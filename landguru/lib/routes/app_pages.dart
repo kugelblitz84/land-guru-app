@@ -11,6 +11,7 @@ import '../modules/auth/signup/views/signup_phone_view.dart';
 import '../modules/auth/signup/views/signup_otp_view.dart';
 import '../modules/auth/signup/views/signup_password_view.dart';
 import '../modules/auth/signup/views/signup_personal_info_view.dart';
+import '../modules/auth/signup/views/signup_identity_view.dart';
 import '../modules/auth/forgot_password/forgot_password_controller.dart';
 import '../modules/auth/forgot_password/views/forgot_password_phone_view.dart';
 import '../modules/auth/forgot_password/views/forgot_password_otp_view.dart';
@@ -71,8 +72,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.SIGNUP_IDENTITY_VERIFICATION,
-      page: () =>
-          const Placeholder(), // TODO: Implement identity verification view
+      page: () => const SignupIdentityView(),
       binding: BindingsBuilder(() {}),
     ),
 

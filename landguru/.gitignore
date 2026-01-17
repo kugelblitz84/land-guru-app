@@ -20,7 +20,7 @@ migrate_working_dir/
 rest/
 agents/
 Forgot Password/
-Signup & Login/
+#Signup & Login/
 agenComponents/
 userComponents/
 # The .vscode folder contains launch configuration and tasks you configure in

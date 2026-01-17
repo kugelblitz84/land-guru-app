@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../widgets/auth_widgets.dart';
 import '../signup_controller.dart';
 
 /// Signup Step 2: Verify OTP
@@ -8,15 +12,198 @@ class SignupOtpView extends GetView<SignupController> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement OTP verification UI
-    // - Step indicator (2/4)
-    // - Title: Verify your phone
-    // - Subtitle showing phone number
-    // - OTP input (6 digits)
-    // - Resend OTP link with countdown
-    // - Verify button
-    return const Scaffold(
-      body: Placeholder(),
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      appBar: AppBar(
+        backgroundColor: AppColors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: AppColors.grey900),
+          onPressed: () => Get.back(),
+        ),
+        centerTitle: true,
+        title: Text(
+          'Create Account',
+          style: TextStyle(
+            color: AppColors.grey900,
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 16.h),
+
+                        // Step Progress Indicator
+                        const StepProgressIndicator(
+                          currentStep: 2,
+                          totalSteps: 5,
+                        ),
+
+                        SizedBox(height: 60.h),
+
+                        // Title
+                        Text(
+                          'Verify Phone Number',
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.grey900,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+
+                        // Subtitle with phone number
+                        RichText(
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: AppColors.grey600,
+                              height: 1.5,
+                            ),
+                            children: [
+                              const TextSpan(text: 'We sent a 4-digit code to '),
+                              TextSpan(
+                                text: controller.formattedPhoneNumber,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.grey900,
+                                ),
+                              ),
+                              const TextSpan(text: '.\nEnter it below to secure your account'),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 32.h),
+
+                        // OTP Input Fields
+                        _buildOtpFields(),
+
+                        SizedBox(height: 24.h),
+
+                        // Resend OTP
+                        Obx(
+                          () => Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Didn't receive the code? ",
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: AppColors.grey600,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: controller.canResend.value
+                                    ? controller.resendOtp
+                                    : null,
+                                child: Text(
+                                  controller.canResend.value
+                                      ? 'Resend'
+                                      : 'Resend in ${controller.resendCountdown.value}s',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: controller.canResend.value
+                                        ? AppColors.primary
+                                        : AppColors.grey400,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const Spacer(),
+
+                        // Verify & Proceed Button
+                        Obx(
+                          () => PrimaryButton(
+                            text: 'Verify & Proceed',
+                            isLoading: controller.isLoading.value,
+                            showArrow: true,
+                            onPressed: controller.verifyOtp,
+                          ),
+                        ),
+                        SizedBox(height: 32.h),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOtpFields() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: List.generate(4, (index) {
+        return SizedBox(
+          width: 70.w,
+          height: 60.h,
+          child: TextFormField(
+            controller: controller.otpControllers[index],
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            maxLength: 1,
+            style: TextStyle(
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.grey900,
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+            ],
+            decoration: InputDecoration(
+              counterText: '',
+              filled: true,
+              fillColor: controller.otpControllers[index].text.isNotEmpty
+                  ? AppColors.primary.withAlpha(26)
+                  : AppColors.grey100,
+              contentPadding: EdgeInsets.zero,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(
+                  color: controller.otpControllers[index].text.isNotEmpty
+                      ? AppColors.primary.withAlpha(77)
+                      : Colors.transparent,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+            ),
+            onChanged: (value) {
+              if (value.isNotEmpty && index < 3) {
+                FocusScope.of(Get.context!).nextFocus();
+              }
+              if (value.isEmpty && index > 0) {
+                FocusScope.of(Get.context!).previousFocus();
+              }
+            },
+          ),
+        );
+      }),
     );
   }
 }
