@@ -26,6 +26,18 @@ import '../modules/user/home/home_controller.dart';
 import '../modules/user/notifications/notifications_view.dart';
 import '../modules/user/notifications/notifications_controller.dart';
 
+// Create Buy Post
+import '../modules/user/properties/create_buy_post/create_buy_post_view.dart';
+import '../modules/user/properties/create_buy_post/create_buy_post_controller.dart';
+
+// Create Sell Post
+import '../modules/user/properties/create_sell_post/create_sell_post_view.dart';
+import '../modules/user/properties/create_sell_post/create_sell_post_controller.dart';
+
+// Create Offer
+import '../modules/user/properties/create_offer/create_offer_view.dart';
+import '../modules/user/properties/create_offer/create_offer_controller.dart';
+
 /// Contains all GetPage configurations for the application.
 /// Each page includes its route, page widget, and binding for dependency injection.
 class AppPages {
@@ -226,71 +238,61 @@ class AppPages {
       binding: BindingsBuilder(() {}),
     ),
 
-    // CREATE SELL POST FLOW (4 Steps)
+    // CREATE SELL POST FLOW (4 Steps) - Single route with step-based view
     GetPage(
       name: AppRoutes.CREATE_SELL_POST_INFO,
-      page: () =>
-          const Placeholder(), // TODO: Replace with CreateSellPostInfoPage()
+      page: () => const CreateSellPostView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<CreateSellPostController>(() => CreateSellPostController());
+        Get.lazyPut<CreateSellPostController>(() => CreateSellPostController());
       }),
     ),
+    // These routes redirect to the main view (controller persists)
     GetPage(
       name: AppRoutes.CREATE_SELL_POST_MEDIA,
-      page: () =>
-          const Placeholder(), // TODO: Replace with CreateSellPostMediaPage()
-      binding: BindingsBuilder(() {
-        // CreateSellPostController persists from previous step
-      }),
+      page: () => const CreateSellPostView(),
+      binding: BindingsBuilder(() {}),
     ),
     GetPage(
       name: AppRoutes.CREATE_SELL_POST_SERVICES,
-      page: () =>
-          const Placeholder(), // TODO: Replace with CreateSellPostServicesPage()
+      page: () => const CreateSellPostView(),
       binding: BindingsBuilder(() {}),
     ),
     GetPage(
       name: AppRoutes.CREATE_SELL_POST_REVIEW,
-      page: () =>
-          const Placeholder(), // TODO: Replace with CreateSellPostReviewPage()
+      page: () => const CreateSellPostView(),
       binding: BindingsBuilder(() {}),
     ),
 
-    // CREATE BUY POST FLOW (2 Steps)
+    // CREATE BUY POST FLOW (2 Steps) - Single route with step-based view
     GetPage(
       name: AppRoutes.CREATE_BUY_POST_INFO,
-      page: () =>
-          const Placeholder(), // TODO: Replace with CreateBuyPostInfoPage()
+      page: () => const CreateBuyPostView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<CreateBuyPostController>(() => CreateBuyPostController());
+        Get.lazyPut<CreateBuyPostController>(() => CreateBuyPostController());
       }),
     ),
     GetPage(
       name: AppRoutes.CREATE_BUY_POST_REVIEW,
-      page: () =>
-          const Placeholder(), // TODO: Replace with CreateBuyPostReviewPage()
+      page: () => const CreateBuyPostView(),
       binding: BindingsBuilder(() {}),
     ),
 
-    // CREATE OFFER FLOW (3 Steps)
+    // CREATE OFFER FLOW (3 Steps) - Single route with step-based view
     GetPage(
       name: AppRoutes.CREATE_OFFER_INFO,
-      page: () =>
-          const Placeholder(), // TODO: Replace with CreateOfferInfoPage()
+      page: () => const CreateOfferView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<CreateOfferController>(() => CreateOfferController());
+        Get.lazyPut<CreateOfferController>(() => CreateOfferController());
       }),
     ),
     GetPage(
       name: AppRoutes.CREATE_OFFER_MEDIA,
-      page: () =>
-          const Placeholder(), // TODO: Replace with CreateOfferMediaPage()
+      page: () => const CreateOfferView(),
       binding: BindingsBuilder(() {}),
     ),
     GetPage(
       name: AppRoutes.CREATE_OFFER_REVIEW,
-      page: () =>
-          const Placeholder(), // TODO: Replace with CreateOfferReviewPage()
+      page: () => const CreateOfferView(),
       binding: BindingsBuilder(() {}),
     ),
 

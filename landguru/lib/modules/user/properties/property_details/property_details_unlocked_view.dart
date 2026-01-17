@@ -18,8 +18,6 @@ class PropertyDetailsUnlockedView extends GetView<PropertyDetailsController> {
     // - Documents section
     // - Request Appointment button
     // - Chat/Call buttons
-    return const Scaffold(
-      body: Placeholder(),
-    );
+    return const Scaffold(body: Placeholder());
   }
 }

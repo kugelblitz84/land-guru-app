@@ -14,8 +14,6 @@ class SellPostDetailsView extends GetView<SellPostDetailsController> {
     // - Property info
     // - For Quoted: Bill breakdown, Pay/Requote options
     // - Actions based on status
-    return const Scaffold(
-      body: Placeholder(),
-    );
+    return const Scaffold(body: Placeholder());
   }
 }

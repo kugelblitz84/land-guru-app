@@ -14,8 +14,6 @@ class OfferFromExistingView extends GetView<OfferFromExistingController> {
     // - Each property card with selection radio
     // - View Details button on each card
     // - Submit Offer button at bottom
-    return const Scaffold(
-      body: Placeholder(),
-    );
+    return const Scaffold(body: Placeholder());
   }
 }

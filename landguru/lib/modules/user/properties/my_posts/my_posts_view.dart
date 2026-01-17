@@ -14,8 +14,6 @@ class MyPostsView extends GetView<MyPostsController> {
     // - Property count and sort dropdown
     // - Post list with cards showing status badges
     // - FAB for creating new post
-    return const Scaffold(
-      body: Placeholder(),
-    );
+    return const Scaffold(body: Placeholder());
   }
 }

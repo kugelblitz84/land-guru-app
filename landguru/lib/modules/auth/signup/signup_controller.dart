@@ -8,7 +8,7 @@ import '../../../routes/app_routes.dart';
 /// Step 3: Set password
 /// Step 4: Personal info
 /// Step 5: Identity verification
-class SignupController extends GetxService {
+class SignupController extends GetxController {
   // Total steps
   static const int totalSteps = 5;
 

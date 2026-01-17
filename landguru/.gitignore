@@ -20,13 +20,14 @@ migrate_working_dir/
 rest/
 agents/
 Forgot Password/
-#Signup & Login/
+Signup & Login/
 agenComponents/
 userComponents/
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
 #.vscode/
+ARCHITECTURE_OVERVIEW.md
 
 # Flutter/Dart/Pub related
 **/doc/api/

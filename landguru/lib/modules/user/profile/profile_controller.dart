@@ -1,15 +1,17 @@
 import 'package:get/get.dart';
+import '../../../routes/app_routes.dart';
 
-/// Service for User Profile screen
-class ProfileController extends GetxService {
+/// Controller for User Profile screen
+class ProfileController extends GetxController {
   // State
   final RxBool isLoading = false.obs;
+  final RxBool isLoggingOut = false.obs;
 
   // User data
-  final RxString userName = ''.obs;
-  final RxString userPhone = ''.obs;
-  final RxString userEmail = ''.obs;
-  final RxString userAddress = ''.obs;
+  final RxString userName = 'User'.obs;
+  final RxString userPhone = '+880 1712-345678'.obs;
+  final RxString userEmail = 'user@example.com'.obs;
+  final RxString userAddress = 'Dhaka, Bangladesh'.obs;
   final RxString profileImage = ''.obs;
 
   @override
@@ -23,9 +25,13 @@ class ProfileController extends GetxService {
     isLoading.value = true;
     try {
       // TODO: Load profile from API or local storage
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(milliseconds: 500));
     } catch (e) {
-      // TODO: Handle error
+      Get.snackbar(
+        'Error',
+        'Failed to load profile',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -33,18 +39,36 @@ class ProfileController extends GetxService {
 
   /// Navigate to edit profile
   void goToEditProfile() {
-    // TODO: Navigate to edit profile
+    Get.toNamed(AppRoutes.PROFILE_EDIT);
   }
 
   /// Navigate to change password
   void goToChangePassword() {
-    // TODO: Navigate to change password
+    Get.toNamed(AppRoutes.PROFILE_CHANGE_PASSWORD);
   }
 
   /// Logout
   Future<void> logout() async {
-    // TODO: Implement logout
-    // - Clear local storage
-    // - Navigate to login
+    isLoggingOut.value = true;
+    try {
+      // TODO: Clear local storage / tokens
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Navigate to login and clear all previous routes
+      Get.offAllNamed(AppRoutes.LOGIN);
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to logout',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoggingOut.value = false;
+    }
+  }
+
+  /// Refresh profile
+  Future<void> refresh() async {
+    await loadProfile();
   }
 }

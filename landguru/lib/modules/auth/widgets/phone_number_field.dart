@@ -10,6 +10,9 @@ class PhoneNumberField extends StatelessWidget {
   final bool enabled;
   final String hintText;
 
+  // Field background color
+  static const Color _fieldColor = Color.fromARGB(255, 255, 255, 255);
+
   const PhoneNumberField({
     super.key,
     required this.controller,
@@ -28,99 +31,107 @@ class PhoneNumberField extends StatelessWidget {
           style: TextStyle(
             fontSize: 14.sp,
             fontWeight: FontWeight.w500,
-            color: AppColors.grey800,
+            color: AppColors.black,
           ),
         ),
         SizedBox(height: 8.h),
-        TextFormField(
-          controller: controller,
-          enabled: enabled,
-          keyboardType: TextInputType.phone,
-          validator: validator,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(11),
-          ],
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: enabled ? AppColors.grey900 : AppColors.grey600,
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(50),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(
+          child: TextFormField(
+            controller: controller,
+            enabled: enabled,
+            keyboardType: TextInputType.phone,
+            validator: validator,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(11),
+            ],
+            style: TextStyle(
               fontSize: 16.sp,
-              color: AppColors.grey400,
+              color: enabled ? AppColors.grey900 : AppColors.grey600,
             ),
-            prefixIcon: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Bangladesh flag
-                  Container(
-                    width: 24.w,
-                    height: 16.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2.r),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(2.r),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Container(color: const Color(0xFF006A4E)),
-                          ),
-                          Container(
-                            width: 8.w,
-                            height: 8.w,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF42A41),
-                              shape: BoxShape.circle,
+            decoration: InputDecoration(
+              hintText: hintText,
+              hintStyle: TextStyle(fontSize: 16.sp, color: AppColors.grey400),
+              prefixIcon: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Bangladesh flag
+                    Container(
+                      width: 24.w,
+                      height: 16.h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2.r),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(color: const Color(0xFF006A4E)),
                             ),
-                          ),
-                          Expanded(
-                            child: Container(color: const Color(0xFF006A4E)),
-                          ),
-                        ],
+                            Container(
+                              width: 8.w,
+                              height: 8.w,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF42A41),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(color: const Color(0xFF006A4E)),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    '+880',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      color: AppColors.grey900,
-                      fontWeight: FontWeight.w500,
+                    SizedBox(width: 8.w),
+                    Text(
+                      '+880',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: AppColors.grey900,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Container(
-                    width: 1,
-                    height: 24.h,
-                    color: AppColors.grey300,
-                  ),
-                ],
+                    SizedBox(width: 8.w),
+                    Container(width: 1, height: 24.h, color: AppColors.grey300),
+                  ],
+                ),
               ),
-            ),
-            filled: true,
-            fillColor: enabled ? AppColors.grey100 : AppColors.grey200,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.error),
+              filled: true,
+              fillColor: enabled ? _fieldColor : AppColors.grey200,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16.w,
+                vertical: 16.h,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppColors.error),
+              ),
             ),
           ),
         ),

@@ -13,8 +13,6 @@ class BuyPostDetailsView extends GetView<BuyPostDetailsController> {
     // - Offers received list
     // - Each offer card with property preview
     // - Accept/Reject actions
-    return const Scaffold(
-      body: Placeholder(),
-    );
+    return const Scaffold(body: Placeholder());
   }
 }

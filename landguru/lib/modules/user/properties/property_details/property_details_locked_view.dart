@@ -16,8 +16,6 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
     // - Property specs (area, size)
     // - Locked sections: Owner info, contact details
     // - Unlock button with price
-    return const Scaffold(
-      body: Placeholder(),
-    );
+    return const Scaffold(body: Placeholder());
   }
 }

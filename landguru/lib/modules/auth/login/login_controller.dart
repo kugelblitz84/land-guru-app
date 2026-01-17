@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_routes.dart';
 
-/// Service for the Login screen
-class LoginController extends GetxService {
+/// Controller for the Login screen
+class LoginController extends GetxController {
   // Form
   final formKey = GlobalKey<FormState>();
   final phoneController = TextEditingController();

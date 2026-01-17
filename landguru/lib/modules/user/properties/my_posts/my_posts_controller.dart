@@ -7,7 +7,8 @@ class MyPostsController extends GetxService {
   final RxInt selectedTabIndex = 0.obs; // 0: Sell, 1: Buy, 2: Offered
 
   // Filter state for Sell Posts
-  final RxString sellPostsFilter = 'All'.obs; // All, Pending, Quoted, Active, Draft
+  final RxString sellPostsFilter =
+      'All'.obs; // All, Pending, Quoted, Active, Draft
 
   // Loading states
   final RxBool isLoading = false.obs;

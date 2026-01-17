@@ -15,8 +15,6 @@ class PropertiesView extends GetView<PropertiesController> {
     // - Location filter chip
     // - Property count and sort dropdown
     // - Property list with cards
-    return const Scaffold(
-      body: Placeholder(),
-    );
+    return const Scaffold(body: Placeholder());
   }
 }
