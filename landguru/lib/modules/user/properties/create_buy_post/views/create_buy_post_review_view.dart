@@ -175,12 +175,11 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
           // Preferred Location
           Obx(
             () => _buildDetailRow(
-              icon: Icons.location_on_outlined,
+              imageAsset: 'assets/Logos/Location.png',
               label: 'Preferred Location',
               value: controller.location.value.formattedAddress.isNotEmpty
                   ? controller.location.value.formattedAddress
                   : 'Not specified',
-              iconColor: AppColors.primary,
             ),
           ),
           SizedBox(height: 16.h),
@@ -188,10 +187,9 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
           // Property Type
           Obx(
             () => _buildDetailRow(
-              icon: Icons.home_outlined,
+              imageAsset: 'assets/Logos/flat.png',
               label: 'Property Type',
               value: controller.propertyType.value?.label ?? 'Not specified',
-              iconColor: AppColors.primary,
             ),
           ),
           SizedBox(height: 16.h),
@@ -200,12 +198,11 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
           Obx(
             () => _buildDetailRowWithAction(
               context: context,
-              icon: Icons.straighten,
+              imageAsset: 'assets/Logos/Land&plotSize.png',
               label: 'Required Land Size',
               value: controller.formattedLandSize.isNotEmpty
                   ? 'Min ${controller.formattedLandSize}'
                   : 'Not specified',
-              iconColor: AppColors.primary,
               actionLabel: 'Change Metrics',
               onAction: () async {
                 final newUnit = await ChangeMetricsSheet.show(
@@ -230,10 +227,9 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
               children: [
                 _buildDetailRowWithAction(
                   context: context,
-                  icon: Icons.crop_square,
+                  imageAsset: 'assets/Logos/Land&plotSize.png',
                   label: 'Required Plot Size',
                   value: 'Min $plotSize',
-                  iconColor: AppColors.primary,
                   actionLabel: 'Change Metrics',
                   onAction: () async {
                     final newUnit = await ChangeMetricsSheet.show(
@@ -253,10 +249,9 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
           // Distance from Road
           Obx(
             () => _buildDetailRow(
-              icon: Icons.directions,
+              imageAsset: 'assets/Logos/DistanceFromRoad.png',
               label: 'Distance from Road',
               value: controller.distanceRange.value?.label ?? 'Not specified',
-              iconColor: AppColors.primary,
             ),
           ),
           SizedBox(height: 16.h),
@@ -264,12 +259,11 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
           // Budget Range
           Obx(
             () => _buildDetailRow(
-              icon: Icons.payments_outlined,
+              imageAsset: 'assets/Logos/Budget Range.png',
               label: 'Budget Range',
               value: controller.formattedBudgetRange.isNotEmpty
                   ? controller.formattedBudgetRange
                   : 'Not specified',
-              iconColor: AppColors.primary,
             ),
           ),
 
@@ -284,21 +278,14 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
                 SizedBox(height: 20.h),
                 Divider(color: AppColors.grey200),
                 SizedBox(height: 16.h),
-                Text(
-                  'Description',
-                  style: TextStyle(
+                ExpandableDescription(
+                  title: 'Description',
+                  text: controller.descriptionValue.value,
+                  maxLines: 1,
+                  titleStyle: TextStyle(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w600,
                     color: AppColors.grey900,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  controller.descriptionValue.value,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: AppColors.grey600,
-                    height: 1.5,
                   ),
                 ),
               ],
@@ -310,10 +297,11 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
   }
 
   Widget _buildDetailRow({
-    required IconData icon,
+    IconData? icon,
     required String label,
     required String value,
-    required Color iconColor,
+    Color? iconColor,
+    String? imageAsset,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,10 +310,29 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
           width: 36.w,
           height: 36.h,
           decoration: BoxDecoration(
-            color: iconColor.withAlpha(20),
+            color: (iconColor ?? AppColors.primary).withAlpha(20),
             borderRadius: BorderRadius.circular(8.r),
           ),
-          child: Icon(icon, size: 20.sp, color: iconColor),
+          child: Center(
+            child: imageAsset != null
+                ? Image.asset(
+                    imageAsset,
+                    width: 20.w,
+                    height: 20.h,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        icon ?? Icons.info,
+                        size: 20.sp,
+                        color: iconColor ?? AppColors.primary,
+                      );
+                    },
+                  )
+                : Icon(
+                    icon ?? Icons.info,
+                    size: 20.sp,
+                    color: iconColor ?? AppColors.primary,
+                  ),
+          ),
         ),
         SizedBox(width: 12.w),
         Expanded(
@@ -354,12 +361,13 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
 
   Widget _buildDetailRowWithAction({
     required BuildContext context,
-    required IconData icon,
+    IconData? icon,
     required String label,
     required String value,
-    required Color iconColor,
+    Color? iconColor,
     required String actionLabel,
     required VoidCallback onAction,
+    String? imageAsset,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,10 +376,29 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
           width: 36.w,
           height: 36.h,
           decoration: BoxDecoration(
-            color: iconColor.withAlpha(20),
+            color: (iconColor ?? AppColors.primary).withAlpha(20),
             borderRadius: BorderRadius.circular(8.r),
           ),
-          child: Icon(icon, size: 20.sp, color: iconColor),
+          child: Center(
+            child: imageAsset != null
+                ? Image.asset(
+                    imageAsset,
+                    width: 20.w,
+                    height: 20.h,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        icon ?? Icons.info,
+                        size: 20.sp,
+                        color: iconColor ?? AppColors.primary,
+                      );
+                    },
+                  )
+                : Icon(
+                    icon ?? Icons.info,
+                    size: 20.sp,
+                    color: iconColor ?? AppColors.primary,
+                  ),
+          ),
         ),
         SizedBox(width: 12.w),
         Expanded(

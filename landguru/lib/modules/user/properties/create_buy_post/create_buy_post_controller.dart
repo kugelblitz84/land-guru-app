@@ -106,12 +106,40 @@ class CreateBuyPostController extends GetxController {
     maxBudgetValue.value = range.maxBudget;
   }
 
-  /// Update land size range from slider
+  /// Update land size from slider (updates text field)
+  void updateLandSizeFromSlider(double value) {
+    landSizeValue.value = value;
+    // Update text field without triggering listener loop
+    final formattedValue = value == value.toInt()
+        ? value.toInt().toString()
+        : value.toStringAsFixed(3).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+    if (minLandSizeController.text != formattedValue) {
+      minLandSizeController.removeListener(_updateLandSizeValue);
+      minLandSizeController.text = formattedValue;
+      minLandSizeController.addListener(_updateLandSizeValue);
+    }
+  }
+
+  /// Update plot size from slider (updates text field)
+  void updatePlotSizeFromSlider(double value) {
+    plotSizeValue.value = value;
+    // Update text field without triggering listener loop
+    final formattedValue = value == value.toInt()
+        ? value.toInt().toString()
+        : value.toStringAsFixed(3).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+    if (minPlotSizeController.text != formattedValue) {
+      minPlotSizeController.removeListener(_updatePlotSizeValue);
+      minPlotSizeController.text = formattedValue;
+      minPlotSizeController.addListener(_updatePlotSizeValue);
+    }
+  }
+
+  /// Update land size range from slider (kept for backwards compatibility)
   void updateLandSizeRange(LandSizeRange range) {
     landSizeRange.value = range;
   }
 
-  /// Update plot size range from slider
+  /// Update plot size range from slider (kept for backwards compatibility)
   void updatePlotSizeRange(LandSizeRange range) {
     plotSizeRange.value = range;
   }

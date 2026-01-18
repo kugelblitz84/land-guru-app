@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../shared/bottom_nav/user_bottom_nav_controller.dart';
 import 'notifications_controller.dart';
 
-/// User Notifications screen
+/// Shared Notifications screen - used by both User and Agent
 class NotificationsView extends GetView<NotificationsController> {
   const NotificationsView({super.key});
 
@@ -18,10 +17,7 @@ class NotificationsView extends GetView<NotificationsController> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: AppColors.grey900),
-          onPressed: () {
-            final navController = Get.find<UserBottomNavController>();
-            navController.backFromNotifications();
-          },
+          onPressed: () => Get.back(),
         ),
         centerTitle: true,
         title: Text(

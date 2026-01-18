@@ -85,37 +85,10 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Description',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.grey900,
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            description,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: AppColors.grey600,
-                              height: 1.5,
-                            ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              // TODO: Show full description
-                            },
-                            child: Text(
-                              'Read More',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                          ExpandableDescription(
+                            title: 'Description',
+                            text: description,
+                            maxLines: 1,
                           ),
                           SizedBox(height: 20.h),
                         ],
@@ -126,7 +99,7 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
                   // Details with Change Metrics
                   _buildDetailRowWithAction(
                     context: context,
-                    icon: Icons.straighten,
+                    imageAsset: 'assets/Logos/Land&plotSize.png',
                     label: 'Sellable Land Amount',
                     value: controller.formattedLandAmount.isNotEmpty
                         ? controller.formattedLandAmount
@@ -155,7 +128,7 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
                       children: [
                         _buildDetailRowWithAction(
                           context: context,
-                          icon: Icons.crop_square,
+                          imageAsset: 'assets/Logos/Land&plotSize.png',
                           label: 'Plot Size',
                           value: plotSize,
                           onAction: () async {
@@ -174,7 +147,7 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
                   }),
 
                   _buildDetailRow(
-                    icon: Icons.directions,
+                    imageAsset: 'assets/Logos/DistanceFromRoad.png',
                     label: 'Distance from Road',
                     value:
                         controller.distanceRange.value?.label ??
@@ -183,7 +156,7 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
                   SizedBox(height: 16.h),
 
                   _buildDetailRow(
-                    icon: Icons.location_on_outlined,
+                    imageAsset: 'assets/Logos/Location.png',
                     label: 'Location',
                     value: controller.location.value.formattedAddress.isNotEmpty
                         ? controller.location.value.formattedAddress
@@ -441,14 +414,29 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
   }
 
   Widget _buildDetailRow({
-    required IconData icon,
+    IconData? icon,
     required String label,
     required String value,
+    String? imageAsset,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20.sp, color: AppColors.primary),
+        if (imageAsset != null)
+          Image.asset(
+            imageAsset,
+            width: 20.w,
+            height: 20.h,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(
+                icon ?? Icons.info,
+                size: 20.sp,
+                color: AppColors.primary,
+              );
+            },
+          )
+        else
+          Icon(icon ?? Icons.info, size: 20.sp, color: AppColors.primary),
         SizedBox(width: 12.w),
         Expanded(
           child: Column(
@@ -476,15 +464,30 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
 
   Widget _buildDetailRowWithAction({
     required BuildContext context,
-    required IconData icon,
+    IconData? icon,
     required String label,
     required String value,
     required VoidCallback onAction,
+    String? imageAsset,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20.sp, color: AppColors.primary),
+        if (imageAsset != null)
+          Image.asset(
+            imageAsset,
+            width: 20.w,
+            height: 20.h,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(
+                icon ?? Icons.info,
+                size: 20.sp,
+                color: AppColors.primary,
+              );
+            },
+          )
+        else
+          Icon(icon ?? Icons.info, size: 20.sp, color: AppColors.primary),
         SizedBox(width: 12.w),
         Expanded(
           child: Column(

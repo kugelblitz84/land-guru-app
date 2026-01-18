@@ -63,6 +63,9 @@ flutter:
   assets:
     - assets/images/
     - assets/images/Properties demo/
+    - assets/images/Properties Listing - For Sale Images/
+    - assets/Logos/
+    - assets/Logos/How Offering Work/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

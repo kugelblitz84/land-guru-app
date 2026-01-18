@@ -23,8 +23,10 @@ import '../modules/shared/bottom_nav/user_bottom_nav_view.dart';
 import '../modules/shared/bottom_nav/user_bottom_nav_controller.dart';
 import '../modules/user/home/home_view.dart';
 import '../modules/user/home/home_controller.dart';
-import '../modules/user/notifications/notifications_view.dart';
-import '../modules/user/notifications/notifications_controller.dart';
+
+// Shared Notifications (used by both User and Agent)
+import '../modules/shared/notifications/notifications_view.dart';
+import '../modules/shared/notifications/notifications_controller.dart';
 
 // Create Buy Post
 import '../modules/user/properties/create_buy_post/create_buy_post_view.dart';
@@ -37,6 +39,11 @@ import '../modules/user/properties/create_sell_post/create_sell_post_controller.
 // Create Offer
 import '../modules/user/properties/create_offer/create_offer_view.dart';
 import '../modules/user/properties/create_offer/create_offer_controller.dart';
+
+// Property Details
+import '../modules/user/properties/property_details/property_details_controller.dart';
+import '../modules/user/properties/property_details/property_details_locked_view.dart';
+import '../modules/user/properties/property_details/property_details_unlocked_view.dart';
 
 /// Contains all GetPage configurations for the application.
 /// Each page includes its route, page widget, and binding for dependency injection.
@@ -162,18 +169,16 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.PROPERTY_DETAILS_LOCKED,
-      page: () =>
-          const Placeholder(), // TODO: Replace with PropertyDetailsLockedPage()
+      page: () => const PropertyDetailsLockedView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<PropertyDetailsController>(() => PropertyDetailsController());
+        Get.lazyPut<PropertyDetailsController>(() => PropertyDetailsController());
       }),
     ),
     GetPage(
       name: AppRoutes.PROPERTY_DETAILS_UNLOCKED,
-      page: () =>
-          const Placeholder(), // TODO: Replace with PropertyDetailsUnlockedPage()
+      page: () => const PropertyDetailsUnlockedView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<PropertyDetailsController>(() => PropertyDetailsController());
+        Get.lazyPut<PropertyDetailsController>(() => PropertyDetailsController());
       }),
     ),
     GetPage(
@@ -418,13 +423,12 @@ class AppPages {
       }),
     ),
 
-    // AGENT - NOTIFICATIONS
+    // AGENT - NOTIFICATIONS (uses shared NotificationsView)
     GetPage(
       name: AppRoutes.AGENT_NOTIFICATIONS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentNotificationsPage()
+      page: () => const NotificationsView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentNotificationsController>(() => AgentNotificationsController());
+        Get.lazyPut<NotificationsController>(() => NotificationsController());
       }),
     ),
 

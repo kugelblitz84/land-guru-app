@@ -4,7 +4,8 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import 'home_controller.dart';
 
-/// User Home/Dashboard screen
+/// User Home/Dashboard screen - Full version with Scaffold
+/// Use this for standalone navigation (not within shell)
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
@@ -12,132 +13,51 @@ class HomeView extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Obx(
-          () => controller.isLoading.value
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                  onRefresh: controller.refresh,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 16.h),
-
-                          // Header Section
-                          _buildHeader(),
-
-                          SizedBox(height: 24.h),
-
-                          // Quick Action Cards
-                          _buildQuickActionCards(),
-
-                          SizedBox(height: 16.h),
-
-                          // Stats Cards
-                          _buildStatsCards(),
-
-                          SizedBox(height: 24.h),
-
-                          // Featured Properties Section
-                          _buildFeaturedPropertiesSection(),
-
-                          SizedBox(height: 24.h),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-        ),
-      ),
+      body: SafeArea(child: const HomeContentView()),
     );
   }
+}
 
-  /// Header with user avatar, welcome text, and notification icon
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        // User Avatar with online indicator
-        Stack(
-          children: [
-            Container(
-              width: 50.w,
-              height: 50.h,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.primary.withAlpha(150),
-                    AppColors.primaryDark,
-                  ],
-                ),
-              ),
-              child: Icon(Icons.person, color: AppColors.white, size: 28.sp),
-            ),
-            // Online indicator
-            Positioned(
-              bottom: 2,
-              right: 2,
-              child: Container(
-                width: 14.w,
-                height: 14.h,
-                decoration: BoxDecoration(
-                  color: AppColors.success,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.white, width: 2),
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(width: 12.w),
+/// Home content view - Content only, no Scaffold
+/// Used within MainShellWrapper for tab-based navigation
+class HomeContentView extends GetView<HomeController> {
+  const HomeContentView({super.key});
 
-        // Welcome text
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome Back,',
-                style: TextStyle(fontSize: 14.sp, color: AppColors.grey600),
-              ),
-              Obx(
-                () => Text(
-                  '${controller.userName.value}!',
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.grey900,
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => controller.isLoading.value
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: controller.refresh,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 8.h),
+
+                      // Quick Action Cards
+                      _buildQuickActionCards(),
+
+                      SizedBox(height: 16.h),
+
+                      // Stats Cards
+                      _buildStatsCards(),
+
+                      SizedBox(height: 24.h),
+
+                      // Featured Properties Section
+                      _buildFeaturedPropertiesSection(),
+
+                      SizedBox(height: 24.h),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
-
-        // Notification icon
-        GestureDetector(
-          onTap: controller.goToNotifications,
-          child: Container(
-            width: 44.w,
-            height: 44.h,
-            decoration: BoxDecoration(
-              color: AppColors.grey100,
-              shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.notifications_outlined,
-              color: AppColors.grey900,
-              size: 24.sp,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -210,6 +130,8 @@ class HomeView extends GetView<HomeController> {
                 fontWeight: FontWeight.w600,
                 color: AppColors.white,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             SizedBox(height: 4.h),
             Text(
@@ -218,6 +140,8 @@ class HomeView extends GetView<HomeController> {
                 fontSize: 12.sp,
                 color: AppColors.white.withAlpha(204),
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -264,11 +188,18 @@ class HomeView extends GetView<HomeController> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        height: 80.h,
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
         decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withAlpha(25),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
           color: AppColors.white,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.grey200),
         ),
         child: Row(
           children: [
@@ -277,17 +208,20 @@ class HomeView extends GetView<HomeController> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     label,
-                    style: TextStyle(fontSize: 12.sp, color: AppColors.grey600),
+                    style: TextStyle(fontSize: 10.sp, color: AppColors.grey600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4.h),
                   Obx(
                     () => Text(
                       '${count.value}',
                       style: TextStyle(
-                        fontSize: 24.sp,
+                        fontSize: 22.sp,
                         fontWeight: FontWeight.bold,
                         color: AppColors.grey900,
                       ),
@@ -348,7 +282,7 @@ class HomeView extends GetView<HomeController> {
 
   Widget _buildPropertyCard(FeaturedProperty property) {
     return GestureDetector(
-      onTap: () => controller.goToPropertyDetails(property.id),
+      onTap: () => controller.goToPropertyDetails(property),
       child: Container(
         margin: EdgeInsets.only(bottom: 16.h),
         decoration: BoxDecoration(
@@ -392,7 +326,10 @@ class HomeView extends GetView<HomeController> {
                 Positioned(
                   top: 12.h,
                   left: 12.w,
-                  child: Row(
+                  right: 12.w,
+                  child: Wrap(
+                    spacing: 8.w,
+                    runSpacing: 6.h,
                     children: [
                       // Property Type Tag
                       _buildTag(
@@ -402,7 +339,6 @@ class HomeView extends GetView<HomeController> {
                         ),
                         textColor: AppColors.white,
                       ),
-                      SizedBox(width: 8.w),
 
                       // Post Type Tag
                       _buildTag(
@@ -411,8 +347,7 @@ class HomeView extends GetView<HomeController> {
                         textColor: AppColors.primary,
                       ),
 
-                      if (property.isVerified) ...[
-                        SizedBox(width: 8.w),
+                      if (property.isVerified)
                         // Verified Tag
                         _buildTag(
                           text: 'Verified',
@@ -420,7 +355,6 @@ class HomeView extends GetView<HomeController> {
                           textColor: AppColors.white,
                           icon: Icons.check_circle,
                         ),
-                      ],
                     ],
                   ),
                 ),
@@ -441,23 +375,37 @@ class HomeView extends GetView<HomeController> {
                       fontWeight: FontWeight.w600,
                       color: AppColors.grey900,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 8.h),
 
                   // Location
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 16.sp,
-                        color: AppColors.primary,
+                      Image.asset(
+                        'assets/Logos/Location.png',
+                        width: 16.w,
+                        height: 16.h,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.location_on,
+                            size: 16.sp,
+                            color: AppColors.primary,
+                          );
+                        },
                       ),
                       SizedBox(width: 4.w),
-                      Text(
-                        property.location,
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: AppColors.grey600,
+                      Expanded(
+                        child: Text(
+                          property.location,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: AppColors.grey600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -468,14 +416,19 @@ class HomeView extends GetView<HomeController> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '৳ ${property.price}',
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                      Flexible(
+                        child: Text(
+                          '৳ ${property.price}',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      SizedBox(width: 8.w),
                       Text(
                         'View Details',
                         style: TextStyle(

@@ -1,36 +1,74 @@
 import 'package:get/get.dart';
 import '../../../routes/app_routes.dart';
 import '../../shared/bottom_nav/user_bottom_nav_controller.dart';
+import '../../shared/shell/main_shell_controller.dart';
 
 /// Model for featured property
 class FeaturedProperty {
   final String id;
+  final String postId;
   final String title;
   final String location;
   final String price;
   final String propertyType;
   final String postType;
   final bool isVerified;
+  final bool isLocked;
   final String? imageUrl;
+  final String? description;
+  final String? sellableLandAmount;
+  final String? plotSize;
+  final String? distanceFromRoad;
+  final String? postedBy;
+  final String? postedTime;
 
   FeaturedProperty({
     required this.id,
+    this.postId = '',
     required this.title,
     required this.location,
     required this.price,
     required this.propertyType,
     required this.postType,
     required this.isVerified,
+    this.isLocked = true,
     this.imageUrl,
+    this.description,
+    this.sellableLandAmount,
+    this.plotSize,
+    this.distanceFromRoad,
+    this.postedBy,
+    this.postedTime,
   });
+
+  /// Convert to Map for navigation arguments
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'postId': postId,
+      'title': title,
+      'location': location,
+      'price': price,
+      'propertyType': propertyType,
+      'postType': postType,
+      'isVerified': isVerified,
+      'isLocked': isLocked,
+      'imageUrl': imageUrl,
+      'description': description,
+      'sellableLandAmount': sellableLandAmount,
+      'plotSize': plotSize,
+      'distanceFromRoad': distanceFromRoad,
+      'postedBy': postedBy,
+      'postedTime': postedTime,
+      'propertyPhotos': imageUrl != null ? [imageUrl] : <String>[],
+    };
+  }
 }
 
 /// Controller for the User Home/Dashboard screen
 class HomeController extends GetxController {
   // State
   final RxBool isLoading = false.obs;
-  final RxString userName = 'User'.obs;
-  final RxString userAvatar = ''.obs;
 
   // Stats
   final RxInt activePostsCount = 0.obs;
@@ -52,8 +90,13 @@ class HomeController extends GetxController {
       // TODO: Load user data from API
       await Future.delayed(const Duration(milliseconds: 500));
 
+      // Update shell controller with user data
+      if (Get.isRegistered<MainShellController>()) {
+        final shellController = Get.find<MainShellController>();
+        shellController.updateUserName('User');
+      }
+
       // Mock data for now
-      userName.value = 'User';
       activePostsCount.value = 12;
       upcomingMeetingsCount.value = 5;
 
@@ -61,33 +104,64 @@ class HomeController extends GetxController {
       featuredProperties.value = [
         FeaturedProperty(
           id: '1',
+          postId: '#POST-1040',
           title: '5 Katha Plot in Purbachal',
-          location: 'Sector 4, Dhaka',
+          location:
+              'Sector 4, Purbachal New Town, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
           price: '2,00,00,000',
           propertyType: 'Plain Land',
           postType: 'Sell Post',
           isVerified: true,
-          imageUrl: 'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
+          isLocked: true,
+          imageUrl:
+              'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
+          description:
+              'Prime residential plot in the rapidly developing Purbachal New Town. Ideal location with excellent connectivity and future growth potential.',
+          sellableLandAmount: '5 Katha',
+          plotSize: '5 Katha',
+          distanceFromRoad: '50m-100m',
+          postedBy: 'Mr. Rahman',
+          postedTime: '1d ago',
         ),
         FeaturedProperty(
           id: '2',
+          postId: '#POST-1041',
           title: 'Luxury 3 Bed Apartment',
-          location: 'Gulshan 2, Dhaka',
+          location:
+              'Gulshan 2, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
           price: '80,75,000',
           propertyType: 'Flat',
           postType: 'Sell Post',
           isVerified: true,
+          isLocked: true,
           imageUrl: 'assets/images/Properties demo/Luxury 3 Bed Apartment.jpg',
+          description:
+              'Luxurious 3 bedroom apartment in prime Gulshan location with modern amenities and premium finishes.',
+          sellableLandAmount: '1800 sqft',
+          plotSize: '1800 sqft',
+          distanceFromRoad: '20m-50m',
+          postedBy: 'Mr. Ahmed',
+          postedTime: '3h ago',
         ),
         FeaturedProperty(
           id: '3',
+          postId: '#POST-1042',
           title: 'Gazipur Water Zone',
-          location: 'Gazipur, Dhaka',
+          location:
+              'Gazipur Sadar, Gazipur City Corporation, Dhaka Division, Bangladesh.',
           price: '95,12,000',
           propertyType: 'Water Land',
           postType: 'Sell Post',
           isVerified: true,
+          isLocked: true,
           imageUrl: 'assets/images/Properties demo/Gazipur Water Zone.jpg',
+          description:
+              'Beautiful water-adjacent land perfect for agricultural or aquaculture projects. Natural water source with excellent drainage system.',
+          sellableLandAmount: '10 Katha',
+          plotSize: '12 Katha',
+          distanceFromRoad: '200m-500m',
+          postedBy: 'Mr. Karim',
+          postedTime: '3d ago',
         ),
       ];
     } catch (e) {
@@ -133,11 +207,12 @@ class HomeController extends GetxController {
   }
 
   /// Navigate to property details
-  void goToPropertyDetails(String propertyId) {
-    Get.toNamed(
-      AppRoutes.PROPERTY_DETAILS_LOCKED,
-      arguments: {'propertyId': propertyId},
-    );
+  void goToPropertyDetails(FeaturedProperty property) {
+    final route = property.isLocked
+        ? AppRoutes.PROPERTY_DETAILS_LOCKED
+        : AppRoutes.PROPERTY_DETAILS_UNLOCKED;
+
+    Get.toNamed(route, arguments: property.toMap());
   }
 
   /// Refresh dashboard

@@ -44,6 +44,7 @@ class SignupController extends GetxController {
   final RxString selectedUpazilla = ''.obs;
   final RxString selectedUnion = ''.obs;
   final RxString selectedWard = ''.obs;
+  final RxBool isFullAddressCustomized = false.obs;
 
   // Step 5: Identity Verification
   final RxString nidFrontImagePath = ''.obs;
@@ -76,6 +77,12 @@ class SignupController extends GetxController {
     for (int i = 0; i < 4; i++) {
       otpControllers.add(TextEditingController());
     }
+    // Listen to postal code changes to update full address
+    postalCodeController.addListener(_onPostalCodeChanged);
+  }
+
+  void _onPostalCodeChanged() {
+    _updateFullAddressIfNotCustomized();
   }
 
   /// Get formatted phone number
@@ -291,6 +298,42 @@ class SignupController extends GetxController {
     isConfirmPasswordObscured.toggle();
   }
 
+  /// Generate full address from location components
+  String _generateFullAddress() {
+    final parts = <String>[];
+    if (selectedWard.value.isNotEmpty) {
+      parts.add('Ward No. ${selectedWard.value}');
+    }
+    if (selectedUnion.value.isNotEmpty) {
+      parts.add(selectedUnion.value);
+    }
+    if (selectedUpazilla.value.isNotEmpty) {
+      parts.add(selectedUpazilla.value);
+    }
+    if (selectedDistrict.value.isNotEmpty) {
+      parts.add(selectedDistrict.value);
+    }
+    if (postalCodeController.text.isNotEmpty) {
+      parts.add(postalCodeController.text);
+    }
+    if (selectedDivision.value.isNotEmpty) {
+      parts.add(selectedDivision.value);
+    }
+    return parts.join(', ');
+  }
+
+  /// Update full address field if not customized by user
+  void _updateFullAddressIfNotCustomized() {
+    if (!isFullAddressCustomized.value) {
+      fullAddressController.text = _generateFullAddress();
+    }
+  }
+
+  /// Mark full address as customized when user edits it
+  void markFullAddressAsCustomized() {
+    isFullAddressCustomized.value = true;
+  }
+
   /// Update division and load districts
   void updateDivision(String? division) {
     if (division == null) return;
@@ -298,8 +341,10 @@ class SignupController extends GetxController {
     selectedDistrict.value = '';
     selectedUpazilla.value = '';
     selectedUnion.value = '';
+    selectedWard.value = '';
     // TODO: Load districts from API based on division
     districts.value = ['District 1', 'District 2', 'District 3'];
+    _updateFullAddressIfNotCustomized();
   }
 
   /// Update district and load upazillas
@@ -308,8 +353,10 @@ class SignupController extends GetxController {
     selectedDistrict.value = district;
     selectedUpazilla.value = '';
     selectedUnion.value = '';
+    selectedWard.value = '';
     // TODO: Load upazillas from API based on district
     upazillas.value = ['Upazilla 1', 'Upazilla 2', 'Upazilla 3'];
+    _updateFullAddressIfNotCustomized();
   }
 
   /// Update upazilla and load unions
@@ -317,20 +364,25 @@ class SignupController extends GetxController {
     if (upazilla == null) return;
     selectedUpazilla.value = upazilla;
     selectedUnion.value = '';
+    selectedWard.value = '';
     // TODO: Load unions from API based on upazilla
     unions.value = ['Union 1', 'Union 2', 'Union 3', 'City Corp'];
+    _updateFullAddressIfNotCustomized();
   }
 
   /// Update union
   void updateUnion(String? union) {
     if (union == null) return;
     selectedUnion.value = union;
+    selectedWard.value = '';
+    _updateFullAddressIfNotCustomized();
   }
 
   /// Update ward
   void updateWard(String? ward) {
     if (ward == null) return;
     selectedWard.value = ward;
+    _updateFullAddressIfNotCustomized();
   }
 
   /// Clear OTP fields
@@ -357,6 +409,7 @@ class SignupController extends GetxController {
     selectedUpazilla.value = '';
     selectedUnion.value = '';
     selectedWard.value = '';
+    isFullAddressCustomized.value = false;
     nidFrontImagePath.value = '';
     nidBackImagePath.value = '';
     tinCertificatePath.value = '';
@@ -372,6 +425,7 @@ class SignupController extends GetxController {
     confirmPasswordController.dispose();
     nameController.dispose();
     emailController.dispose();
+    postalCodeController.removeListener(_onPostalCodeChanged);
     postalCodeController.dispose();
     fullAddressController.dispose();
     super.onClose();

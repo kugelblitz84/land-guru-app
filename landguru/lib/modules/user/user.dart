@@ -4,9 +4,7 @@
 export 'home/home_controller.dart';
 export 'home/home_view.dart';
 
-// Notifications
-export 'notifications/notifications_controller.dart';
-export 'notifications/notifications_view.dart';
+// Note: Notifications moved to shared module (lib/modules/shared/notifications/)
 
 // Properties
 export 'properties/properties_controller.dart';

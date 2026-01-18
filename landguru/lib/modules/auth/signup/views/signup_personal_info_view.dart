@@ -255,12 +255,7 @@ class SignupPersonalInfoView extends GetView<SignupController> {
                   SizedBox(height: 16.h),
 
                   // Full Address Field
-                  _buildTextField(
-                    label: 'Full Address',
-                    hint: 'Holding #45, Ward #03, Bogura Pourashava, Bogura Sadar, Bogura-5800, Rajshahi',
-                    controller: controller.fullAddressController,
-                    maxLines: 3,
-                  ),
+                  _buildFullAddressField(),
                   SizedBox(height: 24.h),
 
                   // Next Button
@@ -353,6 +348,69 @@ class SignupPersonalInfoView extends GetView<SignupController> {
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
               borderSide: BorderSide(color: AppColors.error),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFullAddressField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Full Address',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            color: AppColors.grey800,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Obx(
+          () => TextFormField(
+            controller: controller.fullAddressController,
+            maxLines: 3,
+            onTap: () {
+              controller.markFullAddressAsCustomized();
+            },
+            onChanged: (_) {
+              controller.markFullAddressAsCustomized();
+            },
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: AppColors.grey900,
+            ),
+            decoration: InputDecoration(
+              hintText:
+                  'Holding #45, Ward #03, Bogura Pourashava, Bogura Sadar, Bogura-5800, Rajshahi',
+              hintStyle: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.grey400,
+              ),
+              filled: true,
+              fillColor: AppColors.grey100,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16.w,
+                vertical: 16.h,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppColors.error),
+              ),
             ),
           ),
         ),

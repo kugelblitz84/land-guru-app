@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'metrics_input_field.dart';
 
-/// Predefined land size range
+/// Land size range data class (kept for backwards compatibility)
 class LandSizeRange {
   final double minValue;
   final double maxValue;
@@ -15,7 +15,7 @@ class LandSizeRange {
     required this.label,
   });
 
-  /// Get predefined ranges for a given unit
+  /// Get predefined ranges for a given unit (kept for backwards compatibility)
   static List<LandSizeRange> getRangesForUnit(LandUnit unit) {
     switch (unit) {
       case LandUnit.sqft:
@@ -72,67 +72,36 @@ class LandSizeRange {
   }
 }
 
-/// Land size range slider widget
+/// Continuous land size slider widget that syncs with text field
 class LandSizeRangeSlider extends StatelessWidget {
-  final LandSizeRange? selectedRange;
+  final double currentValue;
   final LandUnit currentUnit;
-  final ValueChanged<LandSizeRange> onChanged;
+  final ValueChanged<double> onChanged;
   final String? label;
+
+  // Keep these for backwards compatibility but they are not used in new implementation
+  final LandSizeRange? selectedRange;
+
+  static const double minValue = 0;
+  static const double maxValue = 9999;
 
   const LandSizeRangeSlider({
     super.key,
-    required this.selectedRange,
+    this.currentValue = 0,
     required this.currentUnit,
     required this.onChanged,
     this.label,
+    this.selectedRange, // Kept for backwards compatibility
   });
 
   @override
   Widget build(BuildContext context) {
-    final ranges = LandSizeRange.getRangesForUnit(currentUnit);
-
-    // Find the current index or default to 0
-    int currentIndex = 0;
-    if (selectedRange != null) {
-      final foundIndex = ranges.indexWhere(
-        (r) =>
-            r.minValue == selectedRange!.minValue &&
-            r.maxValue == selectedRange!.maxValue,
-      );
-      if (foundIndex >= 0) {
-        currentIndex = foundIndex;
-      }
-    }
+    // Clamp the value to valid range
+    final clampedValue = currentValue.clamp(minValue, maxValue);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // if (label != null) ...[
-        //   Row(
-        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //     children: [
-        //       Text(
-        //         label!,
-        //         style: TextStyle(
-        //           fontSize: 12.sp,
-        //           fontWeight: FontWeight.w500,
-        //           color: AppColors.grey500,
-        //         ),
-        //       ),
-        //       if (selectedRange != null)
-        //         Text(
-        //           '${selectedRange!.label} ${currentUnit.label}',
-        //           style: TextStyle(
-        //             fontSize: 12.sp,
-        //             fontWeight: FontWeight.w600,
-        //             color: AppColors.primary,
-        //           ),
-        //         ),
-        //     ],
-        //   ),
-        //   SizedBox(height: 8.h),
-        // ],
-
         // Slider
         Container(
           padding: EdgeInsets.symmetric(horizontal: 4.w),
@@ -152,12 +121,14 @@ class LandSizeRangeSlider extends StatelessWidget {
                   ),
                 ),
                 child: Slider(
-                  value: currentIndex.toDouble(),
-                  min: 0,
-                  max: (ranges.length - 1).toDouble(),
-                  divisions: ranges.length - 1,
+                  value: clampedValue,
+                  min: minValue,
+                  max: maxValue,
+                  // No divisions - continuous slider
                   onChanged: (value) {
-                    onChanged(ranges[value.round()]);
+                    // Round to 3 decimal places for cleaner values
+                    final roundedValue = (value * 1000).round() / 1000;
+                    onChanged(roundedValue);
                   },
                 ),
               ),

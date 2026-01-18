@@ -15,3 +15,4 @@ export 'service_checkbox_item.dart';
 export 'info_banner.dart';
 export 'change_metrics_sheet.dart';
 export 'post_submitted_dialog.dart';
+export 'expandable_description.dart';

@@ -4,102 +4,111 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../user/home/home_view.dart';
 import '../../user/home/home_controller.dart';
-import '../../user/notifications/notifications_view.dart';
-import '../../user/notifications/notifications_controller.dart';
 import '../../user/profile/profile_view.dart';
 import '../../user/profile/profile_controller.dart';
+import '../../user/properties/properties_view.dart';
+import '../../user/properties/properties_controller.dart';
+import '../shell/main_shell_controller.dart';
+import '../shell/main_shell_wrapper.dart';
 import 'user_bottom_nav_controller.dart';
 
 /// User Bottom Navigation shell containing all main tabs
+/// Uses a shared header shell for tabs 0-3 (Home, Properties, Appointments, My Deals)
+/// Profile tab (4) has its own layout without the shell header
 class UserBottomNavView extends GetView<UserBottomNavController> {
   const UserBottomNavView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Ensure controllers are available
+    // Initialize shared shell controller
+    Get.put<MainShellController>(MainShellController(), permanent: true);
+
+    // Ensure tab-specific controllers are available
     Get.lazyPut<HomeController>(() => HomeController());
-    Get.lazyPut<NotificationsController>(() => NotificationsController());
     Get.lazyPut<ProfileController>(() => ProfileController());
+    Get.lazyPut<PropertiesController>(() => PropertiesController());
 
     return Scaffold(
       body: Obx(
         () => IndexedStack(
           index: controller.currentIndex.value,
           children: [
-            // Home tab - can show Home or Notifications
-            _buildHomeTabContent(),
+            // Tab 0: Home - uses shell wrapper
+            _buildShellContent(const HomeContentView()),
 
-            // Properties - Placeholder
-            _buildPlaceholderPage('Properties', Icons.apartment),
+            // Tab 1: Properties - uses shell wrapper
+            _buildShellContent(const PropertiesContentView()),
 
-            // Appointments - Placeholder
-            _buildPlaceholderPage('Appointments', Icons.calendar_today),
+            // Tab 2: Appointments - placeholder with shell wrapper
+            _buildShellContent(
+              _buildPlaceholderContent('Appointments', Icons.calendar_today),
+            ),
 
-            // My Deals - Placeholder
-            _buildPlaceholderPage('My Deals', Icons.handshake),
+            // Tab 3: My Deals - placeholder with shell wrapper
+            _buildShellContent(
+              _buildPlaceholderContent('My Deals', Icons.handshake),
+            ),
 
-            // Profile
+            // Tab 4: Profile - no shell wrapper
             const ProfileView(),
           ],
         ),
       ),
-      bottomNavigationBar: Obx(
-        () => Container(
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            //borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 5.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(
-                    index: 0,
-                    icon: Icons.home_outlined,
-                    activeIcon: Icons.home,
-                    label: 'Home',
-                  ),
-                  _buildNavItem(
-                    index: 1,
-                    icon: Icons.apartment_outlined,
-                    activeIcon: Icons.apartment,
-                    label: 'Properties',
-                  ),
-                  _buildNavItem(
-                    index: 2,
-                    icon: Icons.calendar_today_outlined,
-                    activeIcon: Icons.calendar_today,
-                    label: 'Appointments',
-                  ),
-                  _buildNavItem(
-                    index: 3,
-                    icon: Icons.handshake_outlined,
-                    activeIcon: Icons.handshake,
-                    label: 'My Deals',
-                  ),
-                  _buildNavItem(
-                    index: 4,
-                    icon: Icons.person_outline,
-                    activeIcon: Icons.person,
-                    label: 'Profile',
-                  ),
-                ],
-              ),
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  /// Wrap content with shell (shared header)
+  Widget _buildShellContent(Widget content) {
+    return MainShellWrapper(showHeader: true, child: content);
+  }
+
+  /// Build bottom navigation bar
+  Widget _buildBottomNavBar() {
+    return Obx(
+      () => Container(
+        decoration: BoxDecoration(color: AppColors.primary),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 5.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(
+                  index: 0,
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home,
+                  label: 'Home',
+                ),
+                _buildNavItem(
+                  index: 1,
+                  icon: Icons.apartment_outlined,
+                  activeIcon: Icons.apartment,
+                  label: 'Properties',
+                ),
+                _buildNavItem(
+                  index: 2,
+                  icon: Icons.calendar_today_outlined,
+                  activeIcon: Icons.calendar_today,
+                  label: 'Appointments',
+                ),
+                _buildNavItem(
+                  index: 3,
+                  icon: Icons.handshake_outlined,
+                  activeIcon: Icons.handshake,
+                  label: 'My Deals',
+                ),
+                _buildNavItem(
+                  index: 4,
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: 'Profile',
+                ),
+              ],
             ),
           ),
         ),
       ),
-    );
-  }
-
-  /// Build Home tab content - shows either Home or Notifications
-  Widget _buildHomeTabContent() {
-    return Obx(
-      () => controller.showNotifications.value
-          ? const NotificationsView()
-          : const HomeView(),
     );
   }
 
@@ -149,30 +158,28 @@ class UserBottomNavView extends GetView<UserBottomNavController> {
     );
   }
 
-  Widget _buildPlaceholderPage(String title, IconData icon) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 80.sp, color: AppColors.grey400),
-            SizedBox(height: 16.h),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
-                color: AppColors.grey600,
-              ),
+  /// Placeholder content for tabs not yet implemented
+  Widget _buildPlaceholderContent(String title, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 80.sp, color: AppColors.grey400),
+          SizedBox(height: 16.h),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 24.sp,
+              fontWeight: FontWeight.bold,
+              color: AppColors.grey600,
             ),
-            SizedBox(height: 8.h),
-            Text(
-              'Coming Soon',
-              style: TextStyle(fontSize: 16.sp, color: AppColors.grey500),
-            ),
-          ],
-        ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Coming Soon',
+            style: TextStyle(fontSize: 16.sp, color: AppColors.grey500),
+          ),
+        ],
       ),
     );
   }

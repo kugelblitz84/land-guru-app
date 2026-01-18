@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_routes.dart';
+import '../shell/main_shell_controller.dart';
 
 /// Notification types
 enum NotificationType {
@@ -96,7 +97,8 @@ class NotificationItem {
   }
 }
 
-/// Controller for the User Notifications screen
+/// Shared controller for Notifications screen
+/// Used by both User and Agent
 class NotificationsController extends GetxController {
   // State
   final RxBool isLoading = false.obs;
@@ -120,6 +122,9 @@ class NotificationsController extends GetxController {
   /// Check if there are unread notifications
   bool get hasUnreadNotifications => notifications.any((n) => !n.isRead);
 
+  /// Get unread count
+  int get unreadCount => notifications.where((n) => !n.isRead).length;
+
   @override
   void onInit() {
     super.onInit();
@@ -133,7 +138,7 @@ class NotificationsController extends GetxController {
       // TODO: Load notifications from API
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Mock data
+      // Mock data - uncomment to test with notifications
       notifications.value = [
         // NotificationItem(
         //   id: '1',
@@ -155,43 +160,10 @@ class NotificationsController extends GetxController {
         //   isRead: false,
         //   isActionRequired: true,
         // ),
-        // NotificationItem(
-        //   id: '3',
-        //   title: 'Service Update',
-        //   description:
-        //       'Surveyor Mr. Karim has updated the Pentagraph Map for "5 Katha Plot in Purbachal"',
-        //   timeAgo: '2h ago',
-        //   type: NotificationType.serviceUpdate,
-        //   isRead: true,
-        // ),
-        // NotificationItem(
-        //   id: '4',
-        //   title: 'Appointment Confirmed',
-        //   description:
-        //       'Site visit confirmed for Feb 10 with Buyer Mr. Rahim for "5 Katha Plot in Purbachal"',
-        //   timeAgo: 'Yesterday',
-        //   type: NotificationType.appointment,
-        //   isRead: true,
-        // ),
-        // NotificationItem(
-        //   id: '5',
-        //   title: 'Profile Verified',
-        //   description:
-        //       'Your profile verification (NID) was successful. You can now post properties.',
-        //   timeAgo: '3d ago',
-        //   type: NotificationType.profileVerified,
-        //   isRead: true,
-        // ),
-        // NotificationItem(
-        //   id: '6',
-        //   title: 'New Land Required Post Added',
-        //   description:
-        //       'New buy post for \'Gulshan Apt B-4\' was listed from a verified buyer',
-        //   timeAgo: '3d ago',
-        //   type: NotificationType.newPost,
-        //   isRead: true,
-        // ),
       ];
+
+      // Sync notification count with shell controller
+      _syncNotificationCount();
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -200,6 +172,14 @@ class NotificationsController extends GetxController {
       );
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Sync notification count with MainShellController
+  void _syncNotificationCount() {
+    if (Get.isRegistered<MainShellController>()) {
+      final shellController = Get.find<MainShellController>();
+      shellController.updateNotificationCount(unreadCount);
     }
   }
 
@@ -223,6 +203,7 @@ class NotificationsController extends GetxController {
         isActionRequired: notification.isActionRequired,
         relatedId: notification.relatedId,
       );
+      _syncNotificationCount();
     }
   }
 
@@ -240,6 +221,7 @@ class NotificationsController extends GetxController {
         relatedId: n.relatedId,
       );
     }).toList();
+    _syncNotificationCount();
   }
 
   /// Handle notification tap
@@ -253,6 +235,11 @@ class NotificationsController extends GetxController {
     Get.toNamed(AppRoutes.PROPERTIES_FOR_SALE);
   }
 
+  /// Go back to previous page
+  void goBack() {
+    Get.back();
+  }
+
   /// Refresh notifications
   Future<void> refresh() async {
     await loadNotifications();
@@ -261,5 +248,6 @@ class NotificationsController extends GetxController {
   /// Clear all notifications (for testing empty state)
   void clearNotifications() {
     notifications.clear();
+    _syncNotificationCount();
   }
 }

@@ -16,10 +16,14 @@ class BudgetRange {
   static String formatBudget(int value) {
     if (value >= 10000000) {
       final cr = value / 10000000;
-      return cr == cr.toInt() ? '${cr.toInt()} Cr' : '${cr.toStringAsFixed(1)} Cr';
+      return cr == cr.toInt()
+          ? '${cr.toInt()} Cr'
+          : '${cr.toStringAsFixed(1)} Cr';
     } else if (value >= 100000) {
       final lac = value / 100000;
-      return lac == lac.toInt() ? '${lac.toInt()} Lac' : '${lac.toStringAsFixed(1)} Lac';
+      return lac == lac.toInt()
+          ? '${lac.toInt()} Lac'
+          : '${lac.toStringAsFixed(1)} Lac';
     } else if (value >= 1000) {
       final k = value / 1000;
       return k == k.toInt() ? '${k.toInt()}K' : '${k.toStringAsFixed(1)}K';
@@ -28,7 +32,8 @@ class BudgetRange {
   }
 
   /// Get label from min and max values
-  String get label => '৳ ${formatBudget(minBudget)} - ৳ ${formatBudget(maxBudget)}';
+  String get label =>
+      '৳ ${formatBudget(minBudget)} - ৳ ${formatBudget(maxBudget)}';
 
   /// Format number with Indian style commas (e.g., 30,00,000)
   static String formatWithCommas(int value) {
@@ -36,7 +41,7 @@ class BudgetRange {
     String numStr = value.toString();
     String result = '';
     int count = 0;
-    
+
     // Process from right to left
     for (int i = numStr.length - 1; i >= 0; i--) {
       if (count == 3) {
@@ -51,28 +56,32 @@ class BudgetRange {
     return result;
   }
 
-  /// Predefined budget values for the slider (in BDT)
+  /// Predefined budget values (kept for backwards compatibility)
   static const List<int> budgetValues = [
     0,
-    100000,      // 1 Lac
-    500000,      // 5 Lac
-    1000000,     // 10 Lac
-    2500000,     // 25 Lac
-    5000000,     // 50 Lac
-    10000000,    // 1 Cr
-    25000000,    // 2.5 Cr
-    50000000,    // 5 Cr
-    100000000,   // 10 Cr
-    250000000,   // 25 Cr
-    500000000,   // 50 Cr
+    100000, // 1 Lac
+    500000, // 5 Lac
+    1000000, // 10 Lac
+    2500000, // 25 Lac
+    5000000, // 50 Lac
+    10000000, // 1 Cr
+    25000000, // 2.5 Cr
+    50000000, // 5 Cr
+    100000000, // 10 Cr
+    250000000, // 25 Cr
+    500000000, // 50 Cr
   ];
 }
 
-/// Budget range selector with two thumbs
+/// Budget range selector - continuous slider
 class BudgetRangeSlider extends StatelessWidget {
   final BudgetRange? selectedRange;
   final ValueChanged<BudgetRange> onChanged;
   final String label;
+
+  // Min and max budget values (0 to 50 Cr)
+  static const double minValue = 0;
+  static const double maxValue = 500000000; // 50 Cr
 
   const BudgetRangeSlider({
     super.key,
@@ -81,36 +90,24 @@ class BudgetRangeSlider extends StatelessWidget {
     this.label = 'Budget Range',
   });
 
-  int _findClosestIndex(int value, List<int> values) {
-    int closestIndex = 0;
-    int minDiff = (values[0] - value).abs();
-    
-    for (int i = 1; i < values.length; i++) {
-      int diff = (values[i] - value).abs();
-      if (diff < minDiff) {
-        minDiff = diff;
-        closestIndex = i;
-      }
-    }
-    return closestIndex;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final values = BudgetRange.budgetValues;
+    // Get current values or defaults
+    double startValue = selectedRange?.minBudget.toDouble() ?? minValue;
+    double endValue = selectedRange?.maxBudget.toDouble() ?? maxValue;
 
-    // Find current indices or defaults
-    int startIndex = 0;
-    int endIndex = values.length - 1;
+    // Clamp values to valid range
+    startValue = startValue.clamp(minValue, maxValue);
+    endValue = endValue.clamp(minValue, maxValue);
 
-    if (selectedRange != null) {
-      startIndex = _findClosestIndex(selectedRange!.minBudget, values);
-      endIndex = _findClosestIndex(selectedRange!.maxBudget, values);
+    // Ensure start <= end
+    if (startValue > endValue) {
+      final temp = startValue;
+      startValue = endValue;
+      endValue = temp;
     }
 
-    final displayLabel = selectedRange != null
-        ? selectedRange!.label
-        : '';
+    final displayLabel = selectedRange != null ? selectedRange!.label : '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +149,7 @@ class BudgetRangeSlider extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 4.w),
           child: Column(
             children: [
-              // Range Slider
+              // Range Slider - continuous (no divisions)
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: AppColors.primary,
@@ -167,19 +164,17 @@ class BudgetRangeSlider extends StatelessWidget {
                   ),
                 ),
                 child: RangeSlider(
-                  values: RangeValues(
-                    startIndex.toDouble(),
-                    endIndex.toDouble(),
-                  ),
-                  min: 0,
-                  max: (values.length - 1).toDouble(),
-                  divisions: values.length - 1,
+                  values: RangeValues(startValue, endValue),
+                  min: minValue,
+                  max: maxValue,
+                  // No divisions - continuous slider
                   onChanged: (rangeValues) {
-                    final minIdx = rangeValues.start.round();
-                    final maxIdx = rangeValues.end.round();
+                    // Round to nearest 1000 for cleaner budget values
+                    final minBudget = (rangeValues.start / 1000).round() * 1000;
+                    final maxBudget = (rangeValues.end / 1000).round() * 1000;
                     onChanged(BudgetRange(
-                      minBudget: values[minIdx],
-                      maxBudget: values[maxIdx],
+                      minBudget: minBudget,
+                      maxBudget: maxBudget,
                     ));
                   },
                 ),
@@ -218,7 +213,8 @@ class BudgetRangeSlider extends StatelessWidget {
                       ),
                       child: Text(
                         selectedRange != null
-                            ? BudgetRange.formatWithCommas(selectedRange!.minBudget)
+                            ? BudgetRange.formatWithCommas(
+                                selectedRange!.minBudget)
                             : '0',
                         style: TextStyle(
                           fontSize: 16.sp,
@@ -252,7 +248,8 @@ class BudgetRangeSlider extends StatelessWidget {
                       ),
                       child: Text(
                         selectedRange != null
-                            ? BudgetRange.formatWithCommas(selectedRange!.maxBudget)
+                            ? BudgetRange.formatWithCommas(
+                                selectedRange!.maxBudget)
                             : '0',
                         style: TextStyle(
                           fontSize: 16.sp,

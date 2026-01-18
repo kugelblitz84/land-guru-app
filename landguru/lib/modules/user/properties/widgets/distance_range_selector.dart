@@ -30,7 +30,7 @@ class DistanceRange {
     return '${formatDistance(minMeters)}-${formatDistance(maxMeters)}';
   }
 
-  /// Predefined distance values for the slider (in meters)
+  /// Predefined distance values for the slider (kept for backwards compatibility)
   static const List<int> distanceValues = [
     0,
     50,
@@ -43,11 +43,14 @@ class DistanceRange {
   ];
 }
 
-/// Distance from road range selector with two thumbs
+/// Distance from road range selector - continuous slider
 class DistanceRangeSelector extends StatelessWidget {
   final DistanceRange? selectedRange;
   final ValueChanged<DistanceRange> onChanged;
   final String label;
+
+  static const double minValue = 0;
+  static const double maxValue = 9999;
 
   const DistanceRangeSelector({
     super.key,
@@ -58,17 +61,19 @@ class DistanceRangeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final values = DistanceRange.distanceValues;
+    // Get current values or defaults
+    double startValue = selectedRange?.minMeters.toDouble() ?? minValue;
+    double endValue = selectedRange?.maxMeters.toDouble() ?? maxValue;
 
-    // Find current indices or defaults
-    int startIndex = 0;
-    int endIndex = values.length - 1;
+    // Clamp values to valid range
+    startValue = startValue.clamp(minValue, maxValue);
+    endValue = endValue.clamp(minValue, maxValue);
 
-    if (selectedRange != null) {
-      final minIdx = values.indexOf(selectedRange!.minMeters);
-      final maxIdx = values.indexOf(selectedRange!.maxMeters);
-      if (minIdx >= 0) startIndex = minIdx;
-      if (maxIdx >= 0) endIndex = maxIdx;
+    // Ensure start <= end
+    if (startValue > endValue) {
+      final temp = startValue;
+      startValue = endValue;
+      endValue = temp;
     }
 
     final displayLabel = selectedRange != null
@@ -110,7 +115,7 @@ class DistanceRangeSelector extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 4.w),
           child: Column(
             children: [
-              // Range Slider
+              // Range Slider - continuous (no divisions)
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: AppColors.primary,
@@ -125,24 +130,18 @@ class DistanceRangeSelector extends StatelessWidget {
                   ),
                 ),
                 child: RangeSlider(
-                  values: RangeValues(
-                    startIndex.toDouble(),
-                    endIndex.toDouble(),
-                  ),
-                  min: 0,
-                  max: (values.length - 1).toDouble(),
-                  divisions: values.length - 1,
+                  values: RangeValues(startValue, endValue),
+                  min: minValue,
+                  max: maxValue,
+                  // No divisions - continuous slider
                   onChanged: (rangeValues) {
-                    final minIdx = rangeValues.start.round();
-                    final maxIdx = rangeValues.end.round();
+                    final minMeters = rangeValues.start.round();
+                    final maxMeters = rangeValues.end.round();
                     onChanged(
                       DistanceRange(
-                        label: DistanceRange.getLabel(
-                          values[minIdx],
-                          values[maxIdx],
-                        ),
-                        minMeters: values[minIdx],
-                        maxMeters: values[maxIdx],
+                        label: DistanceRange.getLabel(minMeters, maxMeters),
+                        minMeters: minMeters,
+                        maxMeters: maxMeters,
                       ),
                     );
                   },

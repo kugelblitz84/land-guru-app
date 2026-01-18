@@ -160,9 +160,9 @@ class CreateBuyPostInfoView extends GetView<CreateBuyPostController> {
                     // Land size range slider
                     Obx(
                       () => LandSizeRangeSlider(
-                        selectedRange: controller.landSizeRange.value,
+                        currentValue: controller.landSizeValue.value,
                         currentUnit: controller.landSizeUnit.value,
-                        onChanged: controller.updateLandSizeRange,
+                        onChanged: controller.updateLandSizeFromSlider,
                         label: 'Select range',
                       ),
                     ),
@@ -199,9 +199,9 @@ class CreateBuyPostInfoView extends GetView<CreateBuyPostController> {
                     // Plot size range slider
                     Obx(
                       () => LandSizeRangeSlider(
-                        selectedRange: controller.plotSizeRange.value,
+                        currentValue: controller.plotSizeValue.value,
                         currentUnit: controller.plotSizeUnit.value,
-                        onChanged: controller.updatePlotSizeRange,
+                        onChanged: controller.updatePlotSizeFromSlider,
                         label: 'Select range',
                       ),
                     ),

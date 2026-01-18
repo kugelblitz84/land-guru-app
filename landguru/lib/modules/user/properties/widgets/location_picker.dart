@@ -11,6 +11,7 @@ class LocationData {
   final String? wardNo;
   final String? postalCode;
   final String? fullAddress;
+  final bool? isFullAddressCustomized;
 
   const LocationData({
     this.division,
@@ -20,6 +21,7 @@ class LocationData {
     this.wardNo,
     this.postalCode,
     this.fullAddress,
+    this.isFullAddressCustomized,
   });
 
   LocationData copyWith({
@@ -30,6 +32,7 @@ class LocationData {
     String? wardNo,
     String? postalCode,
     String? fullAddress,
+    bool? isFullAddressCustomized,
   }) {
     return LocationData(
       division: division ?? this.division,
@@ -39,7 +42,32 @@ class LocationData {
       wardNo: wardNo ?? this.wardNo,
       postalCode: postalCode ?? this.postalCode,
       fullAddress: fullAddress ?? this.fullAddress,
+      isFullAddressCustomized: isFullAddressCustomized ?? this.isFullAddressCustomized,
     );
+  }
+
+  /// Generate default address from location components
+  String get generatedAddress {
+    final parts = <String>[];
+    if (wardNo != null && wardNo!.isNotEmpty) {
+      parts.add('Ward No. $wardNo');
+    }
+    if (pouroshova != null && pouroshova!.isNotEmpty) {
+      parts.add(pouroshova!);
+    }
+    if (upazila != null && upazila!.isNotEmpty) {
+      parts.add(upazila!);
+    }
+    if (district != null && district!.isNotEmpty) {
+      parts.add(district!);
+    }
+    if (postalCode != null && postalCode!.isNotEmpty) {
+      parts.add(postalCode!);
+    }
+    if (division != null && division!.isNotEmpty) {
+      parts.add(division!);
+    }
+    return parts.join(', ');
   }
 
   String get formattedAddress {
@@ -76,7 +104,7 @@ class LocationData {
 }
 
 /// Location picker with cascading dropdowns
-class LocationPicker extends StatelessWidget {
+class LocationPicker extends StatefulWidget {
   final LocationData location;
   final ValueChanged<LocationData> onChanged;
   final bool showFullAddress;
@@ -87,6 +115,15 @@ class LocationPicker extends StatelessWidget {
     required this.onChanged,
     this.showFullAddress = true,
   });
+
+  @override
+  State<LocationPicker> createState() => _LocationPickerState();
+}
+
+class _LocationPickerState extends State<LocationPicker> {
+  late TextEditingController _fullAddressController;
+  late TextEditingController _postalCodeController;
+  bool _isUserEditing = false;
 
   // Mock data - replace with actual API data
   static const List<String> divisions = [
@@ -148,6 +185,56 @@ class LocationPicker extends StatelessWidget {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _fullAddressController = TextEditingController(
+      text: widget.location.fullAddress ?? widget.location.generatedAddress,
+    );
+    _postalCodeController = TextEditingController(
+      text: widget.location.postalCode ?? '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(LocationPicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update postal code controller if changed externally
+    if (widget.location.postalCode != oldWidget.location.postalCode) {
+      _postalCodeController.text = widget.location.postalCode ?? '';
+    }
+    // Auto-update full address if location fields changed and user hasn't customized
+    if (!_isUserEditing && widget.location.isFullAddressCustomized != true) {
+      final newGeneratedAddress = widget.location.generatedAddress;
+      if (newGeneratedAddress.isNotEmpty && 
+          _fullAddressController.text != newGeneratedAddress &&
+          _fullAddressController.text == oldWidget.location.generatedAddress) {
+        _fullAddressController.text = newGeneratedAddress;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _fullAddressController.dispose();
+    _postalCodeController.dispose();
+    super.dispose();
+  }
+
+  void _updateLocationAndAddress(LocationData newLocation) {
+    // Generate address from location components
+    final generatedAddress = newLocation.generatedAddress;
+    
+    // If user hasn't customized the address, auto-populate
+    if (widget.location.isFullAddressCustomized != true) {
+      _fullAddressController.text = generatedAddress;
+    }
+    
+    widget.onChanged(newLocation.copyWith(
+      fullAddress: _fullAddressController.text,
+    ));
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,11 +243,11 @@ class LocationPicker extends StatelessWidget {
         _buildDropdown(
           label: 'Division',
           isRequired: true,
-          value: location.division,
+          value: widget.location.division,
           items: divisions,
           hint: 'Select your division',
           onChanged: (value) {
-            onChanged(LocationData(division: value));
+            _updateLocationAndAddress(LocationData(division: value));
           },
         ),
         SizedBox(height: 16.h),
@@ -169,12 +256,12 @@ class LocationPicker extends StatelessWidget {
         _buildDropdown(
           label: 'District',
           isRequired: true,
-          value: location.district,
+          value: widget.location.district,
           items: districts,
           hint: 'Select your district',
           onChanged: (value) {
-            onChanged(
-              location.copyWith(
+            _updateLocationAndAddress(
+              widget.location.copyWith(
                 district: value,
                 upazila: null,
                 pouroshova: null,
@@ -189,12 +276,12 @@ class LocationPicker extends StatelessWidget {
         _buildDropdown(
           label: 'Upazila',
           isRequired: true,
-          value: location.upazila,
+          value: widget.location.upazila,
           items: upazilas,
           hint: 'Select your upazila',
           onChanged: (value) {
-            onChanged(
-              location.copyWith(upazila: value, pouroshova: null, wardNo: null),
+            _updateLocationAndAddress(
+              widget.location.copyWith(upazila: value, pouroshova: null, wardNo: null),
             );
           },
         ),
@@ -204,11 +291,11 @@ class LocationPicker extends StatelessWidget {
         _buildDropdown(
           label: 'Pouroshova/City Corp/Union',
           isRequired: true,
-          value: location.pouroshova,
+          value: widget.location.pouroshova,
           items: pouroshovas,
           hint: 'Select your Pouroshova/City Corp',
           onChanged: (value) {
-            onChanged(location.copyWith(pouroshova: value, wardNo: null));
+            _updateLocationAndAddress(widget.location.copyWith(pouroshova: value, wardNo: null));
           },
         ),
         SizedBox(height: 16.h),
@@ -217,42 +304,117 @@ class LocationPicker extends StatelessWidget {
         _buildDropdown(
           label: 'Ward No',
           isRequired: false,
-          value: location.wardNo,
+          value: widget.location.wardNo,
           items: wardNos,
           hint: 'Select Ward No',
           onChanged: (value) {
-            onChanged(location.copyWith(wardNo: value));
+            _updateLocationAndAddress(widget.location.copyWith(wardNo: value));
           },
         ),
         SizedBox(height: 16.h),
 
         // Postal Code
-        _buildTextField(
-          label: 'Postal Code',
-          isRequired: false,
-          value: location.postalCode ?? '',
-          hint: 'Enter Postal Code',
-          onChanged: (value) {
-            onChanged(location.copyWith(postalCode: value));
-          },
-        ),
+        _buildPostalCodeField(),
 
-        if (showFullAddress) ...[
+        if (widget.showFullAddress) ...[
           SizedBox(height: 16.h),
 
           // Full Address
-          _buildTextField(
-            label: 'Full Address',
-            isRequired: true,
-            value: location.fullAddress ?? '',
-            hint:
-                'Holding ###, Ward #10, Bogura Pourashava, Bogura Sadar, Bogura-5800, Rajshahi',
-            onChanged: (value) {
-              onChanged(location.copyWith(fullAddress: value));
-            },
-            maxLines: 2,
-          ),
+          _buildFullAddressField(),
         ],
+      ],
+    );
+  }
+
+  Widget _buildPostalCodeField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Postal Code',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            color: AppColors.black,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        TextFormField(
+          controller: _postalCodeController,
+          keyboardType: TextInputType.number,
+          onChanged: (value) {
+            _updateLocationAndAddress(widget.location.copyWith(postalCode: value));
+          },
+          style: TextStyle(fontSize: 16.sp, color: AppColors.grey900),
+          decoration: InputDecoration(
+            hintText: 'Enter Postal Code',
+            hintStyle: TextStyle(fontSize: 14.sp, color: AppColors.grey400),
+            filled: true,
+            fillColor: AppColors.grey100,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 16.h,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFullAddressField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Full Address',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+                color: AppColors.black,
+              ),
+            ),
+            Text(
+              ' *',
+              style: TextStyle(fontSize: 14.sp, color: AppColors.error),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        TextFormField(
+          controller: _fullAddressController,
+          maxLines: 2,
+          onTap: () {
+            _isUserEditing = true;
+          },
+          onChanged: (value) {
+            widget.onChanged(widget.location.copyWith(
+              fullAddress: value,
+              isFullAddressCustomized: true,
+            ));
+          },
+          style: TextStyle(fontSize: 16.sp, color: AppColors.grey900),
+          decoration: InputDecoration(
+            hintText:
+                'Holding ###, Ward #10, Bogura Pourashava, Bogura Sadar, Bogura-5800, Rajshahi',
+            hintStyle: TextStyle(fontSize: 14.sp, color: AppColors.grey400),
+            filled: true,
+            fillColor: AppColors.grey100,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 16.h,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -313,56 +475,4 @@ class LocationPicker extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField({
-    required String label,
-    required bool isRequired,
-    required String value,
-    required String hint,
-    required ValueChanged<String> onChanged,
-    int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                color: AppColors.black,
-              ),
-            ),
-            if (isRequired)
-              Text(
-                ' *',
-                style: TextStyle(fontSize: 14.sp, color: AppColors.error),
-              ),
-          ],
-        ),
-        SizedBox(height: 8.h),
-        TextFormField(
-          initialValue: value,
-          maxLines: maxLines,
-          onChanged: onChanged,
-          style: TextStyle(fontSize: 16.sp, color: AppColors.grey900),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(fontSize: 14.sp, color: AppColors.grey400),
-            filled: true,
-            fillColor: AppColors.grey100,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: 16.h,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
