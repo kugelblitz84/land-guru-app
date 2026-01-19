@@ -3,12 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../user/home/home_view.dart';
-import '../../user/home/home_controller.dart';
 import '../../user/profile/profile_view.dart';
-import '../../user/profile/profile_controller.dart';
 import '../../user/properties/properties_view.dart';
-import '../../user/properties/properties_controller.dart';
-import '../shell/main_shell_controller.dart';
 import '../shell/main_shell_wrapper.dart';
 import 'user_bottom_nav_controller.dart';
 
@@ -20,14 +16,6 @@ class UserBottomNavView extends GetView<UserBottomNavController> {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize shared shell controller
-    Get.put<MainShellController>(MainShellController(), permanent: true);
-
-    // Ensure tab-specific controllers are available
-    Get.lazyPut<HomeController>(() => HomeController());
-    Get.lazyPut<ProfileController>(() => ProfileController());
-    Get.lazyPut<PropertiesController>(() => PropertiesController());
-
     return Scaffold(
       body: Obx(
         () => IndexedStack(

@@ -62,6 +62,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/images/Maps/
     - assets/images/Properties demo/
     - assets/images/Properties Listing - For Sale Images/
     - assets/Logos/

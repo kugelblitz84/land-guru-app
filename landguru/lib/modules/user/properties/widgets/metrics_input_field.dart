@@ -2,18 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/enums/land_unit.dart';
 
-/// Land measurement units
-enum LandUnit {
-  sqft('Sqft'),
-  katha('Katha'),
-  decimal('Decimal'),
-  acre('Acre'),
-  bigha('Bigha');
-
-  final String label;
-  const LandUnit(this.label);
-}
+export '../../../../core/enums/land_unit.dart';
 
 /// Metrics input field with unit dropdown
 class MetricsInputField extends StatelessWidget {
@@ -64,50 +55,65 @@ class MetricsInputField extends StatelessWidget {
             // Number input
             Expanded(
               flex: 2,
-              child: TextFormField(
-                controller: controller,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                ],
-                validator: validator,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-                decoration: InputDecoration(
-                  hintText: hintText ?? '0.000',
-                  hintStyle: TextStyle(
+              child: Material(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                elevation: 3,
+                shadowColor: AppColors.black.withAlpha(100),
+
+                //shadowColor: AppColors.black.withAlpha(50),
+                child: TextFormField(
+                  controller: controller,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  ],
+                  validator: validator,
+                  style: TextStyle(
                     fontSize: 16.sp,
-                    color: AppColors.grey400,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
                   ),
-                  filled: true,
-                  fillColor: AppColors.grey100,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 16.h,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide(
-                      color: AppColors.primary,
-                      width: 1.5,
+                  decoration: InputDecoration(
+                    hintText: hintText ?? '0.000',
+                    hintStyle: TextStyle(
+                      fontSize: 16.sp,
+                      color: AppColors.grey400,
                     ),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide(color: AppColors.error),
+                    filled: true,
+                    fillColor: AppColors.white,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 16.h,
+                    ),
+                    // boxShadow: [
+                    //   BoxShadow(
+                    //     color: AppColors.black.withAlpha(25),
+                    //     blurRadius: 10,
+                    //     offset: const Offset(0, 4),
+                    //   ),
+                    // ],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(
+                        color: AppColors.primary,
+                        width: 1.5,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: AppColors.error),
+                    ),
                   ),
                 ),
               ),
@@ -117,10 +123,17 @@ class MetricsInputField extends StatelessWidget {
             // Unit dropdown
             Expanded(
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
                 decoration: BoxDecoration(
-                  color: AppColors.grey100,
+                  color: AppColors.white,
                   borderRadius: BorderRadius.circular(12.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.black.withAlpha(25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<LandUnit>(

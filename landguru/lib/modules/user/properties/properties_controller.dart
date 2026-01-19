@@ -1,193 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_routes.dart';
+import '../../../core/enums/property_type.dart';
+import '../../../core/enums/post_type.dart';
+import '../../../core/models/property_listing.dart';
+import 'wanted_and_needs/models/offer_status.dart';
+import 'wanted_and_needs/models/land_wanted_post.dart';
 import 'widgets/distance_range_selector.dart';
 import 'widgets/properties_filter_sheet.dart';
 
-/// Property type enum
-enum PropertyType { plainLand, waterLand, flat }
-
-/// Post type enum
-enum PostType { sellPost, buyPost }
-
-/// Offer status enum for land wanted posts
-enum OfferStatus {
-  none,
-  pendingBuyerReview, // Waiting for buyer to accept/reject
-  buyerAcceptedPendingAdmin, // Buyer accepted, waiting for admin review
-  buyerAcceptedAppointment, // Buyer accepted, admin approved, appointment scheduled
-  rejected,
-}
-
-/// Model for property listing
-class PropertyListing {
-  final String id;
-  final String postId; // e.g., "#POST-1042"
-  final String title;
-  final String location;
-  final String price;
-  final PropertyType propertyType;
-  final PostType postType;
-  final bool isVerified;
-  final bool isLocked;
-  final String? imageUrl;
-
-  // Additional details for property details page
-  final String? description;
-  final String? sellableLandAmount;
-  final String? plotSize;
-  final String? distanceFromRoad;
-  final String? postedBy;
-  final String? postedTime;
-  final List<String>? propertyPhotos;
-
-  PropertyListing({
-    required this.id,
-    this.postId = '',
-    required this.title,
-    required this.location,
-    required this.price,
-    required this.propertyType,
-    required this.postType,
-    this.isVerified = false,
-    this.isLocked = true,
-    this.imageUrl,
-    this.description,
-    this.sellableLandAmount,
-    this.plotSize,
-    this.distanceFromRoad,
-    this.postedBy,
-    this.postedTime,
-    this.propertyPhotos,
-  });
-
-  String get propertyTypeLabel {
-    switch (propertyType) {
-      case PropertyType.plainLand:
-        return 'Plain Land';
-      case PropertyType.waterLand:
-        return 'Water Land';
-      case PropertyType.flat:
-        return 'Flat';
-    }
-  }
-
-  String get postTypeLabel {
-    switch (postType) {
-      case PostType.sellPost:
-        return 'Sell Post';
-      case PostType.buyPost:
-        return 'Buy Post';
-    }
-  }
-
-  Color get propertyTypeColor {
-    switch (propertyType) {
-      case PropertyType.plainLand:
-        return const Color(0xFF2E7D32); // Green
-      case PropertyType.waterLand:
-        return const Color(0xFF0288D1); // Blue
-      case PropertyType.flat:
-        return const Color(0xFF3B6CF5); // Primary blue
-    }
-  }
-
-  /// Convert to Map for passing as route arguments
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'postId': postId,
-      'title': title,
-      'location': location,
-      'price': price,
-      'propertyType': propertyType.name,
-      'postType': postType.name,
-      'isVerified': isVerified,
-      'isLocked': isLocked,
-      'imageUrl': imageUrl,
-      'description': description,
-      'sellableLandAmount': sellableLandAmount,
-      'plotSize': plotSize,
-      'distanceFromRoad': distanceFromRoad,
-      'postedBy': postedBy,
-      'postedTime': postedTime,
-      'propertyPhotos': propertyPhotos,
-    };
-  }
-}
-
-/// Model for land wanted/needs post
-class LandWantedPost {
-  final String id;
-  final String postId; // e.g., "#BUY-1042"
-  final String title;
-  final String postedBy;
-  final String postedTime;
-  final String preferredLocation;
-  final String propertyType;
-  final String requiredLandSize;
-  final String requiredPlotSize;
-  final String distanceFromRoad;
-  final String budgetRange;
-  final OfferStatus offerStatus;
-  final bool hasOffered;
-
-  LandWantedPost({
-    required this.id,
-    required this.postId,
-    required this.title,
-    required this.postedBy,
-    required this.postedTime,
-    required this.preferredLocation,
-    required this.propertyType,
-    required this.requiredLandSize,
-    required this.requiredPlotSize,
-    required this.distanceFromRoad,
-    required this.budgetRange,
-    this.offerStatus = OfferStatus.none,
-    this.hasOffered = false,
-  });
-
-  /// Primary status badge label
-  String get offerStatusLabel {
-    switch (offerStatus) {
-      case OfferStatus.none:
-        return '';
-      case OfferStatus.pendingBuyerReview:
-        return 'Pending Buyer Review';
-      case OfferStatus.buyerAcceptedPendingAdmin:
-        return 'Buyer accepted your offer';
-      case OfferStatus.buyerAcceptedAppointment:
-        return 'Buyer accepted your offer';
-      case OfferStatus.rejected:
-        return 'Offer Rejected';
-    }
-  }
-
-  /// Primary status badge color
-  Color get offerStatusColor {
-    switch (offerStatus) {
-      case OfferStatus.none:
-        return const Color(0xFF9E9E9E);
-      case OfferStatus.pendingBuyerReview:
-        return const Color(0xFF9E9E9E);
-      case OfferStatus.buyerAcceptedPendingAdmin:
-        return const Color(0xFF4CAF50);
-      case OfferStatus.buyerAcceptedAppointment:
-        return const Color(0xFF4CAF50);
-      case OfferStatus.rejected:
-        return const Color(0xFFF44336);
-    }
-  }
-
-  /// Whether to show "View Appointment" button
-  bool get showViewAppointment =>
-      offerStatus == OfferStatus.buyerAcceptedAppointment;
-
-  /// Whether to show "Pending Admin Review" button
-  bool get showPendingAdminReview =>
-      offerStatus == OfferStatus.buyerAcceptedPendingAdmin;
-}
+// Re-export for backward compatibility
+export '../../../core/enums/property_type.dart';
+export '../../../core/enums/post_type.dart';
+export '../../../core/models/property_listing.dart';
+export 'wanted_and_needs/models/offer_status.dart';
+export 'wanted_and_needs/models/land_wanted_post.dart';
 
 /// Controller for the Properties listing screen
 /// Handles: For Sale, Land Wanted/Needs, My Posts tabs
@@ -587,8 +414,15 @@ class PropertiesController extends GetxController {
           requiredPlotSize: 'Min 5 Katha',
           distanceFromRoad: '200m-750m',
           budgetRange: '৳ 30,00,000 - ৳ 40,00,000',
+          description:
+              'Client is looking for a ready flat in Dhanmondi area. Must have parking and be above 2nd floor.',
           hasOffered: true,
           offerStatus: OfferStatus.buyerAcceptedAppointment,
+          offeredPropertyTitle: 'Modern Duplex Villa',
+          offeredPropertyPrice: '40,00,000',
+          offeredPropertyType: PropertyType.flat,
+          offeredPropertyImageUrl:
+              'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
         ),
         LandWantedPost(
           id: '2',
@@ -603,12 +437,19 @@ class PropertiesController extends GetxController {
           requiredPlotSize: 'Min 5 Katha',
           distanceFromRoad: '200m-750m',
           budgetRange: '৳ 30,00,000 - ৳ 40,00,000',
+          description:
+              'Looking for agricultural land suitable for farming. Must have water access and good soil quality.',
           hasOffered: true,
           offerStatus: OfferStatus.buyerAcceptedPendingAdmin,
+          offeredPropertyTitle: '5 Katha Plot in Purbachal',
+          offeredPropertyPrice: '2,00,00,000',
+          offeredPropertyType: PropertyType.plainLand,
+          offeredPropertyImageUrl:
+              'assets/images/Properties Listing - For Sale Images/5 katha plot in purbachal.jpg',
         ),
         LandWantedPost(
           id: '3',
-          postId: '#BUY-1042',
+          postId: '#BUY-1044',
           title: 'Luxury Flat',
           postedBy: 'Mr. Karim',
           postedTime: '2h ago',
@@ -619,8 +460,15 @@ class PropertiesController extends GetxController {
           requiredPlotSize: 'Min 5 Katha',
           distanceFromRoad: '200m-750m',
           budgetRange: '৳ 30,00,000 - ৳ 40,00,000',
+          description:
+              'Need a luxury flat with modern amenities, preferably in a gated community with 24/7 security.',
           hasOffered: true,
           offerStatus: OfferStatus.pendingBuyerReview,
+          offeredPropertyTitle: 'Gazipur Water Zone',
+          offeredPropertyPrice: '95,12,000',
+          offeredPropertyType: PropertyType.waterLand,
+          offeredPropertyImageUrl:
+              'assets/images/Properties Listing - For Sale Images/Gazipur Water Zone.jpg',
         ),
       ];
 
@@ -642,14 +490,10 @@ class PropertiesController extends GetxController {
 
   /// Handle "I have this property" button
   void onIHaveThisProperty(LandWantedPost post) {
-    // Navigate to create offer or show popup
-    Get.snackbar(
-      'Make Offer',
-      'Offer feature for "${post.title}"',
-      snackPosition: SnackPosition.BOTTOM,
+    Get.toNamed(
+      AppRoutes.CREATE_OFFER_INFO,
+      arguments: {'postId': post.id, 'postTitle': post.title},
     );
-    // TODO: Navigate to offer creation flow
-    // Get.toNamed(AppRoutes.CREATE_OFFER, arguments: {'postId': post.id});
   }
 
   /// Handle "View Appointment" button

@@ -21,8 +21,11 @@ import '../modules/auth/forgot_password/views/forgot_password_success_view.dart'
 // User Main Pages
 import '../modules/shared/bottom_nav/user_bottom_nav_view.dart';
 import '../modules/shared/bottom_nav/user_bottom_nav_controller.dart';
+import '../modules/shared/shell/main_shell_controller.dart';
 import '../modules/user/home/home_view.dart';
 import '../modules/user/home/home_controller.dart';
+import '../modules/user/profile/profile_controller.dart';
+import '../modules/user/properties/properties_controller.dart';
 
 // Shared Notifications (used by both User and Agent)
 import '../modules/shared/notifications/notifications_view.dart';
@@ -37,13 +40,21 @@ import '../modules/user/properties/create_sell_post/create_sell_post_view.dart';
 import '../modules/user/properties/create_sell_post/create_sell_post_controller.dart';
 
 // Create Offer
-import '../modules/user/properties/create_offer/create_offer_view.dart';
-import '../modules/user/properties/create_offer/create_offer_controller.dart';
+import '../modules/user/properties/wanted_and_needs/create_offer/create_offer_view.dart';
+import '../modules/user/properties/wanted_and_needs/create_offer/create_offer_controller.dart';
+
+// Offer from Existing
+import '../modules/user/properties/wanted_and_needs/offer_from_existing/offer_from_existing_view.dart';
+import '../modules/user/properties/wanted_and_needs/offer_from_existing/offer_from_existing_controller.dart';
 
 // Property Details
 import '../modules/user/properties/property_details/property_details_controller.dart';
 import '../modules/user/properties/property_details/property_details_locked_view.dart';
 import '../modules/user/properties/property_details/property_details_unlocked_view.dart';
+
+// Sell Post Details (My Posts)
+import '../modules/user/properties/my_posts/sell_posts/sell_post_details_view.dart';
+import '../modules/user/properties/my_posts/sell_posts/sell_post_details_controller.dart';
 
 /// Contains all GetPage configurations for the application.
 /// Each page includes its route, page widget, and binding for dependency injection.
@@ -124,8 +135,14 @@ class AppPages {
       name: AppRoutes.MAIN,
       page: () => const UserBottomNavView(),
       binding: BindingsBuilder(() {
+        // Initialize shared shell controller
+        Get.put<MainShellController>(MainShellController(), permanent: true);
+
+        // Ensure tab-specific controllers are available
         Get.lazyPut<UserBottomNavController>(() => UserBottomNavController());
         Get.lazyPut<HomeController>(() => HomeController());
+        Get.lazyPut<ProfileController>(() => ProfileController());
+        Get.lazyPut<PropertiesController>(() => PropertiesController());
       }),
     ),
 
@@ -171,14 +188,18 @@ class AppPages {
       name: AppRoutes.PROPERTY_DETAILS_LOCKED,
       page: () => const PropertyDetailsLockedView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<PropertyDetailsController>(() => PropertyDetailsController());
+        Get.lazyPut<PropertyDetailsController>(
+          () => PropertyDetailsController(),
+        );
       }),
     ),
     GetPage(
       name: AppRoutes.PROPERTY_DETAILS_UNLOCKED,
       page: () => const PropertyDetailsUnlockedView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<PropertyDetailsController>(() => PropertyDetailsController());
+        Get.lazyPut<PropertyDetailsController>(
+          () => PropertyDetailsController(),
+        );
       }),
     ),
     GetPage(
@@ -205,17 +226,21 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.MY_SELL_POST_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with MySellPostDetailsPage()
+      page: () => const SellPostDetailsView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<MySellPostDetailsController>(() => MySellPostDetailsController());
+        Get.lazyPut<SellPostDetailsController>(
+          () => SellPostDetailsController(),
+        );
       }),
     ),
     GetPage(
       name: AppRoutes.MY_SELL_POST_QUOTED_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with MySellPostQuotedDetailsPage()
-      binding: BindingsBuilder(() {}),
+      page: () => const SellPostDetailsView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<SellPostDetailsController>(
+          () => SellPostDetailsController(),
+        );
+      }),
     ),
     GetPage(
       name: AppRoutes.MY_BUY_POSTS,
@@ -287,7 +312,15 @@ class AppPages {
       name: AppRoutes.CREATE_OFFER_INFO,
       page: () => const CreateOfferView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<CreateOfferController>(() => CreateOfferController());
+        final args = Get.arguments as Map<String, dynamic>?;
+        final controller = CreateOfferController();
+        if (args != null) {
+          controller.initWithBuyPost(
+            args['postId'] ?? '',
+            args['postTitle'] ?? '',
+          );
+        }
+        Get.put<CreateOfferController>(controller);
       }),
     ),
     GetPage(
@@ -304,10 +337,11 @@ class AppPages {
     // OFFER FROM EXISTING
     GetPage(
       name: AppRoutes.OFFER_FROM_EXISTING_LIST,
-      page: () =>
-          const Placeholder(), // TODO: Replace with OfferFromExistingListPage()
+      page: () => const OfferFromExistingView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<OfferFromExistingController>(() => OfferFromExistingController());
+        Get.lazyPut<OfferFromExistingController>(
+          () => OfferFromExistingController(),
+        );
       }),
     ),
     GetPage(

@@ -16,10 +16,12 @@ export 'properties/property_details/property_details_unlocked_view.dart';
 // My Posts
 export 'properties/my_posts/my_posts_controller.dart';
 export 'properties/my_posts/my_posts_view.dart';
-export 'properties/my_posts/sell_post_details_controller.dart';
-export 'properties/my_posts/sell_post_details_view.dart';
 export 'properties/my_posts/buy_post_details_controller.dart';
 export 'properties/my_posts/buy_post_details_view.dart';
+
+// Sell Post Details (My Posts)
+export 'properties/my_posts/sell_posts/sell_post_details_controller.dart';
+export 'properties/my_posts/sell_posts/sell_post_details_view.dart';
 
 // Create Sell Post
 export 'properties/create_sell_post/create_sell_post_controller.dart';
@@ -34,14 +36,17 @@ export 'properties/create_buy_post/views/create_buy_post_info_view.dart';
 export 'properties/create_buy_post/views/create_buy_post_review_view.dart';
 
 // Create Offer
-export 'properties/create_offer/create_offer_controller.dart';
-export 'properties/create_offer/views/create_offer_info_view.dart';
-export 'properties/create_offer/views/create_offer_media_view.dart';
-export 'properties/create_offer/views/create_offer_review_view.dart';
+export 'properties/wanted_and_needs/create_offer/create_offer_controller.dart';
+export 'properties/wanted_and_needs/create_offer/views/create_offer_info_view.dart';
+export 'properties/wanted_and_needs/create_offer/views/create_offer_media_view.dart';
+export 'properties/wanted_and_needs/create_offer/views/create_offer_review_view.dart';
 
 // Offer from Existing
-export 'properties/offer_from_existing/offer_from_existing_controller.dart';
-export 'properties/offer_from_existing/offer_from_existing_view.dart';
+export 'properties/wanted_and_needs/offer_from_existing/offer_from_existing_controller.dart';
+export 'properties/wanted_and_needs/offer_from_existing/offer_from_existing_view.dart';
+
+// Land Wanted Offer Popup
+export 'properties/wanted_and_needs/land_wanted_offer_popup.dart';
 
 // Appointments
 export 'appointments/appointments_controller.dart';

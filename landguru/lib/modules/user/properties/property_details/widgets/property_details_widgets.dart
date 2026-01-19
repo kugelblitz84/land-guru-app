@@ -252,8 +252,9 @@ class PropertyDetailRowWithAction extends StatelessWidget {
   final String? iconPrefix;
   final String label;
   final String value;
-  final String actionText;
-  final VoidCallback onAction;
+  final String? actionText;
+  final VoidCallback? onAction;
+  final Widget? actionWidget;
   final Map<String, double>? conversions;
   final String? currentUnit;
   final String? imageAsset;
@@ -265,12 +266,16 @@ class PropertyDetailRowWithAction extends StatelessWidget {
     this.iconPrefix,
     required this.label,
     required this.value,
-    required this.actionText,
-    required this.onAction,
+    this.actionText,
+    this.onAction,
+    this.actionWidget,
     this.conversions,
     this.currentUnit,
     this.imageAsset,
-  });
+  }) : assert(
+         actionWidget != null || (actionText != null && onAction != null),
+         'Either actionWidget or both actionText and onAction must be provided',
+       );
 
   String _formatValue(double val) {
     if (val >= 1000) {
@@ -338,17 +343,20 @@ class PropertyDetailRowWithAction extends StatelessWidget {
                       color: AppColors.grey900,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: onAction,
-                    child: Text(
-                      actionText,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
+                  if (actionWidget != null)
+                    actionWidget!
+                  else
+                    GestureDetector(
+                      onTap: onAction,
+                      child: Text(
+                        actionText!,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
               SizedBox(height: 4.h),
@@ -404,7 +412,7 @@ class PropertyDetailRowWithAction extends StatelessWidget {
   }
 }
 
-/// Land Shape Section with Map placeholder
+/// Land Shape Section with Map image
 class LandShapeSection extends StatelessWidget {
   const LandShapeSection({super.key});
 
@@ -429,86 +437,41 @@ class LandShapeSection extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
         Container(
-          height: 180.h,
+          height: 200.h,
           width: double.infinity,
           decoration: BoxDecoration(
             color: AppColors.grey100,
             borderRadius: BorderRadius.circular(12.r),
             border: Border.all(color: AppColors.grey200),
           ),
-          child: Stack(
-            children: [
-              // Map placeholder with labels
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'HAMMADPUR',
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        color: AppColors.grey500,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(11.r),
+            child: Image.asset(
+              'assets/images/Maps/LandShape.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.map_outlined,
+                        size: 48.sp,
+                        color: AppColors.grey400,
                       ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Text(
-                          'DHANMONDI',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: AppColors.grey500,
-                          ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'Land Shape Map',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.grey500,
                         ),
-                        Container(
-                          width: 60.w,
-                          height: 60.h,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: AppColors.primary,
-                              width: 2,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'TEJGAON',
-                              style: TextStyle(
-                                fontSize: 8.sp,
-                                color: AppColors.grey600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          'RAMPURA',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: AppColors.grey500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'MOTIJHEEL',
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        color: AppColors.grey500,
                       ),
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'OLD DHAKA',
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        color: AppColors.grey500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],

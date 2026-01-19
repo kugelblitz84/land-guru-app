@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../widgets/metrics_conversion_row.dart';
 import 'models/property_details_models.dart';
 import 'property_details_controller.dart';
 import 'widgets/property_details_widgets.dart';
@@ -115,8 +116,12 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
                               imageAsset: 'assets/Logos/Land&plotSize.png',
                               label: 'Sellable Land Amount',
                               value: convertedValue,
-                              actionText: 'Change Metrics',
-                              onAction: controller.changeMetrics,
+                              actionWidget: ChangeMetricsPopup(
+                                selectedUnit: controller.selectedLandUnit.value,
+                                onUnitChanged: (unit) {
+                                  controller.selectedLandUnit.value = unit;
+                                },
+                              ),
                               conversions: conversionsMap,
                               currentUnit: currentUnit,
                             );
@@ -146,8 +151,12 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
                               imageAsset: 'assets/Logos/Land&plotSize.png',
                               label: 'Plot Size',
                               value: convertedValue,
-                              actionText: 'Change Metrics',
-                              onAction: controller.changeMetrics,
+                              actionWidget: ChangeMetricsPopup(
+                                selectedUnit: controller.selectedLandUnit.value,
+                                onUnitChanged: (unit) {
+                                  controller.selectedLandUnit.value = unit;
+                                },
+                              ),
                               conversions: conversionsMap,
                               currentUnit: currentUnit,
                             );
@@ -249,9 +258,9 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: AppColors.grey50,
+        color: AppColors.primary.withAlpha(15),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.grey200),
+        border: Border.all(color: AppColors.primary.withAlpha(30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,8 +268,16 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
           // Header
           Row(
             children: [
-              Icon(Icons.lock, color: AppColors.primary, size: 20.sp),
-              SizedBox(width: 8.w),
+              Container(
+                width: 32.w,
+                height: 32.h,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(30),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Icon(Icons.lock, color: AppColors.primary, size: 18.sp),
+              ),
+              SizedBox(width: 10.w),
               Text(
                 'Locked Features',
                 style: TextStyle(
@@ -285,7 +302,7 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
             return _buildLockedFeatureItem(feature);
           }),
 
-          SizedBox(height: 16.h),
+          SizedBox(height: 20.h),
 
           // Unlock button
           SizedBox(
@@ -295,20 +312,21 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.white,
-                padding: EdgeInsets.symmetric(vertical: 14.h),
+                padding: EdgeInsets.symmetric(vertical: 16.h),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(30.r),
                 ),
+                elevation: 0,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.lock_open, size: 18.sp),
+                  Icon(Icons.lock, size: 18.sp),
                   SizedBox(width: 8.w),
                   Text(
                     'Unlock All Features at ৳4000',
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 15.sp,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -317,13 +335,19 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
             ),
           ),
 
-          SizedBox(height: 12.h),
+          SizedBox(height: 14.h),
 
           // Info text
-          Text(
-            'Pay one time fee to unlock the above features.\nAll post will be unlocked afterwards',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
+          Center(
+            child: Text(
+              'Pay one time fee to unlock the above features.\nAll post will be unlocked afterwards',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppColors.grey600,
+                height: 1.5,
+              ),
+            ),
           ),
         ],
       ),
@@ -332,12 +356,19 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
 
   Widget _buildLockedFeatureItem(LockedFeature feature) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(12.w),
+      margin: EdgeInsets.only(bottom: 10.h),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: AppColors.grey200),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.grey300.withAlpha(30),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -345,7 +376,7 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
             width: 36.w,
             height: 36.h,
             decoration: BoxDecoration(
-              color: feature.iconColor.withAlpha(30),
+              color: feature.iconColor.withAlpha(20),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(feature.icon, color: feature.iconColor, size: 20.sp),
@@ -363,10 +394,14 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
                     color: AppColors.grey900,
                   ),
                 ),
-                SizedBox(height: 2.h),
+                SizedBox(height: 3.h),
                 Text(
                   feature.subtitle,
-                  style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppColors.grey500,
+                    height: 1.3,
+                  ),
                 ),
               ],
             ),
@@ -861,11 +896,13 @@ class _RequestAppointmentDialogState extends State<RequestAppointmentDialog> {
 class RequestSubmittedDialog extends StatelessWidget {
   final PropertyDetails property;
   final VoidCallback onClose;
+  final bool isOfferFlow;
 
   const RequestSubmittedDialog({
     super.key,
     required this.property,
     required this.onClose,
+    this.isOfferFlow = false,
   });
 
   @override
@@ -906,7 +943,7 @@ class RequestSubmittedDialog extends StatelessWidget {
 
             // Title
             Text(
-              'Request Submitted',
+              isOfferFlow ? 'Offer Submitted' : 'Request Submitted',
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w600,
@@ -918,7 +955,9 @@ class RequestSubmittedDialog extends StatelessWidget {
 
             // Subtitle
             Text(
-              'You will be notified for appointment soon.\nIt may take up to 1-3 business days for reviewing',
+              isOfferFlow
+                  ? 'Your offer post will be visible to the buyer soon.'
+                  : 'You will be notified for appointment soon.\nIt may take up to 1-3 business days for reviewing',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13.sp, color: AppColors.primary),
             ),

@@ -97,22 +97,18 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
                   ),
 
                   // Details with Change Metrics
-                  _buildDetailRowWithAction(
-                    context: context,
-                    imageAsset: 'assets/Logos/Land&plotSize.png',
-                    label: 'Sellable Land Amount',
-                    value: controller.formattedLandAmount.isNotEmpty
-                        ? controller.formattedLandAmount
-                        : 'Not specified',
-                    onAction: () async {
-                      final newUnit = await ChangeMetricsSheet.show(
-                        context,
-                        currentUnit: controller.landAmountUnit.value,
-                      );
-                      if (newUnit != null) {
-                        controller.changeLandAmountUnit(newUnit);
-                      }
-                    },
+                  Obx(
+                    () => _buildDetailRowWithAction(
+                      imageAsset: 'assets/Logos/Land&plotSize.png',
+                      label: 'Sellable Land Amount',
+                      value: controller.formattedLandAmount.isNotEmpty
+                          ? controller.formattedLandAmount
+                          : 'Not specified',
+                      actionWidget: ChangeMetricsPopup(
+                        selectedUnit: controller.landAmountUnit.value,
+                        onUnitChanged: controller.changeLandAmountUnit,
+                      ),
+                    ),
                   ),
                   SizedBox(height: 16.h),
 
@@ -127,19 +123,13 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
                     return Column(
                       children: [
                         _buildDetailRowWithAction(
-                          context: context,
                           imageAsset: 'assets/Logos/Land&plotSize.png',
                           label: 'Plot Size',
                           value: plotSize,
-                          onAction: () async {
-                            final newUnit = await ChangeMetricsSheet.show(
-                              context,
-                              currentUnit: unit,
-                            );
-                            if (newUnit != null) {
-                              controller.changePlotSizeUnit(newUnit);
-                            }
-                          },
+                          actionWidget: ChangeMetricsPopup(
+                            selectedUnit: unit,
+                            onUnitChanged: controller.changePlotSizeUnit,
+                          ),
                         ),
                         SizedBox(height: 16.h),
                       ],
@@ -463,11 +453,10 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
   }
 
   Widget _buildDetailRowWithAction({
-    required BuildContext context,
     IconData? icon,
     required String label,
     required String value,
-    required VoidCallback onAction,
+    required Widget actionWidget,
     String? imageAsset,
   }) {
     return Row(
@@ -500,17 +489,7 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
                     label,
                     style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
                   ),
-                  GestureDetector(
-                    onTap: onAction,
-                    child: Text(
-                      'Change Metrics',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
+                  actionWidget,
                 ],
               ),
               SizedBox(height: 2.h),

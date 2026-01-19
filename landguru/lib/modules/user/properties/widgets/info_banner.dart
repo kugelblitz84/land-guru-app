@@ -21,7 +21,7 @@ class InfoBanner extends StatelessWidget {
   Color get _backgroundColor {
     switch (type) {
       case InfoBannerType.info:
-        return AppColors.primary.withAlpha(15);
+        return AppColors.primary.withAlpha(30);
       case InfoBannerType.warning:
         return AppColors.warning.withAlpha(15);
       case InfoBannerType.success:
@@ -62,6 +62,7 @@ class InfoBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
+
       decoration: BoxDecoration(
         color: _backgroundColor,
         borderRadius: BorderRadius.circular(12.r),
@@ -76,7 +77,7 @@ class InfoBanner extends StatelessWidget {
             child: Text(
               message,
               style: TextStyle(
-                fontSize: 14.sp,
+                fontSize: 12.sp,
                 color: AppColors.black,
                 height: 1.5,
               ),

@@ -62,11 +62,18 @@ class PropertyTypeSelector extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.grey300,
+                  color: isSelected ? AppColors.primary : AppColors.white,
                   borderRadius: BorderRadius.circular(8.r),
                   // border: Border.all(
                   //   color: isSelected ? AppColors.primary : AppColors.grey500,
                   // ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.black.withAlpha(25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Text(
                   type.label,

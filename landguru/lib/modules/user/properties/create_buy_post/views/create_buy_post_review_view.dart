@@ -197,22 +197,15 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
           // Required Land Size
           Obx(
             () => _buildDetailRowWithAction(
-              context: context,
               imageAsset: 'assets/Logos/Land&plotSize.png',
               label: 'Required Land Size',
               value: controller.formattedLandSize.isNotEmpty
                   ? 'Min ${controller.formattedLandSize}'
                   : 'Not specified',
-              actionLabel: 'Change Metrics',
-              onAction: () async {
-                final newUnit = await ChangeMetricsSheet.show(
-                  context,
-                  currentUnit: controller.landSizeUnit.value,
-                );
-                if (newUnit != null) {
-                  controller.changeLandSizeUnit(newUnit);
-                }
-              },
+              actionWidget: ChangeMetricsPopup(
+                selectedUnit: controller.landSizeUnit.value,
+                onUnitChanged: controller.changeLandSizeUnit,
+              ),
             ),
           ),
           SizedBox(height: 16.h),
@@ -220,26 +213,20 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
           // Required Plot Size
           Obx(() {
             final plotSize = controller.formattedPlotSize;
+            final unit = controller.plotSizeUnit.value;
             if (plotSize.isEmpty) {
               return const SizedBox.shrink();
             }
             return Column(
               children: [
                 _buildDetailRowWithAction(
-                  context: context,
                   imageAsset: 'assets/Logos/Land&plotSize.png',
                   label: 'Required Plot Size',
                   value: 'Min $plotSize',
-                  actionLabel: 'Change Metrics',
-                  onAction: () async {
-                    final newUnit = await ChangeMetricsSheet.show(
-                      context,
-                      currentUnit: controller.plotSizeUnit.value,
-                    );
-                    if (newUnit != null) {
-                      controller.changePlotSizeUnit(newUnit);
-                    }
-                  },
+                  actionWidget: ChangeMetricsPopup(
+                    selectedUnit: unit,
+                    onUnitChanged: controller.changePlotSizeUnit,
+                  ),
                 ),
                 SizedBox(height: 16.h),
               ],
@@ -360,13 +347,11 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
   }
 
   Widget _buildDetailRowWithAction({
-    required BuildContext context,
     IconData? icon,
     required String label,
     required String value,
     Color? iconColor,
-    required String actionLabel,
-    required VoidCallback onAction,
+    required Widget actionWidget,
     String? imageAsset,
   }) {
     return Row(
@@ -412,17 +397,7 @@ class CreateBuyPostReviewView extends GetView<CreateBuyPostController> {
                     label,
                     style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
                   ),
-                  GestureDetector(
-                    onTap: onAction,
-                    child: Text(
-                      actionLabel,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
+                  actionWidget,
                 ],
               ),
               SizedBox(height: 2.h),

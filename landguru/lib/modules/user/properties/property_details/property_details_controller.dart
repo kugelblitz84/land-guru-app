@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../../../../routes/app_routes.dart';
 import '../widgets/metrics_input_field.dart';
 import '../widgets/metrics_conversion_row.dart';
-import '../widgets/change_metrics_sheet.dart';
 import 'models/property_details_models.dart';
 
 /// Controller for Property Details screen (Locked and Unlocked views)
@@ -13,6 +12,11 @@ class PropertyDetailsController extends GetxController {
   final RxBool isLocked = true.obs;
   final RxBool hasRequestedAppointment = false.obs;
   final RxBool isDescriptionExpanded = false.obs;
+
+  // Offer from Existing flow state
+  final RxBool isOfferFromExisting = false.obs;
+  final RxString buyPostId = ''.obs;
+  final RxString pageTitle = 'Property Details'.obs;
 
   // Property data
   final Rxn<PropertyDetails> property = Rxn<PropertyDetails>();
@@ -161,6 +165,11 @@ class PropertyDetailsController extends GetxController {
     try {
       propertyId.value = args['id'] ?? '';
       isLocked.value = args['isLocked'] ?? true;
+
+      // Check if coming from "Offer from Existing" flow
+      isOfferFromExisting.value = args['isOfferFromExisting'] ?? false;
+      buyPostId.value = args['buyPostId'] ?? '';
+      pageTitle.value = args['pageTitle'] ?? 'Property Details';
 
       // Map propertyType string to display label
       String propertyTypeLabel = 'Flat';
@@ -329,24 +338,30 @@ class PropertyDetailsController extends GetxController {
     }
   }
 
+  /// Submit offer (for Offer from Existing flow)
+  /// This skips the appointment dialog and directly submits the offer
+  Future<bool> submitOffer() async {
+    try {
+      // TODO: Call API to submit offer to the buy post
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Update state
+      hasRequestedAppointment.value = true;
+
+      return true;
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to submit offer',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+  }
+
   /// Navigate back
   void goBack() {
     Get.back();
-  }
-
-  /// Change metrics (for land size display)
-  Future<void> changeMetrics() async {
-    final context = Get.context;
-    if (context == null) return;
-
-    final result = await ChangeMetricsSheet.show(
-      context,
-      currentUnit: selectedLandUnit.value,
-    );
-
-    if (result != null) {
-      selectedLandUnit.value = result;
-    }
   }
 
   /// Parse land amount string to get numeric value
