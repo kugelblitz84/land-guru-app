@@ -42,4 +42,5 @@ class AppColors {
   static const Color background = Color(0xFFF8F9FA);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color scaffoldBackground = Color(0xFFF5F5F5);
+  static const Color propertyDetailsBackground = Color(0xFFDBE7FF);
 }

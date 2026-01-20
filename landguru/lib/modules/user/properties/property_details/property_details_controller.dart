@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../routes/app_routes.dart';
+import '../../../../core/services/nested_navigation_service.dart';
 import '../widgets/metrics_input_field.dart';
 import '../widgets/metrics_conversion_row.dart';
 import 'models/property_details_models.dart';
@@ -302,15 +302,35 @@ class PropertyDetailsController extends GetxController {
   /// Unlock property (pay to see owner details)
   Future<void> unlockProperty() async {
     // TODO: Implement actual payment flow
-    // For now, simulate unlock by navigating to unlocked view
+    // For now, simulate unlock by changing the locked state
 
     if (property.value == null) return;
 
-    // Navigate to unlocked view with same property data but isLocked = false
-    Get.offNamed(
-      AppRoutes.PROPERTY_DETAILS_UNLOCKED,
-      arguments: property.value!.toMap(overrideLocked: false),
+    // Simply change the locked state - the view will react automatically
+    isLocked.value = false;
+
+    // Update the property object as well
+    final updatedProperty = PropertyDetails(
+      id: property.value!.id,
+      postId: property.value!.postId,
+      title: property.value!.title,
+      price: property.value!.price,
+      propertyType: property.value!.propertyType,
+      postType: property.value!.postType,
+      isVerified: property.value!.isVerified,
+      isLocked: false,
+      description: property.value!.description,
+      location: property.value!.location,
+      sellableLandAmount: property.value!.sellableLandAmount,
+      plotSize: property.value!.plotSize,
+      distanceFromRoad: property.value!.distanceFromRoad,
+      landShapeImageUrl: property.value!.landShapeImageUrl,
+      propertyPhotos: property.value!.propertyPhotos,
+      postedBy: property.value!.postedBy,
+      postedTime: property.value!.postedTime,
+      hasRequestedAppointment: property.value!.hasRequestedAppointment,
     );
+    property.value = updatedProperty;
   }
 
   /// Submit appointment request
@@ -359,9 +379,9 @@ class PropertyDetailsController extends GetxController {
     }
   }
 
-  /// Navigate back
+  /// Navigate back (uses nested navigation if available)
   void goBack() {
-    Get.back();
+    NestedNavigationService.back();
   }
 
   /// Parse land amount string to get numeric value

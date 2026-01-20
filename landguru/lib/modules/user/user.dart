@@ -10,8 +10,7 @@ export 'home/home_view.dart';
 export 'properties/properties_controller.dart';
 export 'properties/properties_view.dart';
 export 'properties/property_details/property_details_controller.dart';
-export 'properties/property_details/property_details_locked_view.dart';
-export 'properties/property_details/property_details_unlocked_view.dart';
+export 'properties/property_details/property_details_view.dart';
 
 // My Posts
 export 'properties/my_posts/my_posts_controller.dart';

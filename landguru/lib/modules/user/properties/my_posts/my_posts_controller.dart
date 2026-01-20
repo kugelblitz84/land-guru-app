@@ -1,9 +1,12 @@
 import 'package:get/get.dart';
 import '../../../../core/enums/property_type.dart';
 import '../../../../core/enums/post_type.dart';
+import '../../../../core/services/nested_navigation_service.dart';
 import '../../../../routes/app_routes.dart';
 import 'models/my_post.dart';
 import 'models/my_post_status.dart';
+import 'sell_posts/sell_post_details_controller.dart';
+import 'sell_posts/sell_post_details_view.dart';
 
 export 'models/my_post.dart';
 export 'models/my_post_status.dart';
@@ -323,16 +326,19 @@ class MyPostsController extends GetxController {
     await loadPosts();
   }
 
-  /// Navigate to post details
+  /// Navigate to post details (uses nested navigation to keep bottom nav visible)
   void goToPostDetails(MyPost post) {
     if (post.postType == PostType.sellPost) {
       // Navigate to Sell Post Details with status
-      Get.toNamed(
-        AppRoutes.MY_SELL_POST_DETAILS,
+      NestedNavigationService.to(
+        const SellPostDetailsView(),
         arguments: {
           'postId': post.id,
           'status': post.status.name, // pending, quoted, active, draft
         },
+        binding: BindingsBuilder(() {
+          Get.lazyPut<SellPostDetailsController>(() => SellPostDetailsController());
+        }),
       );
     } else {
       // TODO: Navigate to Buy Post Details

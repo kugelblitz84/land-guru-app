@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../core/services/nested_navigation_service.dart';
+import '../../widgets/metrics_conversion_row.dart';
 import '../models/my_post_status.dart';
 import 'models/sell_post_models.dart';
+import 'widgets/quoted_popups.dart';
 
 /// Controller for Sell Post Details screen
 /// Handles all 4 states: Pending, Quoted, Active, Draft
@@ -18,8 +20,8 @@ class SellPostDetailsController extends GetxController {
   // Feature expansion state (for Active status)
   final RxMap<int, bool> featureExpansionState = <int, bool>{}.obs;
 
-  // Selected land unit for metrics
-  final RxString selectedLandUnit = 'Katha'.obs;
+  // Selected land unit for metrics conversion
+  final Rx<LandUnit> selectedLandUnit = LandUnit.katha.obs;
 
   @override
   void onInit() {
@@ -324,9 +326,40 @@ class SellPostDetailsController extends GetxController {
     return featureExpansionState[index] ?? false;
   }
 
-  /// Change land unit for metrics
-  void changeLandUnit(String unit) {
-    selectedLandUnit.value = unit;
+  /// Get land value from string
+  double _getLandValueInKatha(String value) {
+    final cleaned = value
+        .replaceAll(RegExp(r'[Kk]atha'), '')
+        .replaceAll(RegExp(r'[Dd]ecimal'), '')
+        .replaceAll(RegExp(r'[Aa]cre'), '')
+        .replaceAll(RegExp(r'[Bb]igha'), '')
+        .replaceAll(RegExp(r'[Ss]qft'), '')
+        .trim();
+    return double.tryParse(cleaned) ?? 0;
+  }
+
+  /// Get converted land amount based on selected unit
+  String getConvertedLandAmount(String value) {
+    final kathaValue = _getLandValueInKatha(value);
+    final sqft = LandUnitConverter.toSqft(kathaValue, LandUnit.katha);
+    final converted = LandUnitConverter.fromSqft(sqft, selectedLandUnit.value);
+
+    String formattedNumber;
+    if (converted >= 1) {
+      formattedNumber = converted.toStringAsFixed(
+        converted.truncateToDouble() == converted ? 0 : 2,
+      );
+    } else {
+      formattedNumber = converted.toStringAsFixed(4);
+    }
+    return '$formattedNumber ${selectedLandUnit.value.label}';
+  }
+
+  /// Get all conversions for a land value
+  Map<LandUnit, double> getAllConversions(String value) {
+    final kathaValue = _getLandValueInKatha(value);
+    final sqft = LandUnitConverter.toSqft(kathaValue, LandUnit.katha);
+    return LandUnitConverter.getAllConversions(sqft, LandUnit.sqft);
   }
 
   // === Status-specific Actions ===
@@ -358,26 +391,72 @@ class SellPostDetailsController extends GetxController {
 
   /// Request requote (for Quoted status)
   void requestRequote() {
-    // TODO: Navigate to requote flow
-    Get.snackbar(
-      'Requote',
-      'Request requote',
-      snackPosition: SnackPosition.BOTTOM,
+    final post = postDetails.value;
+    if (post == null || post.billBreakdown == null) return;
+
+    RequoteDialog.show(
+      Get.context!,
+      billBreakdown: post.billBreakdown!,
+      onSubmit: (mandatoryFee, optionalFee) async {
+        // Close the requote dialog
+        Get.back();
+
+        // Simulate API call
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Show success dialog
+        final totalRequoted = mandatoryFee + optionalFee;
+        RequoteSubmittedDialog.show(
+          Get.context!,
+          propertyTitle: post.title,
+          requotedAmount: totalRequoted,
+          requotedTimes: post.billBreakdown!.quotationRevisions,
+          onClose: () {
+            Get.back();
+            // Refresh post details to reflect changes
+            loadPostDetails();
+          },
+        );
+      },
     );
   }
 
   /// Pay and activate post (for Quoted status)
   Future<void> payAndActivate() async {
-    // TODO: Navigate to payment flow
-    Get.snackbar(
-      'Payment',
-      'Navigate to payment',
-      snackPosition: SnackPosition.BOTTOM,
+    final post = postDetails.value;
+    if (post == null || post.billBreakdown == null) return;
+
+    PayAndActivateDialog.show(
+      Get.context!,
+      totalPayable: post.billBreakdown!.totalPayable,
+      quotationRevisions: post.billBreakdown!.quotationRevisions,
+      onPay: (paymentMethod) async {
+        // Close the payment dialog
+        Get.back();
+
+        // Simulate payment processing
+        await Future.delayed(const Duration(milliseconds: 800));
+
+        // Show payment confirmed dialog
+        PaymentConfirmedDialog.show(
+          Get.context!,
+          amount: post.billBreakdown!.totalPayable,
+          propertyTitle: post.title,
+          propertyPrice: post.price,
+          propertyType: post.propertyType,
+          imageUrl: post.imageUrl,
+          onClose: () {
+            Get.back();
+            // Navigate back to my posts or refresh
+            loadPostDetails();
+          },
+        );
+      },
     );
   }
 
-  /// Navigate back
+  /// Navigate back (uses nested navigation if available)
   void goBack() {
-    Get.back();
+    NestedNavigationService.back();
   }
 }

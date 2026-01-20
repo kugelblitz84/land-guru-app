@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/services/nested_navigation_service.dart';
 import '../../../routes/app_routes.dart';
 import '../../../core/enums/property_type.dart';
 import '../../../core/enums/post_type.dart';
@@ -8,6 +9,8 @@ import 'wanted_and_needs/models/offer_status.dart';
 import 'wanted_and_needs/models/land_wanted_post.dart';
 import 'widgets/distance_range_selector.dart';
 import 'widgets/properties_filter_sheet.dart';
+import 'property_details/property_details_controller.dart';
+import 'property_details/property_details_view.dart';
 
 // Re-export for backward compatibility
 export '../../../core/enums/property_type.dart';
@@ -320,13 +323,18 @@ class PropertiesController extends GetxController {
     );
   }
 
-  /// Navigate to property details
+  /// Navigate to property details (uses nested navigation to keep bottom nav visible)
   void goToPropertyDetails(PropertyListing property) {
-    final route = property.isLocked
-        ? AppRoutes.PROPERTY_DETAILS_LOCKED
-        : AppRoutes.PROPERTY_DETAILS_UNLOCKED;
-
-    Get.toNamed(route, arguments: property.toMap());
+    // The unified PropertyDetailsView handles both locked and unlocked states
+    NestedNavigationService.to(
+      const PropertyDetailsView(),
+      arguments: property.toMap(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<PropertyDetailsController>(
+          () => PropertyDetailsController(),
+        );
+      }),
+    );
   }
 
   /// Navigate to land wanted details

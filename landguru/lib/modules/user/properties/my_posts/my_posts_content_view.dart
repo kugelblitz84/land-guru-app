@@ -5,6 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/enums/property_type.dart';
 import 'models/my_post.dart';
 import 'my_posts_controller.dart';
+import 'buy_posts/buy_posts_content_view.dart';
+import 'offered_posts/offered_posts_content_view.dart';
 
 /// My Posts content view with sub-tabs, filters, and post cards
 class MyPostsContentView extends StatelessWidget {
@@ -25,13 +27,135 @@ class MyPostsContentView extends StatelessWidget {
 
         SizedBox(height: 12.h),
 
-        // Filter chips (only for Sell Posts and Buy Posts)
-        Obx(() {
-          if (controller.subTabIndex.value < 2) {
-            return _buildFilterChips(controller);
-          }
-          return const SizedBox.shrink();
-        }),
+        // Content based on selected sub-tab
+        Expanded(
+          child: Obx(() {
+            switch (controller.subTabIndex.value) {
+              case 0:
+                // Sell Posts - use existing content
+                return _buildSellPostsContent(controller);
+              case 1:
+                // Buy Posts - use dedicated view
+                return const BuyPostsContentView();
+              case 2:
+                // Offered Posts - use dedicated view
+                return const OfferedPostsContentView();
+              default:
+                return _buildSellPostsContent(controller);
+            }
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubTabs(MyPostsController controller) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Container(
+        padding: EdgeInsets.all(4.w),
+        decoration: BoxDecoration(
+          color: AppColors.grey200,
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Obx(
+          () => Row(
+            children: [
+              // Sell Posts tab
+              Expanded(
+                child: _buildSubTab(
+                  controller: controller,
+                  label: 'Sell Posts',
+                  index: 0,
+                  isSelected: controller.subTabIndex.value == 0,
+                ),
+              ),
+
+              // Buy Posts tab with badge
+              Expanded(
+                child: _buildSubTab(
+                  controller: controller,
+                  label: 'Buy Posts',
+                  index: 1,
+                  isSelected: controller.subTabIndex.value == 1,
+                  badgeCount: controller.buyPostsBadgeCount.value,
+                ),
+              ),
+
+              // Offered Posts tab
+              Expanded(
+                child: _buildSubTab(
+                  controller: controller,
+                  label: 'Offered Posts',
+                  index: 2,
+                  isSelected: controller.subTabIndex.value == 2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubTab({
+    required MyPostsController controller,
+    required String label,
+    required int index,
+    required bool isSelected,
+    int badgeCount = 0,
+  }) {
+    return GestureDetector(
+      onTap: () => controller.changeSubTab(index),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected ? AppColors.white : AppColors.grey600,
+                ),
+              ),
+              if (badgeCount > 0) ...[
+                SizedBox(width: 6.w),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.white : AppColors.error,
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Text(
+                    '$badgeCount',
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? AppColors.primary : AppColors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build Sell Posts content (existing implementation)
+  Widget _buildSellPostsContent(MyPostsController controller) {
+    return Column(
+      children: [
+        // Filter chips
+        _buildFilterChips(controller),
 
         SizedBox(height: 12.h),
 
@@ -70,104 +194,6 @@ class MyPostsContentView extends StatelessWidget {
     );
   }
 
-  Widget _buildSubTabs(MyPostsController controller) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Obx(
-        () => Row(
-          children: [
-            // Sell Posts tab
-            _buildSubTab(
-              controller: controller,
-              label: 'Sell Posts',
-              index: 0,
-              isSelected: controller.subTabIndex.value == 0,
-            ),
-            SizedBox(width: 8.w),
-
-            // Buy Posts tab with badge
-            _buildSubTab(
-              controller: controller,
-              label: 'Buy Posts',
-              index: 1,
-              isSelected: controller.subTabIndex.value == 1,
-              badgeCount: controller.buyPostsBadgeCount.value,
-            ),
-            SizedBox(width: 8.w),
-
-            // Offered Posts tab
-            _buildSubTab(
-              controller: controller,
-              label: 'Offered Posts',
-              index: 2,
-              isSelected: controller.subTabIndex.value == 2,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSubTab({
-    required MyPostsController controller,
-    required String label,
-    required int index,
-    required bool isSelected,
-    int badgeCount = 0,
-  }) {
-    return GestureDetector(
-      onTap: () => controller.changeSubTab(index),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.white,
-          borderRadius: BorderRadius.circular(8.r),
-          // border: Border.all(
-          //   color: isSelected ? AppColors.primary : AppColors.grey300,
-          // ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.black.withAlpha(25),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? AppColors.white : AppColors.grey700,
-              ),
-            ),
-            if (badgeCount > 0) ...[
-              SizedBox(width: 6.w),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.white : AppColors.error,
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Text(
-                  '$badgeCount',
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isSelected ? AppColors.primary : AppColors.white,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildFilterChips(MyPostsController controller) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -190,9 +216,6 @@ class MyPostsContentView extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isSelected ? AppColors.primary : AppColors.white,
                     borderRadius: BorderRadius.circular(8.r),
-                    // border: Border.all(
-                    //   color: isSelected ? AppColors.primary : AppColors.grey300,
-                    // ),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.black.withAlpha(25),

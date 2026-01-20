@@ -27,6 +27,10 @@ import '../modules/user/home/home_controller.dart';
 import '../modules/user/profile/profile_controller.dart';
 import '../modules/user/properties/properties_controller.dart';
 
+// User Appointments
+import '../modules/user/appointments/appointments_view.dart';
+import '../modules/user/appointments/appointments_controller.dart';
+
 // Shared Notifications (used by both User and Agent)
 import '../modules/shared/notifications/notifications_view.dart';
 import '../modules/shared/notifications/notifications_controller.dart';
@@ -49,12 +53,22 @@ import '../modules/user/properties/wanted_and_needs/offer_from_existing/offer_fr
 
 // Property Details
 import '../modules/user/properties/property_details/property_details_controller.dart';
-import '../modules/user/properties/property_details/property_details_locked_view.dart';
-import '../modules/user/properties/property_details/property_details_unlocked_view.dart';
+import '../modules/user/properties/property_details/property_details_view.dart';
 
 // Sell Post Details (My Posts)
 import '../modules/user/properties/my_posts/sell_posts/sell_post_details_view.dart';
 import '../modules/user/properties/my_posts/sell_posts/sell_post_details_controller.dart';
+
+// Buy Post Offer Details (My Posts)
+import '../modules/user/properties/my_posts/buy_posts/buy_post_offer_details_view.dart';
+
+// Offered Post Details (My Posts)
+import '../modules/user/properties/my_posts/offered_posts/offered_post_details_view.dart';
+
+// My Deals
+import '../modules/user/my_deals/my_deals_view.dart';
+import '../modules/user/my_deals/my_deals_controller.dart';
+import '../modules/user/my_deals/sold_deal_details_view.dart';
 
 /// Contains all GetPage configurations for the application.
 /// Each page includes its route, page widget, and binding for dependency injection.
@@ -184,9 +198,20 @@ class AppPages {
           const Placeholder(), // TODO: Replace with PropertiesWantedPage()
       binding: BindingsBuilder(() {}),
     ),
+    // Unified Property Details (handles both locked and unlocked states)
+    GetPage(
+      name: AppRoutes.PROPERTY_DETAILS,
+      page: () => const PropertyDetailsView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<PropertyDetailsController>(
+          () => PropertyDetailsController(),
+        );
+      }),
+    ),
+    // Legacy routes - redirect to unified view
     GetPage(
       name: AppRoutes.PROPERTY_DETAILS_LOCKED,
-      page: () => const PropertyDetailsLockedView(),
+      page: () => const PropertyDetailsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut<PropertyDetailsController>(
           () => PropertyDetailsController(),
@@ -195,7 +220,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.PROPERTY_DETAILS_UNLOCKED,
-      page: () => const PropertyDetailsUnlockedView(),
+      page: () => const PropertyDetailsView(),
       binding: BindingsBuilder(() {
         Get.lazyPut<PropertyDetailsController>(
           () => PropertyDetailsController(),
@@ -257,14 +282,18 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.MY_BUY_POST_OFFER_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with MyBuyPostOfferDetailsPage()
+      page: () => const BuyPostOfferDetailsView(),
       binding: BindingsBuilder(() {}),
     ),
     GetPage(
       name: AppRoutes.MY_OFFERED_POSTS,
       page: () =>
           const Placeholder(), // TODO: Replace with MyOfferedPostsPage()
+      binding: BindingsBuilder(() {}),
+    ),
+    GetPage(
+      name: AppRoutes.MY_OFFERED_POST_DETAILS,
+      page: () => const OfferedPostDetailsView(),
       binding: BindingsBuilder(() {}),
     ),
 
@@ -354,9 +383,9 @@ class AppPages {
     // APPOINTMENTS
     GetPage(
       name: AppRoutes.APPOINTMENTS,
-      page: () => const Placeholder(), // TODO: Replace with AppointmentsPage()
+      page: () => const AppointmentsView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<AppointmentsController>(() => AppointmentsController());
+        Get.lazyPut<AppointmentsController>(() => AppointmentsController());
       }),
     ),
     GetPage(
@@ -381,36 +410,35 @@ class AppPages {
     // MY DEALS
     GetPage(
       name: AppRoutes.MY_DEALS,
-      page: () => const Placeholder(), // TODO: Replace with MyDealsPage()
+      page: () => const MyDealsView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<MyDealsController>(() => MyDealsController());
+        Get.lazyPut<MyDealsController>(() => MyDealsController());
       }),
     ),
     GetPage(
       name: AppRoutes.MY_DEALS_SOLD,
-      page: () => const Placeholder(), // TODO: Replace with MyDealsSoldPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.MY_DEALS_SOLD_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with MyDealsSoldDetailsPage()
+      page: () => const MyDealsView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<DealDetailsController>(() => DealDetailsController());
+        Get.lazyPut<MyDealsController>(() => MyDealsController());
       }),
     ),
     GetPage(
-      name: AppRoutes.MY_DEALS_BOUGHT,
-      page: () => const Placeholder(), // TODO: Replace with MyDealsBoughtPage()
+      name: AppRoutes.MY_DEALS_SOLD_DETAILS,
+      page: () => const SoldDealDetailsView(),
       binding: BindingsBuilder(() {}),
+    ),
+    GetPage(
+      name: AppRoutes.MY_DEALS_BOUGHT,
+      page: () => const MyDealsView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<MyDealsController>(() => MyDealsController());
+      }),
     ),
     GetPage(
       name: AppRoutes.MY_DEALS_BOUGHT_DETAILS,
       page: () =>
-          const Placeholder(), // TODO: Replace with MyDealsBoughtDetailsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<DealDetailsController>(() => DealDetailsController());
-      }),
+          const SoldDealDetailsView(), // Reuse for now, can create separate view later
+      binding: BindingsBuilder(() {}),
     ),
 
     // PROFILE

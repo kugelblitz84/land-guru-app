@@ -53,11 +53,15 @@ class AppRoutes {
   /// Land Wanted/Needs tab - Browse buy requests from buyers
   static const PROPERTIES_WANTED = '/properties/wanted';
 
-  /// Property details - Locked view (before unlocking features)
+  /// Property details - Unified view (handles both locked and unlocked states)
+  /// Pass property data as argument with 'isLocked' flag
+  static const PROPERTY_DETAILS = '/properties/details';
+
+  /// Property details - Locked view (legacy route, redirects to unified view)
   /// Pass property ID as argument
   static const PROPERTY_DETAILS_LOCKED = '/properties/details/locked';
 
-  /// Property details - Unlocked view (after paying to unlock features)
+  /// Property details - Unlocked view (legacy route, redirects to unified view)
   /// Pass property ID as argument
   static const PROPERTY_DETAILS_UNLOCKED = '/properties/details/unlocked';
 
@@ -93,8 +97,15 @@ class AppRoutes {
   static const MY_BUY_POST_OFFER_DETAILS =
       '/properties/my-posts/buy/offer/details';
 
+  /// Shorthand alias for buy post offer details
+  static const BUY_POST_OFFER_DETAILS = MY_BUY_POST_OFFER_DETAILS;
+
   /// My Offered Posts listing (properties offered in response to buy requests)
   static const MY_OFFERED_POSTS = '/properties/my-posts/offered';
+
+  /// My Offered Post details (view offer made by user)
+  /// Pass offered post data as argument
+  static const MY_OFFERED_POST_DETAILS = '/properties/my-posts/offered/details';
 
   // CREATE SELL POST FLOW (4 Steps)
   /// Step 1: Basic property info (title, description, type, location, pricing)

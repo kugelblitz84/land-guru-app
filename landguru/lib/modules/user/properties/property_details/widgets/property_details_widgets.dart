@@ -11,32 +11,35 @@ class PropertyTitleSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          property.title,
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.grey900,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            property.title,
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: AppColors.grey900,
+            ),
           ),
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          '৳ ${property.price}',
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.grey900,
+          SizedBox(height: 4.h),
+          Text(
+            '৳ ${property.price}',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.grey900,
+            ),
           ),
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          property.postId,
-          style: TextStyle(fontSize: 13.sp, color: AppColors.grey500),
-        ),
-      ],
+          SizedBox(height: 4.h),
+          Text(
+            property.postId,
+            style: TextStyle(fontSize: 13.sp, color: AppColors.grey500),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -54,27 +57,30 @@ class PropertyTagsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8.w,
-      runSpacing: 8.h,
-      children: [
-        // Property Type
-        _buildTag(property.propertyType, property.propertyTypeColor),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12.w),
+      child: Wrap(
+        spacing: 8.w,
+        runSpacing: 8.h,
+        children: [
+          // Property Type
+          _buildTag(property.propertyType, property.propertyTypeColor),
 
-        // Post Type
-        _buildTag(property.postType, AppColors.grey600),
+          // Post Type
+          _buildTag(property.postType, AppColors.grey600),
 
-        // Verified
-        if (property.isVerified)
-          _buildTag('Verified', AppColors.success, icon: Icons.check_circle),
+          // Verified
+          if (property.isVerified)
+            _buildTag('Verified', AppColors.success, icon: Icons.check_circle),
 
-        // Locked/Unlocked
-        _buildTag(
-          isLocked ? 'Locked' : 'Unlocked',
-          isLocked ? AppColors.grey600 : AppColors.success,
-          icon: isLocked ? Icons.lock : Icons.lock_open,
-        ),
-      ],
+          // Locked/Unlocked
+          _buildTag(
+            isLocked ? 'Locked' : 'Unlocked',
+            isLocked ? AppColors.grey600 : AppColors.success,
+            icon: isLocked ? Icons.lock : Icons.lock_open,
+          ),
+        ],
+      ),
     );
   }
 
@@ -121,41 +127,44 @@ class PropertyDescriptionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Description',
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.grey900,
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Text(
-          description,
-          maxLines: isExpanded ? null : 3,
-          overflow: isExpanded ? null : TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 13.sp,
-            color: AppColors.grey600,
-            height: 1.5,
-          ),
-        ),
-        SizedBox(height: 4.h),
-        GestureDetector(
-          onTap: onToggle,
-          child: Text(
-            isExpanded ? 'Show Less' : 'Read More',
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Description',
             style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w500,
-              color: AppColors.primary,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.grey900,
             ),
           ),
-        ),
-      ],
+          SizedBox(height: 4.h),
+          Text(
+            description,
+            maxLines: isExpanded ? null : 3,
+            overflow: isExpanded ? null : TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: AppColors.grey600,
+              height: 1.5,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          GestureDetector(
+            onTap: onToggle,
+            child: Text(
+              isExpanded ? 'Show Less' : 'Read More',
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -181,49 +190,52 @@ class PropertyDetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (imageAsset != null)
-          Image.asset(
-            imageAsset!,
-            width: 24.w,
-            height: 24.h,
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(
-                icon ?? Icons.info,
-                size: 20.sp,
-                color: iconColor ?? AppColors.primary,
-              );
-            },
-          )
-        else if (iconPrefix != null)
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-            decoration: BoxDecoration(
-              color: (iconColor ?? AppColors.primary).withAlpha(30),
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-            child: Text(
-              iconPrefix!,
-              style: TextStyle(
-                fontSize: 8.sp,
-                fontWeight: FontWeight.bold,
-                color: iconColor ?? AppColors.primary,
-              ),
-            ),
-          )
-        else
-          Icon(
-            icon ?? Icons.info,
-            size: 20.sp,
-            color: iconColor ?? AppColors.primary,
-          ),
-        SizedBox(width: 10.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        //mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          // Icon and Label on same line
+          Row(
+            //mainAxisAlignment: MainAxisAlignment.start,
             children: [
+              if (imageAsset != null)
+                Image.asset(
+                  imageAsset!,
+                  width: 20.w,
+                  height: 20.h,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      icon ?? Icons.info,
+                      size: 20.sp,
+                      color: iconColor ?? AppColors.primary,
+                    );
+                  },
+                )
+              else if (iconPrefix != null)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: (iconColor ?? AppColors.primary).withAlpha(30),
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Text(
+                    iconPrefix!,
+                    style: TextStyle(
+                      fontSize: 8.sp,
+                      fontWeight: FontWeight.bold,
+                      color: iconColor ?? AppColors.primary,
+                    ),
+                  ),
+                )
+              else
+                Icon(
+                  icon ?? Icons.info,
+                  size: 20.sp,
+                  color: iconColor ?? AppColors.primary,
+                ),
+              SizedBox(width: 8.w),
               Text(
                 label,
                 style: TextStyle(
@@ -232,15 +244,19 @@ class PropertyDetailRow extends StatelessWidget {
                   color: AppColors.grey900,
                 ),
               ),
-              SizedBox(height: 4.h),
-              Text(
-                value,
-                style: TextStyle(fontSize: 13.sp, color: AppColors.grey600),
-              ),
             ],
           ),
-        ),
-      ],
+          //SizedBox(height: 6.h),
+          // Value/Description below
+          Padding(
+            padding: const EdgeInsets.only(left: 4.0),
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 13.sp, color: AppColors.grey600),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -289,123 +305,121 @@ class PropertyDetailRowWithAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (imageAsset != null)
-          Image.asset(
-            imageAsset!,
-            width: 24.w,
-            height: 24.h,
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(
+        // Icon and Label on same line with action widget
+        Row(
+          children: [
+            if (imageAsset != null)
+              Image.asset(
+                imageAsset!,
+                width: 20.w,
+                height: 20.h,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    icon ?? Icons.info,
+                    size: 20.sp,
+                    color: iconColor ?? AppColors.primary,
+                  );
+                },
+              )
+            else if (iconPrefix != null)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: (iconColor ?? AppColors.primary).withAlpha(30),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: Text(
+                  iconPrefix!,
+                  style: TextStyle(
+                    fontSize: 8.sp,
+                    fontWeight: FontWeight.bold,
+                    color: iconColor ?? AppColors.primary,
+                  ),
+                ),
+              )
+            else
+              Icon(
                 icon ?? Icons.info,
                 size: 20.sp,
                 color: iconColor ?? AppColors.primary,
-              );
-            },
-          )
-        else if (iconPrefix != null)
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-            decoration: BoxDecoration(
-              color: (iconColor ?? AppColors.primary).withAlpha(30),
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-            child: Text(
-              iconPrefix!,
-              style: TextStyle(
-                fontSize: 8.sp,
-                fontWeight: FontWeight.bold,
-                color: iconColor ?? AppColors.primary,
+              ),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.grey900,
+                ),
               ),
             ),
-          )
-        else
-          Icon(
-            icon ?? Icons.info,
-            size: 20.sp,
-            color: iconColor ?? AppColors.primary,
-          ),
-        SizedBox(width: 10.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.grey900,
-                    ),
+            if (actionWidget != null)
+              actionWidget!
+            else
+              GestureDetector(
+                onTap: onAction,
+                child: Text(
+                  actionText!,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.primary,
                   ),
-                  if (actionWidget != null)
-                    actionWidget!
-                  else
-                    GestureDetector(
-                      onTap: onAction,
-                      child: Text(
-                        actionText!,
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                ],
+                ),
+              ),
+          ],
+        ),
+        // Value and conversions below, aligned under label
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+            // Conversions row
+            if (conversions != null && conversions!.isNotEmpty) ...[
+              SizedBox(height: 6.h),
+              Text(
+                'In other metrics',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: AppColors.grey500,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               SizedBox(height: 4.h),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: conversions!.entries
+                      .where((e) => currentUnit == null || e.key != currentUnit)
+                      .map((entry) {
+                        return Padding(
+                          padding: EdgeInsets.only(right: 16.w),
+                          child: Text(
+                            '${_formatValue(entry.value)} ${entry.key}',
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: AppColors.grey600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      })
+                      .toList(),
                 ),
               ),
-              // Conversions row
-              if (conversions != null && conversions!.isNotEmpty) ...[
-                SizedBox(height: 6.h),
-                Text(
-                  'In other metrics',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: AppColors.grey500,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: conversions!.entries
-                        .where(
-                          (e) => currentUnit == null || e.key != currentUnit,
-                        )
-                        .map((entry) {
-                          return Padding(
-                            padding: EdgeInsets.only(right: 16.w),
-                            child: Text(
-                              '${_formatValue(entry.value)} ${entry.key}',
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                color: AppColors.grey600,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          );
-                        })
-                        .toList(),
-                  ),
-                ),
-              ],
             ],
-          ),
+          ],
         ),
       ],
     );
@@ -418,63 +432,66 @@ class LandShapeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.map_outlined, size: 20.sp, color: AppColors.primary),
-            SizedBox(width: 10.w),
-            Text(
-              'Land Shape',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: AppColors.grey900,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.map_outlined, size: 20.sp, color: AppColors.primary),
+              SizedBox(width: 10.w),
+              Text(
+                'Land Shape',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.grey900,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Container(
+            height: 200.h,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.grey100,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: AppColors.grey200),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(11.r),
+              child: Image.asset(
+                'assets/images/Maps/LandShape.png',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.map_outlined,
+                          size: 48.sp,
+                          color: AppColors.grey400,
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          'Land Shape Map',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.grey500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        Container(
-          height: 200.h,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: AppColors.grey100,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.grey200),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(11.r),
-            child: Image.asset(
-              'assets/images/Maps/LandShape.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.map_outlined,
-                        size: 48.sp,
-                        color: AppColors.grey400,
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        'Land Shape Map',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: AppColors.grey500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -487,78 +504,81 @@ class PropertyPhotosSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.photo_library_outlined,
-              size: 20.sp,
-              color: AppColors.primary,
-            ),
-            SizedBox(width: 10.w),
-            Text(
-              'Property Photos',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: AppColors.grey900,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.photo_library_outlined,
+                size: 20.sp,
+                color: AppColors.primary,
               ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        SizedBox(
-          height: 80.h,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: photos.length + 1, // +1 for "more" indicator
-            itemBuilder: (context, index) {
-              if (index == photos.length) {
-                // More indicator
+              SizedBox(width: 10.w),
+              Text(
+                'Property Photos',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.grey900,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          SizedBox(
+            height: 80.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: photos.length + 1, // +1 for "more" indicator
+              itemBuilder: (context, index) {
+                if (index == photos.length) {
+                  // More indicator
+                  return Container(
+                    width: 80.w,
+                    margin: EdgeInsets.only(right: 8.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: AppColors.primaryLight),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '+8',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.grey600,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
                 return Container(
                   width: 80.w,
                   margin: EdgeInsets.only(right: 8.w),
-                  decoration: BoxDecoration(
-                    color: AppColors.grey100,
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: AppColors.grey200),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '+8',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.grey600,
-                      ),
+                    child: Image.asset(
+                      photos[index],
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppColors.grey200,
+                          child: Icon(Icons.image, color: AppColors.grey400),
+                        );
+                      },
                     ),
                   ),
                 );
-              }
-
-              return Container(
-                width: 80.w,
-                margin: EdgeInsets.only(right: 8.w),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: Image.asset(
-                    photos[index],
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: AppColors.grey200,
-                        child: Icon(Icons.image, color: AppColors.grey400),
-                      );
-                    },
-                  ),
-                ),
-              );
-            },
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -681,83 +701,90 @@ class PostedBySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Posted By',
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.grey900,
-          ),
-        ),
-        SizedBox(height: 12.h),
-        Row(
-          children: [
-            // Avatar
-            Container(
-              width: 44.w,
-              height: 44.h,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(50),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.person, color: AppColors.primary, size: 24.sp),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Posted By',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.grey900,
             ),
-            SizedBox(width: 12.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.grey900,
-                  ),
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              // Avatar
+              Container(
+                width: 44.w,
+                height: 44.h,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(50),
+                  shape: BoxShape.circle,
                 ),
-                SizedBox(height: 4.h),
-                if (isVerified)
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 2.h,
+                child: Icon(
+                  Icons.person,
+                  color: AppColors.primary,
+                  size: 24.sp,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.grey900,
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.success,
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.check_circle,
-                          size: 10.sp,
-                          color: AppColors.white,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          'Verified',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.w600,
+                  ),
+                  SizedBox(height: 4.h),
+                  if (isVerified)
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 2.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.success,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            size: 10.sp,
                             color: AppColors.white,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 4.w),
+                          Text(
+                            'Verified',
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    'Posted: $postedTime',
+                    style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
                   ),
-                SizedBox(height: 4.h),
-                Text(
-                  'Posted: $postedTime',
-                  style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

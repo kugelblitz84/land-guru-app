@@ -7,6 +7,55 @@ import '../../../../core/utils/land_unit_converter.dart';
 export '../../../../core/enums/land_unit.dart';
 export '../../../../core/utils/land_unit_converter.dart';
 
+/// Helper class for parsing and formatting land measurement values
+class LandValueHelper {
+  /// Parse numeric value from a string (removes unit labels like Katha, Decimal, etc.)
+  static double parseNumericValue(String value) {
+    final cleaned = value
+        .replaceAll(RegExp(r'[Mm]in\s*'), '')
+        .replaceAll(RegExp(r'[Mm]ax\s*'), '')
+        .replaceAll(RegExp(r'[Kk]atha'), '')
+        .replaceAll(RegExp(r'[Dd]ecimal'), '')
+        .replaceAll(RegExp(r'[Aa]cre'), '')
+        .replaceAll(RegExp(r'[Bb]igha'), '')
+        .replaceAll(RegExp(r'[Ss]qft'), '')
+        .trim();
+    return double.tryParse(cleaned) ?? 0;
+  }
+
+  /// Format a value with unit conversion
+  /// [value] - the numeric value in original unit (default: Katha)
+  /// [unit] - the target unit to display
+  /// [fromUnit] - the source unit (default: Katha)
+  /// [prefix] - optional prefix like "Min" or "Max"
+  /// [notSpecifiedText] - text to show when value is 0
+  static String formatValue(
+    double value,
+    LandUnit unit, {
+    LandUnit fromUnit = LandUnit.katha,
+    String? prefix,
+    String notSpecifiedText = 'Not specified',
+  }) {
+    if (value == 0) return notSpecifiedText;
+    final converted = LandUnitConverter.fromSqft(
+      LandUnitConverter.toSqft(value, fromUnit),
+      unit,
+    );
+    String formattedNumber;
+    if (converted >= 1) {
+      formattedNumber = converted.toStringAsFixed(
+        converted.truncateToDouble() == converted ? 0 : 2,
+      );
+    } else {
+      formattedNumber = converted.toStringAsFixed(4);
+    }
+    if (prefix != null && prefix.isNotEmpty) {
+      return '$prefix $formattedNumber ${unit.label}';
+    }
+    return '$formattedNumber ${unit.label}';
+  }
+}
+
 /// PopupMenuButton widget for changing measurement unit
 class ChangeMetricsPopup extends StatelessWidget {
   final LandUnit selectedUnit;

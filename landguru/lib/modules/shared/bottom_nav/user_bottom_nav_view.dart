@@ -2,47 +2,79 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../user/appointments/appointments_view.dart';
 import '../../user/home/home_view.dart';
+import '../../user/my_deals/my_deals_view.dart';
 import '../../user/profile/profile_view.dart';
 import '../../user/properties/properties_view.dart';
 import '../shell/main_shell_wrapper.dart';
+import 'nested_navigator.dart';
 import 'user_bottom_nav_controller.dart';
 
 /// User Bottom Navigation shell containing all main tabs
 /// Uses a shared header shell for tabs 0-3 (Home, Properties, Appointments, My Deals)
 /// Profile tab (4) has its own layout without the shell header
+/// Each tab has its own nested Navigator to support internal navigation
+/// while keeping the bottom nav bar visible
 class UserBottomNavView extends GetView<UserBottomNavController> {
   const UserBottomNavView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Obx(
-        () => IndexedStack(
-          index: controller.currentIndex.value,
-          children: [
-            // Tab 0: Home - uses shell wrapper
-            _buildShellContent(const HomeContentView()),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await controller.onWillPop();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        body: Obx(
+          () => IndexedStack(
+            index: controller.currentIndex.value,
+            children: [
+              // Tab 0: Home - uses nested navigator with shell wrapper
+              _buildNestedTab(
+                index: 0,
+                child: _buildShellContent(const HomeContentView()),
+              ),
 
-            // Tab 1: Properties - uses shell wrapper
-            _buildShellContent(const PropertiesContentView()),
+              // Tab 1: Properties - uses nested navigator with shell wrapper
+              _buildNestedTab(
+                index: 1,
+                child: _buildShellContent(const PropertiesContentView()),
+              ),
 
-            // Tab 2: Appointments - placeholder with shell wrapper
-            _buildShellContent(
-              _buildPlaceholderContent('Appointments', Icons.calendar_today),
-            ),
+              // Tab 2: Appointments - uses nested navigator with shell wrapper
+              _buildNestedTab(
+                index: 2,
+                child: _buildShellContent(const AppointmentsContentView()),
+              ),
 
-            // Tab 3: My Deals - placeholder with shell wrapper
-            _buildShellContent(
-              _buildPlaceholderContent('My Deals', Icons.handshake),
-            ),
+              // Tab 3: My Deals - uses nested navigator with shell wrapper
+              _buildNestedTab(
+                index: 3,
+                child: _buildShellContent(const MyDealsContentView()),
+              ),
 
-            // Tab 4: Profile - no shell wrapper
-            const ProfileView(),
-          ],
+              // Tab 4: Profile - uses nested navigator without shell wrapper
+              _buildNestedTab(index: 4, child: const ProfileView()),
+            ],
+          ),
         ),
+        bottomNavigationBar: _buildBottomNavBar(),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  /// Build a tab with nested navigation support
+  Widget _buildNestedTab({required int index, required Widget child}) {
+    return NestedNavigator(
+      navigatorKey: controller.navigatorKeys[index],
+      initialPage: child,
+      tabIndex: index,
     );
   }
 

@@ -2,32 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../widgets/info_banner.dart';
 import '../widgets/metrics_conversion_row.dart';
 import 'models/property_details_models.dart';
 import 'property_details_controller.dart';
 import 'widgets/property_details_widgets.dart';
 
-/// Property Details - Locked View (before paying to unlock)
-class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
-  const PropertyDetailsLockedView({super.key});
+/// Unified Property Details View (handles both locked and unlocked states)
+class PropertyDetailsView extends GetView<PropertyDetailsController> {
+  const PropertyDetailsView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
           onPressed: controller.goBack,
           icon: Icon(Icons.arrow_back, color: AppColors.grey900, size: 24.sp),
         ),
-        title: Text(
-          'Property Details',
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.grey900,
+        title: Obx(
+          () => Text(
+            controller.pageTitle.value,
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.grey900,
+            ),
           ),
         ),
         centerTitle: true,
@@ -42,178 +45,172 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
           return const Center(child: Text('Property not found'));
         }
 
-        return Column(
-          children: [
-            // Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Property Image
-                    _buildPropertyImage(property),
+        final isLocked = controller.isLocked.value;
 
-                    // Content
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 16.h),
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Property Image
+              _buildPropertyImage(property),
+              SizedBox(height: 10.h),
 
-                          // Title and Price
-                          PropertyTitleSection(property: property),
+              // Title and Tags
+              PropertyTitleSection(property: property),
+              SizedBox(height: 8.h),
+              PropertyTagsSection(property: property, isLocked: isLocked),
+              SizedBox(height: 12.h),
 
-                          SizedBox(height: 12.h),
+              // Description
+              PropertyDescriptionSection(
+                description: property.description,
+                isExpanded: controller.isDescriptionExpanded.value,
+                onToggle: controller.toggleDescription,
+              ),
+              SizedBox(height: 16.h),
 
-                          // Tags
-                          PropertyTagsSection(
-                            property: property,
-                            isLocked: true,
-                          ),
+              // Location
+              PropertyDetailRow(
+                imageAsset: 'assets/Logos/Location.png',
+                label: 'Location',
+                value: property.location,
+              ),
+              SizedBox(height: 16.h),
 
-                          SizedBox(height: 16.h),
+              // Sellable Land Amount
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                child: Obx(() {
+                  final conversions = controller.getAllConversions(
+                    property.sellableLandAmount,
+                  );
+                  final convertedValue = controller.getConvertedLandAmount(
+                    property.sellableLandAmount,
+                  );
+                  final currentUnit = controller.selectedLandUnit.value.label;
 
-                          // Description
-                          PropertyDescriptionSection(
-                            description: property.description,
-                            isExpanded: controller.isDescriptionExpanded.value,
-                            onToggle: controller.toggleDescription,
-                          ),
+                  final conversionsMap = <String, double>{};
+                  conversions.forEach((unit, value) {
+                    if (unit.label != currentUnit) {
+                      conversionsMap[unit.label] = value;
+                    }
+                  });
 
-                          SizedBox(height: 16.h),
-
-                          // Location
-                          PropertyDetailRow(
-                            imageAsset: 'assets/Logos/Location.png',
-                            label: 'Location',
-                            value: property.location,
-                          ),
-
-                          SizedBox(height: 16.h),
-
-                          // Sellable Land Amount
-                          Obx(() {
-                            final conversions = controller.getAllConversions(
-                              property.sellableLandAmount,
-                            );
-                            final convertedValue = controller
-                                .getConvertedLandAmount(
-                                  property.sellableLandAmount,
-                                );
-                            final currentUnit =
-                                controller.selectedLandUnit.value.label;
-
-                            // Build conversions map with labels
-                            final conversionsMap = <String, double>{};
-                            conversions.forEach((unit, value) {
-                              if (unit.label != currentUnit) {
-                                conversionsMap[unit.label] = value;
-                              }
-                            });
-
-                            return PropertyDetailRowWithAction(
-                              imageAsset: 'assets/Logos/Land&plotSize.png',
-                              label: 'Sellable Land Amount',
-                              value: convertedValue,
-                              actionWidget: ChangeMetricsPopup(
-                                selectedUnit: controller.selectedLandUnit.value,
-                                onUnitChanged: (unit) {
-                                  controller.selectedLandUnit.value = unit;
-                                },
-                              ),
-                              conversions: conversionsMap,
-                              currentUnit: currentUnit,
-                            );
-                          }),
-
-                          SizedBox(height: 16.h),
-
-                          // Plot Size
-                          Obx(() {
-                            final conversions = controller.getAllConversions(
-                              property.plotSize,
-                            );
-                            final convertedValue = controller
-                                .getConvertedLandAmount(property.plotSize);
-                            final currentUnit =
-                                controller.selectedLandUnit.value.label;
-
-                            // Build conversions map with labels
-                            final conversionsMap = <String, double>{};
-                            conversions.forEach((unit, value) {
-                              if (unit.label != currentUnit) {
-                                conversionsMap[unit.label] = value;
-                              }
-                            });
-
-                            return PropertyDetailRowWithAction(
-                              imageAsset: 'assets/Logos/Land&plotSize.png',
-                              label: 'Plot Size',
-                              value: convertedValue,
-                              actionWidget: ChangeMetricsPopup(
-                                selectedUnit: controller.selectedLandUnit.value,
-                                onUnitChanged: (unit) {
-                                  controller.selectedLandUnit.value = unit;
-                                },
-                              ),
-                              conversions: conversionsMap,
-                              currentUnit: currentUnit,
-                            );
-                          }),
-
-                          SizedBox(height: 16.h),
-
-                          // Distance from Road
-                          PropertyDetailRow(
-                            imageAsset: 'assets/Logos/DistanceFromRoad.png',
-                            label: 'Distance from Road',
-                            value: property.distanceFromRoad,
-                          ),
-
-                          SizedBox(height: 20.h),
-
-                          // Land Shape
-                          const LandShapeSection(),
-
-                          SizedBox(height: 20.h),
-
-                          // Property Photos
-                          PropertyPhotosSection(
-                            photos: property.propertyPhotos,
-                          ),
-
-                          SizedBox(height: 24.h),
-
-                          // Locked Features Section
-                          _buildLockedFeaturesSection(),
-
-                          SizedBox(height: 24.h),
-
-                          // How to buy section
-                          const HowToBuySection(),
-
-                          SizedBox(height: 24.h),
-
-                          // Posted By section
-                          PostedBySection(
-                            name: property.postedBy,
-                            isVerified: property.isVerified,
-                            postedTime: property.postedTime,
-                          ),
-
-                          SizedBox(height: 100.h), // Space for bottom button
-                        ],
-                      ),
+                  return PropertyDetailRowWithAction(
+                    imageAsset: 'assets/Logos/Land&plotSize.png',
+                    label: 'Sellable Land Amount',
+                    value: convertedValue,
+                    actionWidget: ChangeMetricsPopup(
+                      selectedUnit: controller.selectedLandUnit.value,
+                      onUnitChanged: (unit) {
+                        controller.selectedLandUnit.value = unit;
+                      },
                     ),
+                    conversions: conversionsMap,
+                    currentUnit: currentUnit,
+                  );
+                }),
+              ),
+              SizedBox(height: 16.h),
+
+              // Plot Size
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                child: Obx(() {
+                  final conversions = controller.getAllConversions(
+                    property.plotSize,
+                  );
+                  final convertedValue = controller.getConvertedLandAmount(
+                    property.plotSize,
+                  );
+                  final currentUnit = controller.selectedLandUnit.value.label;
+
+                  final conversionsMap = <String, double>{};
+                  conversions.forEach((unit, value) {
+                    if (unit.label != currentUnit) {
+                      conversionsMap[unit.label] = value;
+                    }
+                  });
+
+                  return PropertyDetailRowWithAction(
+                    imageAsset: 'assets/Logos/Land&plotSize.png',
+                    label: 'Plot Size',
+                    value: convertedValue,
+                    actionWidget: ChangeMetricsPopup(
+                      selectedUnit: controller.selectedLandUnit.value,
+                      onUnitChanged: (unit) {
+                        controller.selectedLandUnit.value = unit;
+                      },
+                    ),
+                    conversions: conversionsMap,
+                    currentUnit: currentUnit,
+                  );
+                }),
+              ),
+              SizedBox(height: 16.h),
+
+              // Distance from Road
+              PropertyDetailRow(
+                imageAsset: 'assets/Logos/DistanceFromRoad.png',
+                label: 'Distance from Road',
+                value: property.distanceFromRoad,
+              ),
+              SizedBox(height: 16.h),
+
+              // Land Shape
+              const LandShapeSection(),
+              SizedBox(height: 12.h),
+
+              // Property Photos
+              PropertyPhotosSection(photos: property.propertyPhotos),
+              SizedBox(height: 12.h),
+
+              // Features Section (Locked or Unlocked based on state)
+              Container(
+                color: AppColors.propertyDetailsBackground,
+                child: Column(
+                  children: [
+                    SizedBox(height: 12.h),
+                    isLocked
+                        ? _buildLockedFeaturesSection()
+                        : _buildUnlockedFeaturesSection(),
+                    SizedBox(height: 12.h),
                   ],
                 ),
               ),
-            ),
 
-            // Bottom action button
-            _buildBottomActionButton(),
-          ],
+              // How to buy section
+              const HowToBuySection(),
+              SizedBox(height: 12.h),
+
+              // Posted By section
+              PostedBySection(
+                name: property.postedBy,
+                isVerified: property.isVerified,
+                postedTime: property.postedTime,
+              ),
+
+              // Info banner for offer flow (only in unlocked state)
+              if (!isLocked && controller.isOfferFromExisting.value) ...[
+                SizedBox(height: 12.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w),
+                  child: const InfoBanner(
+                    message:
+                        'Your full location will remain private to the buyer.',
+                    type: InfoBannerType.info,
+                  ),
+                ),
+              ],
+
+              SizedBox(height: 16.h),
+
+              // Bottom action button (inside scroll)
+              _buildBottomActionButton(),
+
+              SizedBox(height: 24.h), // Bottom padding
+            ],
+          ),
         );
       }),
     );
@@ -232,9 +229,8 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
             ? Image.asset(
                 property.propertyPhotos.first,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _buildImagePlaceholder();
-                },
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildImagePlaceholder(),
               )
             : _buildImagePlaceholder(),
       ),
@@ -254,14 +250,11 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
     );
   }
 
+  // ============ LOCKED FEATURES SECTION ============
+
   Widget _buildLockedFeaturesSection() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withAlpha(15),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.primary.withAlpha(30)),
-      ),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -286,21 +279,14 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
                   color: AppColors.grey900,
                 ),
               ),
-              const Spacer(),
-              Icon(
-                Icons.keyboard_arrow_down,
-                color: AppColors.grey600,
-                size: 24.sp,
-              ),
             ],
           ),
-
           SizedBox(height: 16.h),
 
-          // Feature items
-          ...controller.lockedFeatures.map((feature) {
-            return _buildLockedFeatureItem(feature);
-          }),
+          // Feature items (non-expandable)
+          ...controller.lockedFeatures.map(
+            (feature) => _buildLockedFeatureItem(feature),
+          ),
 
           SizedBox(height: 20.h),
 
@@ -361,12 +347,12 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.grey200),
+        border: Border.all(color: AppColors.primaryLight.withAlpha(100)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.grey300.withAlpha(30),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: AppColors.black.withAlpha(20),
+            blurRadius: 4.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
@@ -411,22 +397,618 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
     );
   }
 
-  Widget _buildBottomActionButton() {
+  // ============ UNLOCKED FEATURES SECTION ============
+
+  Widget _buildUnlockedFeaturesSection() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(Icons.lock_open, color: AppColors.primary, size: 20.sp),
+              SizedBox(width: 8.w),
+              Text(
+                'Unlocked Features',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.grey900,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+
+          // Feature items (expandable)
+          _buildExpandableFeature(
+            index: 0,
+            title: 'Risk & Due Diligence Checklist',
+            subtitle: 'Get further verification about this property',
+            icon: Icons.checklist_rounded,
+            iconColor: AppColors.primary,
+            expandedContent: _buildDueDiligenceContent(),
+          ),
+          _buildExpandableFeature(
+            index: 1,
+            title: 'Property Video',
+            subtitle: 'Get a video tour of the property before buying',
+            icon: Icons.videocam_outlined,
+            iconColor: AppColors.primary,
+            expandedContent: _buildVideoContent(),
+          ),
+          _buildExpandableFeature(
+            index: 2,
+            title: 'Ownership History',
+            subtitle: 'Get to know the connected owners history',
+            icon: Icons.history,
+            iconColor: AppColors.grey600,
+            expandedContent: _buildOwnershipHistoryContent(),
+          ),
+          _buildExpandableFeature(
+            index: 3,
+            title: 'Validated Legal Documents',
+            subtitle: 'Get to see which documents will be provided',
+            icon: Icons.description_outlined,
+            iconColor: AppColors.primary,
+            expandedContent: _buildLegalDocumentsContent(),
+          ),
+          _buildExpandableFeature(
+            index: 4,
+            title: 'Pentagraph Map',
+            subtitle: 'Detailed Mouza map of the area',
+            icon: Icons.map_outlined,
+            iconColor: AppColors.primary,
+            expandedContent: _buildPentagraphMapContent(),
+          ),
+          _buildExpandableFeature(
+            index: 5,
+            title: 'Services Taken',
+            subtitle: 'Get to see which services was taken by the user',
+            icon: Icons.miscellaneous_services_outlined,
+            iconColor: AppColors.warning,
+            expandedContent: _buildServicesTakenContent(),
+            isLast: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandableFeature({
+    required int index,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required Widget expandedContent,
+    bool isLast = false,
+  }) {
     return Obx(() {
-      final hasRequested = controller.hasRequestedAppointment.value;
+      final isExpanded = controller.isFeatureExpanded(index);
 
       return Container(
-        padding: EdgeInsets.all(16.w),
+        margin: EdgeInsets.only(bottom: isLast ? 0 : 12.h),
         decoration: BoxDecoration(
           color: AppColors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.primaryLight.withAlpha(100)),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withAlpha(10),
-              blurRadius: 10,
-              offset: const Offset(0, -4),
+              color: AppColors.black.withAlpha(20),
+              blurRadius: 4.r,
+              offset: Offset(0, 2.h),
             ),
           ],
         ),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: () => controller.toggleFeatureExpansion(index),
+              child: Container(
+                padding: EdgeInsets.all(12.w),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36.w,
+                      height: 36.h,
+                      decoration: BoxDecoration(
+                        color: iconColor.withAlpha(30),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Icon(icon, color: iconColor, size: 20.sp),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.grey900,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: AppColors.grey500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      isExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: AppColors.grey600,
+                      size: 24.sp,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (isExpanded)
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 12.w),
+                child: expandedContent,
+              ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildDueDiligenceContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Divider(color: AppColors.grey200),
+        SizedBox(height: 12.h),
+        ...controller.dueDiligenceItems.map(
+          (item) => Padding(
+            padding: EdgeInsets.only(bottom: 10.h),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 20.w,
+                  height: 20.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withAlpha(50),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check,
+                    color: AppColors.success,
+                    size: 14.sp,
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Text(
+                    item,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: AppColors.grey700,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVideoContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Divider(color: AppColors.grey200),
+        SizedBox(height: 8.h),
+        Container(
+          height: 180.h,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withAlpha(20),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.primary.withAlpha(40)),
+          ),
+          child: Center(
+            child: Container(
+              width: 64.w,
+              height: 64.h,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.play_arrow_rounded,
+                color: AppColors.white,
+                size: 40.sp,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOwnershipHistoryContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Divider(color: AppColors.grey200),
+        SizedBox(height: 12.h),
+        ...controller.ownershipHistory.asMap().entries.map((entry) {
+          final index = entry.key;
+          final owner = entry.value;
+          final isLast = index == controller.ownershipHistory.length - 1;
+          final isFirst = index == 0;
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                children: [
+                  Container(
+                    width: 32.w,
+                    height: 32.h,
+                    decoration: BoxDecoration(
+                      color: isFirst
+                          ? AppColors.primary.withAlpha(20)
+                          : AppColors.grey100,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isFirst ? AppColors.primary : AppColors.grey300,
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.person,
+                      color: isFirst ? AppColors.primary : AppColors.grey400,
+                      size: 18.sp,
+                    ),
+                  ),
+                  if (!isLast)
+                    Container(width: 2, height: 40.h, color: AppColors.grey300),
+                ],
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(bottom: isLast ? 0 : 8.h),
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: isFirst ? AppColors.white : AppColors.grey50,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: isFirst
+                          ? AppColors.primary.withAlpha(40)
+                          : AppColors.grey200,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            owner.name,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.grey900,
+                            ),
+                          ),
+                          if (owner.period.isNotEmpty)
+                            Text(
+                              owner.period,
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: isFirst
+                                    ? AppColors.primary
+                                    : AppColors.grey500,
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (owner.isCurrent)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 4.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            'Current',
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildLegalDocumentsContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Divider(color: AppColors.grey200),
+        SizedBox(height: 12.h),
+        ...controller.legalDocuments.map(
+          (doc) => Padding(
+            padding: EdgeInsets.only(bottom: 8.h),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: EdgeInsets.only(top: 6.h),
+                  width: 6.w,
+                  height: 6.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Text(
+                    doc,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 12.h),
+        Text(
+          'Documents will be handed over after successful purchase',
+          style: TextStyle(
+            fontSize: 12.sp,
+            color: AppColors.grey500,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPentagraphMapContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Divider(color: AppColors.grey200),
+        SizedBox(height: 12.h),
+        Container(
+          height: 200.h,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.primary.withAlpha(40)),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(11.r),
+            child: Image.asset(
+              'assets/images/Maps/PentaGraphMap.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.map_outlined,
+                        size: 48.sp,
+                        color: AppColors.grey400,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'Pentagraph Map',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.grey500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildServicesTakenContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Divider(color: AppColors.grey200),
+        SizedBox(height: 12.h),
+        ...controller.serviceVerifications.asMap().entries.map((entry) {
+          final index = entry.key;
+          final service = entry.value;
+          final isLast = index == controller.serviceVerifications.length - 1;
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                children: [
+                  Container(
+                    width: 24.w,
+                    height: 24.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 2),
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 8.w,
+                        height: 8.h,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (!isLast)
+                    Container(
+                      width: 2,
+                      height: 100.h,
+                      color: AppColors.grey300,
+                    ),
+                ],
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(bottom: isLast ? 0 : 12.h),
+                  padding: EdgeInsets.all(14.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: AppColors.grey200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              service.serviceName,
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.grey900,
+                              ),
+                            ),
+                          ),
+                          if (service.isVerified)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 3.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.error.withAlpha(20),
+                                borderRadius: BorderRadius.circular(4.r),
+                              ),
+                              child: Text(
+                                'Verified',
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      Text(
+                        'ASSIGNED AGENT',
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: AppColors.grey500,
+                          letterSpacing: 0.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 18.r,
+                            backgroundColor: AppColors.grey200,
+                            child: Icon(
+                              Icons.person,
+                              color: AppColors.grey500,
+                              size: 20.sp,
+                            ),
+                          ),
+                          SizedBox(width: 10.w),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                service.assignedAgent,
+                                style: TextStyle(
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.grey900,
+                                ),
+                              ),
+                              if (service.agentRole.isNotEmpty)
+                                Text(
+                                  service.agentRole,
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: AppColors.grey500,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
+      ],
+    );
+  }
+
+  // ============ BOTTOM ACTION BUTTON ============
+
+  Widget _buildBottomActionButton() {
+    return Obx(() {
+      final hasRequested = controller.hasRequestedAppointment.value;
+      final isOfferFlow = controller.isOfferFromExisting.value;
+      final isLocked = controller.isLocked.value;
+
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -435,14 +1017,14 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
               child: ElevatedButton(
                 onPressed: hasRequested
                     ? null
-                    : () => _showRequestAppointmentDialog(),
+                    : isOfferFlow && !isLocked
+                        ? () => _submitOfferDirectly()
+                        : () => _showRequestAppointmentDialog(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: hasRequested
-                      ? AppColors.grey300
-                      : AppColors.primary,
-                  foregroundColor: hasRequested
-                      ? AppColors.grey600
-                      : AppColors.white,
+                  backgroundColor:
+                      hasRequested ? AppColors.grey300 : AppColors.primary,
+                  foregroundColor:
+                      hasRequested ? AppColors.grey600 : AppColors.white,
                   padding: EdgeInsets.symmetric(vertical: 16.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
@@ -454,9 +1036,7 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      hasRequested
-                          ? 'Request for appointment'
-                          : 'Request For Appointment',
+                      _getButtonText(hasRequested, isOfferFlow, isLocked),
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
@@ -473,14 +1053,47 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
             if (hasRequested) ...[
               SizedBox(height: 8.h),
               Text(
-                'Check appointment section to see the update.',
+                isOfferFlow && !isLocked
+                    ? 'Your offer has been submitted.'
+                    : 'Check appointment section to see the update.',
                 style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
+                textAlign: TextAlign.center,
               ),
             ],
           ],
         ),
       );
     });
+  }
+
+  String _getButtonText(bool hasRequested, bool isOfferFlow, bool isLocked) {
+    if (hasRequested) {
+      return isOfferFlow && !isLocked
+          ? 'Offer Submitted'
+          : 'Request for appointment';
+    }
+    return isOfferFlow && !isLocked
+        ? 'Submit Offer'
+        : 'Request For Appointment';
+  }
+
+  Future<void> _submitOfferDirectly() async {
+    final success = await controller.submitOffer();
+    if (success) {
+      _showOfferSubmittedDialog();
+    }
+  }
+
+  void _showOfferSubmittedDialog() {
+    showDialog(
+      context: Get.context!,
+      barrierDismissible: false,
+      builder: (context) => RequestSubmittedDialog(
+        property: controller.property.value!,
+        onClose: () => Get.back(),
+        isOfferFlow: true,
+      ),
+    );
   }
 
   void _showRequestAppointmentDialog() {
@@ -498,8 +1111,8 @@ class PropertyDetailsLockedView extends GetView<PropertyDetailsController> {
             address: address,
           );
           if (success) {
-            Get.back(); // Close the request dialog first
-            _showRequestSubmittedDialog(); // Then show success dialog
+            Get.back();
+            _showRequestSubmittedDialog();
           }
           return success;
         },
@@ -562,14 +1175,10 @@ class _RequestAppointmentDialogState extends State<RequestAppointmentDialog> {
 
   Future<void> _handleSubmit() async {
     setState(() => _isSubmitting = true);
-    final success = await widget.onSubmit(
-      _phoneController.text,
-      _addressController.text,
-    );
+    await widget.onSubmit(_phoneController.text, _addressController.text);
     if (mounted) {
       setState(() => _isSubmitting = false);
     }
-    // Note: Parent callback handles closing this dialog and showing success dialog
   }
 
   @override
@@ -608,14 +1217,12 @@ class _RequestAppointmentDialogState extends State<RequestAppointmentDialog> {
                   ),
                 ],
               ),
-
               SizedBox(height: 8.h),
 
               Text(
                 'By requesting for appointment, you are agreeing to share your details below. You will be notified for appointment soon.',
                 style: TextStyle(fontSize: 12.sp, color: AppColors.grey600),
               ),
-
               SizedBox(height: 16.h),
 
               // Property card
@@ -627,7 +1234,6 @@ class _RequestAppointmentDialogState extends State<RequestAppointmentDialog> {
                 ),
                 child: Row(
                   children: [
-                    // Image
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8.r),
                       child: property.propertyPhotos.isNotEmpty
@@ -713,7 +1319,6 @@ class _RequestAppointmentDialogState extends State<RequestAppointmentDialog> {
                   ],
                 ),
               ),
-
               SizedBox(height: 20.h),
 
               // Full Name (read-only)
@@ -731,7 +1336,6 @@ class _RequestAppointmentDialogState extends State<RequestAppointmentDialog> {
                   style: TextStyle(fontSize: 14.sp, color: AppColors.grey900),
                 ),
               ),
-
               SizedBox(height: 16.h),
 
               // Phone Number
@@ -767,7 +1371,6 @@ class _RequestAppointmentDialogState extends State<RequestAppointmentDialog> {
                 ),
                 style: TextStyle(fontSize: 14.sp, color: AppColors.grey900),
               ),
-
               SizedBox(height: 16.h),
 
               // Your Address
@@ -803,7 +1406,6 @@ class _RequestAppointmentDialogState extends State<RequestAppointmentDialog> {
                 ),
                 style: TextStyle(fontSize: 14.sp, color: AppColors.grey900),
               ),
-
               SizedBox(height: 24.h),
 
               // Submit button
@@ -938,7 +1540,6 @@ class RequestSubmittedDialog extends StatelessWidget {
                 size: 50.sp,
               ),
             ),
-
             SizedBox(height: 16.h),
 
             // Title
@@ -950,7 +1551,6 @@ class RequestSubmittedDialog extends StatelessWidget {
                 color: AppColors.grey900,
               ),
             ),
-
             SizedBox(height: 8.h),
 
             // Subtitle
@@ -961,7 +1561,6 @@ class RequestSubmittedDialog extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13.sp, color: AppColors.primary),
             ),
-
             SizedBox(height: 20.h),
 
             // Property card
@@ -973,7 +1572,6 @@ class RequestSubmittedDialog extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // Image
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8.r),
                     child: property.propertyPhotos.isNotEmpty
@@ -1094,7 +1692,6 @@ class RequestSubmittedDialog extends StatelessWidget {
                 ],
               ),
             ),
-
             SizedBox(height: 16.h),
 
             // Status

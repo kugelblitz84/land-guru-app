@@ -1,7 +1,10 @@
 import 'package:get/get.dart';
+import '../../../core/services/nested_navigation_service.dart';
 import '../../../routes/app_routes.dart';
 import '../../shared/bottom_nav/user_bottom_nav_controller.dart';
 import '../../shared/shell/main_shell_controller.dart';
+import '../properties/property_details/property_details_controller.dart';
+import '../properties/property_details/property_details_view.dart';
 
 /// Model for featured property
 class FeaturedProperty {
@@ -206,13 +209,17 @@ class HomeController extends GetxController {
     Get.toNamed(AppRoutes.PROPERTIES_FOR_SALE);
   }
 
-  /// Navigate to property details
+  /// Navigate to property details (uses nested navigation to keep bottom nav visible)
   void goToPropertyDetails(FeaturedProperty property) {
-    final route = property.isLocked
-        ? AppRoutes.PROPERTY_DETAILS_LOCKED
-        : AppRoutes.PROPERTY_DETAILS_UNLOCKED;
-
-    Get.toNamed(route, arguments: property.toMap());
+    // Navigate using nested navigation with arguments
+    // The unified PropertyDetailsView handles both locked and unlocked states
+    NestedNavigationService.to(
+      const PropertyDetailsView(),
+      arguments: property.toMap(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<PropertyDetailsController>(() => PropertyDetailsController());
+      }),
+    );
   }
 
   /// Refresh dashboard
