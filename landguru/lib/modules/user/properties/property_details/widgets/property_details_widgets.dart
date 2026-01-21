@@ -30,7 +30,7 @@ class PropertyTitleSection extends StatelessWidget {
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.w600,
-              color: AppColors.grey900,
+              color: AppColors.primary,
             ),
           ),
           SizedBox(height: 4.h),
@@ -718,17 +718,11 @@ class PostedBySection extends StatelessWidget {
           Row(
             children: [
               // Avatar
-              Container(
-                width: 44.w,
-                height: 44.h,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(50),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.person,
-                  color: AppColors.primary,
-                  size: 24.sp,
+              CircleAvatar(
+                radius: 22.r,
+                backgroundColor: AppColors.grey200,
+                backgroundImage: const AssetImage(
+                  'assets/images/User_DP/jahangir.jpg',
                 ),
               ),
               SizedBox(width: 12.w),

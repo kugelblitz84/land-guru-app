@@ -28,6 +28,7 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
   // Parsed values (in the original unit - Katha)
   double _landSizeValue = 0;
   double _plotSizeValue = 0;
+  double _shareUnitValue = 0;
 
   @override
   void initState() {
@@ -44,6 +45,7 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
       offer.sellableLandAmount ?? '',
     );
     _plotSizeValue = LandValueHelper.parseNumericValue(offer.plotSize ?? '');
+    _shareUnitValue = LandValueHelper.parseNumericValue(offer.shareUnit ?? '');
   }
 
   String _getConvertedValue(double kathaValue) {
@@ -160,6 +162,31 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
                   ),
                   SizedBox(height: 16.h),
 
+                  // Share Unit (only shown if property has share unit)
+                  if (offer.shareUnit != null &&
+                      offer.shareUnit!.isNotEmpty &&
+                      _shareUnitValue > 0)
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      child: PropertyDetailRowWithAction(
+                        imageAsset: 'assets/Logos/Land&plotSize.png',
+                        label: 'Share Unit',
+                        value: _getConvertedValue(_shareUnitValue),
+                        actionWidget: ChangeMetricsPopup(
+                          selectedUnit: _selectedLandUnit,
+                          onUnitChanged: (newUnit) {
+                            setState(() => _selectedLandUnit = newUnit);
+                          },
+                        ),
+                        conversions: _getAllConversions(_shareUnitValue),
+                        currentUnit: _selectedLandUnit.label,
+                      ),
+                    ),
+                  if (offer.shareUnit != null &&
+                      offer.shareUnit!.isNotEmpty &&
+                      _shareUnitValue > 0)
+                    SizedBox(height: 16.h),
+
                   // Distance from Road
                   PropertyDetailRow(
                     imageAsset: 'assets/Logos/DistanceFromRoad.png',
@@ -226,15 +253,21 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
   }
 
   Widget _buildImagePlaceholder() {
-    return Container(
-      color: AppColors.primary.withAlpha(50),
-      child: Center(
-        child: Icon(
-          Icons.image,
-          size: 60.sp,
-          color: AppColors.primary.withAlpha(100),
-        ),
-      ),
+    return Image.asset(
+      'assets/images/Properties demo/Gazipur Water Zone.jpg',
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: AppColors.primary.withAlpha(50),
+          child: Center(
+            child: Icon(
+              Icons.image,
+              size: 60.sp,
+              color: AppColors.primary.withAlpha(100),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -412,16 +445,9 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
                 CircleAvatar(
                   radius: 30.r,
                   backgroundColor: AppColors.grey200,
-                  backgroundImage: offer.sellerImageUrl != null
-                      ? AssetImage(offer.sellerImageUrl!)
-                      : null,
-                  child: offer.sellerImageUrl == null
-                      ? Icon(
-                          Icons.person,
-                          color: AppColors.grey500,
-                          size: 28.sp,
-                        )
-                      : null,
+                  backgroundImage: AssetImage(
+                    offer.sellerImageUrl ?? 'assets/images/User_DP/forhad.jpg',
+                  ),
                 ),
                 SizedBox(width: 12.w),
                 Column(

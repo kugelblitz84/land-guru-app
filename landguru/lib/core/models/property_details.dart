@@ -14,6 +14,7 @@ class PropertyDetails {
   final String location;
   final String sellableLandAmount;
   final String plotSize;
+  final String? shareUnit; // Optional - only for properties with share units
   final String distanceFromRoad;
   final String? landShapeImageUrl;
   final List<String> propertyPhotos;
@@ -34,6 +35,7 @@ class PropertyDetails {
     required this.location,
     required this.sellableLandAmount,
     required this.plotSize,
+    this.shareUnit,
     required this.distanceFromRoad,
     this.landShapeImageUrl,
     this.propertyPhotos = const [],
@@ -70,6 +72,7 @@ class PropertyDetails {
       'location': location,
       'sellableLandAmount': sellableLandAmount,
       'plotSize': plotSize,
+      'shareUnit': shareUnit,
       'distanceFromRoad': distanceFromRoad,
       'postedBy': postedBy,
       'postedTime': postedTime,

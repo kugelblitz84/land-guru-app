@@ -136,6 +136,32 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
                     );
                   }),
 
+                  // Share Unit (only shown when enabled)
+                  Obx(() {
+                    // Access reactive values to trigger observation
+                    final hasShareUnit = controller.hasShareUnit.value;
+                    final _ = controller.shareUnitValue.value;
+                    final unit = controller.shareUnitUnit.value;
+                    final shareUnit = controller.formattedShareUnit;
+                    if (!hasShareUnit || shareUnit.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return Column(
+                      children: [
+                        _buildDetailRowWithAction(
+                          imageAsset: 'assets/Logos/Land&plotSize.png',
+                          label: 'Share Unit',
+                          value: shareUnit,
+                          actionWidget: ChangeMetricsPopup(
+                            selectedUnit: unit,
+                            onUnitChanged: controller.changeShareUnitUnit,
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                      ],
+                    );
+                  }),
+
                   _buildDetailRow(
                     imageAsset: 'assets/Logos/DistanceFromRoad.png',
                     label: 'Distance from Road',

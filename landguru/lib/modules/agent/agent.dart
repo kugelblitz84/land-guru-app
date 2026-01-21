@@ -4,6 +4,7 @@
 // Dashboard
 export 'dashboard/agent_dashboard_controller.dart';
 export 'dashboard/agent_dashboard_view.dart';
+export 'dashboard/models/dashboard_models.dart';
 
 // My Tasks
 export 'my_tasks/my_tasks_controller.dart';

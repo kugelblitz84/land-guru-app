@@ -31,14 +31,19 @@ class UserBottomNavController extends GetxController {
   GlobalKey<NavigatorState> get currentNavigatorKey =>
       navigatorKeys[currentIndex.value];
 
-  /// Change tab - if same tab, pop to root
+  /// Change tab - if same tab, pop to root; if different tab, clear previous tab's stack
   void changeTab(int index) {
-    if (currentIndex.value == index) {
-      // If already on this tab, pop to root of this tab's navigator
-      Get.popToRootNested(navigatorKey: navigatorKeys[index]);
-    } else {
-      currentIndex.value = index;
-    }
+    Get.popToRootNested(navigatorKey: navigatorKeys[currentIndex.value]);
+    currentIndex.value = index;
+    // if (currentIndex.value == index) {
+    //   Get.popToRootNested(navigatorKey: navigatorKeys[currentIndex.value]);
+    //   // If already on this tab, pop to root of this tab's navigator
+    //   Get.popToRootNested(navigatorKey: navigatorKeys[index]);
+    // } else {
+    //   // Pop the current (previous) tab's navigation stack to root before switching
+
+    //   currentIndex.value = index;
+    // }
   }
 
   /// Navigate to specific tab by name

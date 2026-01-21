@@ -140,26 +140,26 @@ class NotificationsController extends GetxController {
 
       // Mock data - uncomment to test with notifications
       notifications.value = [
-        // NotificationItem(
-        //   id: '1',
-        //   title: 'Complete Offer Post',
-        //   description:
-        //       'A Buyer accepted your offer on the Post "Modern Duplex Villa". Complete the post as soon as possible for fixing the appointment',
-        //   timeAgo: '10m ago',
-        //   type: NotificationType.offerPost,
-        //   isRead: false,
-        //   isActionRequired: true,
-        // ),
-        // NotificationItem(
-        //   id: '2',
-        //   title: 'We Quoted on your Sell Post',
-        //   description:
-        //       'We quoted on the Post "Modern Duplex Villa". Review our service fees and pay your fees.',
-        //   timeAgo: '10m ago',
-        //   type: NotificationType.quote,
-        //   isRead: false,
-        //   isActionRequired: true,
-        // ),
+        NotificationItem(
+          id: '1',
+          title: 'Complete Offer Post',
+          description:
+              'A Buyer accepted your offer on the Post "Modern Duplex Villa". Complete the post as soon as possible for fixing the appointment',
+          timeAgo: '10m ago',
+          type: NotificationType.offerPost,
+          isRead: false,
+          isActionRequired: true,
+        ),
+        NotificationItem(
+          id: '2',
+          title: 'We Quoted on your Sell Post',
+          description:
+              'We quoted on the Post "Modern Duplex Villa". Review our service fees and pay your fees.',
+          timeAgo: '10m ago',
+          type: NotificationType.quote,
+          isRead: false,
+          isActionRequired: true,
+        ),
       ];
 
       // Sync notification count with shell controller

@@ -296,14 +296,9 @@ class WantedContentView extends GetView<PropertiesController> {
     }
 
     return GestureDetector(
-      onTap: () {
-        // Show different popup based on tab
-        if (showOfferedStatus) {
-          OfferedByYouPopup.show(Get.context!, post);
-        } else {
-          controller.goToLandWantedDetails(post.id);
-        }
-      },
+      onTap: showOfferedStatus
+          ? () => OfferedByYouPopup.show(Get.context!, post)
+          : null, // Disabled for All tab - use "I have this property" button instead
       child: Container(
         margin: EdgeInsets.only(bottom: 16.h),
         padding: EdgeInsets.all(16.w),
@@ -322,7 +317,7 @@ class WantedContentView extends GetView<PropertiesController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title and arrow
+            // Title and arrow (only show arrow for Offered by you tab)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -336,11 +331,12 @@ class WantedContentView extends GetView<PropertiesController> {
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  color: AppColors.grey400,
-                  size: 24.sp,
-                ),
+                if (showOfferedStatus)
+                  Icon(
+                    Icons.chevron_right,
+                    color: AppColors.grey400,
+                    size: 24.sp,
+                  ),
               ],
             ),
 

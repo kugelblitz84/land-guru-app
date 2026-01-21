@@ -150,14 +150,16 @@ class MyDealsContentView extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 4.h),
-                    Text(
-                      isSold
-                          ? controller.stats.value.totalEarned
-                          : controller.stats.value.totalSpent,
-                      style: TextStyle(
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.grey900,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '৳ ${isSold ? controller.stats.value.totalEarned : controller.stats.value.totalSpent}',
+                        style: TextStyle(
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.grey900,
+                        ),
                       ),
                     ),
                   ],
@@ -470,12 +472,15 @@ class MyDealsContentView extends StatelessWidget {
                           color: AppColors.grey600,
                         ),
                       ),
-                      Text(
-                        '৳ ${deal.soldPrice}',
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                      Flexible(
+                        child: Text(
+                          '৳ ${deal.soldPrice}',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

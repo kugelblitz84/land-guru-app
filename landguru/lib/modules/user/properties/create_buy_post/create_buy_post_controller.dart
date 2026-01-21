@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../routes/app_routes.dart';
 import '../widgets/properties_widgets.dart';
 
@@ -112,7 +113,10 @@ class CreateBuyPostController extends GetxController {
     // Update text field without triggering listener loop
     final formattedValue = value == value.toInt()
         ? value.toInt().toString()
-        : value.toStringAsFixed(3).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+        : value
+              .toStringAsFixed(3)
+              .replaceAll(RegExp(r'0+$'), '')
+              .replaceAll(RegExp(r'\.$'), '');
     if (minLandSizeController.text != formattedValue) {
       minLandSizeController.removeListener(_updateLandSizeValue);
       minLandSizeController.text = formattedValue;
@@ -126,7 +130,10 @@ class CreateBuyPostController extends GetxController {
     // Update text field without triggering listener loop
     final formattedValue = value == value.toInt()
         ? value.toInt().toString()
-        : value.toStringAsFixed(3).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+        : value
+              .toStringAsFixed(3)
+              .replaceAll(RegExp(r'0+$'), '')
+              .replaceAll(RegExp(r'\.$'), '');
     if (minPlotSizeController.text != formattedValue) {
       minPlotSizeController.removeListener(_updatePlotSizeValue);
       minPlotSizeController.text = formattedValue;
@@ -163,15 +170,7 @@ class CreateBuyPostController extends GetxController {
   }
 
   String _formatNumber(int number) {
-    if (number >= 10000000) {
-      return '${(number / 10000000).toStringAsFixed(2)} Cr';
-    } else if (number >= 100000) {
-      return '${(number / 100000).toStringAsFixed(2)} Lac';
-    }
-    return number.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
+    return CurrencyFormatter.format(number);
   }
 
   /// Format land size for display

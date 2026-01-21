@@ -15,6 +15,7 @@ class SellPostDetails {
   final String propertyType;
   final String sellableLandAmount;
   final String plotSize;
+  final String? shareUnit; // Optional - only for properties with share units
   final String distanceFromRoad;
   final String location;
   final String timestamp;
@@ -45,6 +46,7 @@ class SellPostDetails {
     required this.propertyType,
     required this.sellableLandAmount,
     required this.plotSize,
+    this.shareUnit,
     required this.distanceFromRoad,
     required this.location,
     required this.timestamp,

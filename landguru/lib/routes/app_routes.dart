@@ -20,18 +20,26 @@ class AppRoutes {
   /// Step 5: Upload identity documents (NID, TIN Certificate)
   static const SIGNUP_IDENTITY_VERIFICATION = '/signup/identity-verification';
 
-  // AUTH - FORGOT PASSWORD FLOW (4 Steps)
-  /// Step 1: Enter phone number to receive OTP
+  // AUTH - FORGOT PASSWORD FLOW
+  // For User: 4 Steps (Phone → OTP → New Password → Success)
+  // For Agent: 2 Steps (Phone → Request Sent)
+
+  /// Step 1: Enter phone number (common for both User and Agent)
   static const FORGOT_PASSWORD_PHONE = '/forgot-password/phone';
 
-  /// Step 2: Verify OTP sent to phone
+  /// Step 2 (User): Verify OTP sent to phone
   static const FORGOT_PASSWORD_VERIFY_OTP = '/forgot-password/verify-otp';
 
-  /// Step 3: Set new password
+  /// Step 3 (User): Set new password
   static const FORGOT_PASSWORD_SET_PASSWORD = '/forgot-password/set-password';
 
-  /// Step 4: Password change success confirmation
+  /// Step 4 (User): Password change success confirmation
   static const FORGOT_PASSWORD_SUCCESS = '/forgot-password/success';
+
+  /// Step 2 (Agent): Password reset request sent confirmation
+  /// Admin will review and contact the agent
+  static const FORGOT_PASSWORD_AGENT_REQUEST_SENT =
+      '/forgot-password/agent-request-sent';
 
   // MAIN - BOTTOM NAVIGATION SHELL
   /// Main shell containing bottom navigation (Home, Properties, Appointments, My Deals, Profile)

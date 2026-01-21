@@ -8,11 +8,29 @@ class ProfileController extends GetxController {
   final RxBool isLoggingOut = false.obs;
 
   // User data
-  final RxString userName = 'User'.obs;
-  final RxString userPhone = '+880 1712-345678'.obs;
-  final RxString userEmail = 'user@example.com'.obs;
+  final RxString userName = 'User Name'.obs;
+  final RxString userPhone = '+8801700000000'.obs;
+  final RxString userEmail = 'username@email.com'.obs;
   final RxString userAddress = 'Dhaka, Bangladesh'.obs;
   final RxString profileImage = ''.obs;
+  final RxBool isVerified = true.obs;
+
+  // Additional profile data
+  final RxString division = 'Rajshahi'.obs;
+  final RxString district = 'Rajshahi'.obs;
+  final RxString upazilla = 'Bogura'.obs;
+  final RxString pouroshova = 'Bogura Pouroshova'.obs;
+  final RxString wardNo = '03'.obs;
+  final RxString postalCode = '5800'.obs;
+  final RxString fullAddress =
+      'Holding #45, Ward #03, Bogura Pourashava, Bogura Sadar, Bogura-5800, Rajshahi'
+          .obs;
+
+  // Verification documents
+  final RxString nidNumber = '88***321'.obs;
+  final RxBool isNidVerified = true.obs;
+  final RxString tinNumber = '44***99'.obs;
+  final RxBool isTinVerified = true.obs;
 
   @override
   void onInit() {

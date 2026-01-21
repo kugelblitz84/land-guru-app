@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/currency_formatter.dart';
 
 /// Budget range input with min-max fields
 class BudgetRangeInput extends StatelessWidget {
@@ -24,13 +25,7 @@ class BudgetRangeInput extends StatelessWidget {
     if (value.isEmpty) return '';
     final number = int.tryParse(value.replaceAll(',', ''));
     if (number == null) return value;
-
-    if (number >= 10000000) {
-      return '৳ ${(number / 10000000).toStringAsFixed(2)} Cr';
-    } else if (number >= 100000) {
-      return '৳ ${(number / 100000).toStringAsFixed(2)} Lac';
-    }
-    return '৳ $value';
+    return CurrencyFormatter.formatWithSymbol(number);
   }
 
   @override
@@ -161,14 +156,7 @@ class AskingPriceDisplay extends StatelessWidget {
   });
 
   String _formatPrice(double price) {
-    if (price >= 10000000) {
-      return '৳ ${(price / 10000000).toStringAsFixed(2)} Cr';
-    } else if (price >= 100000) {
-      return '৳ ${(price / 100000).toStringAsFixed(2)} Lac';
-    } else if (price >= 1000) {
-      return '৳ ${price.toStringAsFixed(0)}';
-    }
-    return '৳ ${price.toStringAsFixed(2)}';
+    return CurrencyFormatter.formatWithSymbol(price);
   }
 
   @override

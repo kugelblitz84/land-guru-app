@@ -296,7 +296,7 @@ class _LandWantedOfferPopupState extends State<LandWantedOfferPopup> {
           CircleAvatar(
             radius: 35.r,
             backgroundColor: AppColors.grey300,
-            child: Icon(Icons.person, color: AppColors.grey600, size: 28.sp),
+            backgroundImage: const AssetImage('assets/images/User_DP/sahil.jpg'),
           ),
           SizedBox(width: 12.w),
           // Name and details

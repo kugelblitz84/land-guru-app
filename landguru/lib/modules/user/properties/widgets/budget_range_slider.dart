@@ -1,34 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/currency_formatter.dart';
 
 /// Budget range data class
 class BudgetRange {
   final int minBudget;
   final int maxBudget;
 
-  const BudgetRange({
-    required this.minBudget,
-    required this.maxBudget,
-  });
+  const BudgetRange({required this.minBudget, required this.maxBudget});
 
-  /// Format budget value for display
+  /// Format budget value for display (with comma separators)
   static String formatBudget(int value) {
-    if (value >= 10000000) {
-      final cr = value / 10000000;
-      return cr == cr.toInt()
-          ? '${cr.toInt()} Cr'
-          : '${cr.toStringAsFixed(1)} Cr';
-    } else if (value >= 100000) {
-      final lac = value / 100000;
-      return lac == lac.toInt()
-          ? '${lac.toInt()} Lac'
-          : '${lac.toStringAsFixed(1)} Lac';
-    } else if (value >= 1000) {
-      final k = value / 1000;
-      return k == k.toInt() ? '${k.toInt()}K' : '${k.toStringAsFixed(1)}K';
-    }
-    return '৳$value';
+    return CurrencyFormatter.format(value);
   }
 
   /// Get label from min and max values
@@ -37,39 +21,23 @@ class BudgetRange {
 
   /// Format number with Indian style commas (e.g., 30,00,000)
   static String formatWithCommas(int value) {
-    if (value == 0) return '0';
-    String numStr = value.toString();
-    String result = '';
-    int count = 0;
-
-    // Process from right to left
-    for (int i = numStr.length - 1; i >= 0; i--) {
-      if (count == 3) {
-        result = ',$result';
-        count = 0;
-      } else if (count > 3 && (count - 3) % 2 == 0) {
-        result = ',$result';
-      }
-      result = numStr[i] + result;
-      count++;
-    }
-    return result;
+    return CurrencyFormatter.format(value);
   }
 
-  /// Predefined budget values (kept for backwards compatibility)
+  /// Predefined budget values
   static const List<int> budgetValues = [
     0,
-    100000, // 1 Lac
-    500000, // 5 Lac
-    1000000, // 10 Lac
-    2500000, // 25 Lac
-    5000000, // 50 Lac
-    10000000, // 1 Cr
-    25000000, // 2.5 Cr
-    50000000, // 5 Cr
-    100000000, // 10 Cr
-    250000000, // 25 Cr
-    500000000, // 50 Cr
+    100000,
+    500000,
+    1000000,
+    2500000,
+    5000000,
+    10000000,
+    25000000,
+    50000000,
+    100000000,
+    250000000,
+    500000000,
   ];
 }
 
@@ -79,9 +47,9 @@ class BudgetRangeSlider extends StatelessWidget {
   final ValueChanged<BudgetRange> onChanged;
   final String label;
 
-  // Min and max budget values (0 to 50 Cr)
+  // Min and max budget values (0 to 50,00,00,000)
   static const double minValue = 0;
-  static const double maxValue = 500000000; // 50 Cr
+  static const double maxValue = 500000000;
 
   const BudgetRangeSlider({
     super.key,
@@ -172,10 +140,9 @@ class BudgetRangeSlider extends StatelessWidget {
                     // Round to nearest 1000 for cleaner budget values
                     final minBudget = (rangeValues.start / 1000).round() * 1000;
                     final maxBudget = (rangeValues.end / 1000).round() * 1000;
-                    onChanged(BudgetRange(
-                      minBudget: minBudget,
-                      maxBudget: maxBudget,
-                    ));
+                    onChanged(
+                      BudgetRange(minBudget: minBudget, maxBudget: maxBudget),
+                    );
                   },
                 ),
               ),
@@ -214,7 +181,8 @@ class BudgetRangeSlider extends StatelessWidget {
                       child: Text(
                         selectedRange != null
                             ? BudgetRange.formatWithCommas(
-                                selectedRange!.minBudget)
+                                selectedRange!.minBudget,
+                              )
                             : '0',
                         style: TextStyle(
                           fontSize: 16.sp,
@@ -249,7 +217,8 @@ class BudgetRangeSlider extends StatelessWidget {
                       child: Text(
                         selectedRange != null
                             ? BudgetRange.formatWithCommas(
-                                selectedRange!.maxBudget)
+                                selectedRange!.maxBudget,
+                              )
                             : '0',
                         style: TextStyle(
                           fontSize: 16.sp,

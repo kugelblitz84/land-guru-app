@@ -57,21 +57,24 @@ class MainShellHeader extends StatelessWidget {
           height: 50.h,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primary.withAlpha(150), AppColors.primaryDark],
+            border: Border.all(color: AppColors.grey200, width: 2),
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/images/User_DP/MainUser.jpg',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: AppColors.grey200,
+                  child: Icon(
+                    Icons.person,
+                    color: AppColors.grey400,
+                    size: 28.sp,
+                  ),
+                );
+              },
             ),
           ),
-          child: Obx(() {
-            if (controller.userAvatar.value.isNotEmpty) {
-              // TODO: Replace with actual image when avatar URL is available
-              return ClipOval(
-                child: Icon(Icons.person, color: AppColors.white, size: 28.sp),
-              );
-            }
-            return Icon(Icons.person, color: AppColors.white, size: 28.sp);
-          }),
         ),
         // Online indicator
         Obx(

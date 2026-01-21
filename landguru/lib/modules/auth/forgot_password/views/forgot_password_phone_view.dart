@@ -45,14 +45,6 @@ class ForgotPasswordPhoneView extends GetView<ForgotPasswordController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 16.h),
-
-                          // Step Progress Indicator
-                          const StepProgressIndicator(
-                            currentStep: 1,
-                            totalSteps: 4,
-                          ),
-
                           SizedBox(height: 60.h),
 
                           // Title
@@ -93,13 +85,13 @@ class ForgotPasswordPhoneView extends GetView<ForgotPasswordController> {
 
                           const Spacer(),
 
-                          // Send OTP Button
+                          // Send Reset Request Button
                           Obx(
                             () => PrimaryButton(
-                              text: 'Send OTP',
+                              text: 'Send Reset Request',
                               isLoading: controller.isLoading.value,
-                              showArrow: false,
-                              onPressed: controller.sendOtp,
+                              showArrow: true,
+                              onPressed: controller.sendResetRequest,
                             ),
                           ),
                           SizedBox(height: 24.h),

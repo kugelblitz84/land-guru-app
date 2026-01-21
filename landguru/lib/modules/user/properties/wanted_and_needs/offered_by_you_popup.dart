@@ -254,7 +254,9 @@ class _OfferedByYouPopupState extends State<OfferedByYouPopup> {
           CircleAvatar(
             radius: 35.r,
             backgroundColor: AppColors.grey300,
-            child: Icon(Icons.person, color: AppColors.grey600, size: 28.sp),
+            backgroundImage: const AssetImage(
+              'assets/images/User_DP/Farhan.jpg',
+            ),
           ),
           SizedBox(width: 12.w),
           Column(
@@ -610,17 +612,28 @@ class _OfferedByYouPopupState extends State<OfferedByYouPopup> {
   }
 
   Widget _buildImagePlaceholder() {
-    return Container(
-      width: 70.w,
-      height: 70.h,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withAlpha(30),
-        borderRadius: BorderRadius.circular(8.r),
-      ),
-      child: Icon(
-        Icons.image,
-        size: 30.sp,
-        color: AppColors.primary.withAlpha(100),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8.r),
+      child: Image.asset(
+        'assets/images/Properties demo/Gazipur Water Zone.jpg',
+        width: 70.w,
+        height: 70.h,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 70.w,
+            height: 70.h,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withAlpha(30),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Icon(
+              Icons.image,
+              size: 30.sp,
+              color: AppColors.primary.withAlpha(100),
+            ),
+          );
+        },
       ),
     );
   }

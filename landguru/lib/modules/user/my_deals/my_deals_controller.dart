@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import '../../../core/enums/property_type.dart';
 import '../../../core/services/nested_navigation_service.dart';
 import 'models/deal_models.dart';
-import 'sold_deal_details_view.dart';
+import 'deal_details_view.dart';
 
 /// Controller for User My Deals screen
 /// Handles: Sold, Bought tabs with filtering
@@ -36,9 +36,9 @@ class MyDealsController extends GetxController {
     // Demo stats
     stats.value = DealStats(
       propertySold: 12,
-      totalEarned: '9.2 Cr',
+      totalEarned: '9,20,00,000',
       propertyBought: 5,
-      totalSpent: '4.5 Cr',
+      totalSpent: '4,50,00,000',
     );
 
     allDeals.value = [
@@ -174,13 +174,90 @@ class MyDealsController extends GetxController {
         soldPrice: '1,50,00,000',
         status: DealStatus.bought,
         dealDate: now.subtract(const Duration(days: 1)),
-        description: 'Prime location land in Uttara.',
+        description:
+            'Prime location land in Uttara with excellent connectivity.',
         soldLandAmount: '5 Katha',
         plotSize: '5 Katha',
         distanceFromRoad: '0m (Road adjacent)',
+        propertyPhotos: [
+          'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
+        ],
         otherPartyId: 'seller_1',
         otherPartyName: 'Seller Name',
         otherPartyVerified: true,
+        hasHideDueDiligence: true,
+        hasPropertyVideo: true,
+        hasOwnershipHistory: true,
+      ),
+      Deal(
+        id: '6',
+        postId: '#POST-1044',
+        propertyTitle: 'Modern Duplex Villa',
+        propertyImageUrl:
+            'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
+        propertyType: PropertyType.flat,
+        location:
+            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
+        soldPrice: '40,00,000',
+        status: DealStatus.bought,
+        dealDate: now.subtract(const Duration(hours: 2)),
+        description:
+            'A stunning newly renovated villa featuring an open-concept '
+            "living area, chef's kitchen with top-tier appliances, and a "
+            'private backyards oasis. The property offers modern amenities '
+            'and a serene environment perfect for family living.',
+        soldLandAmount: '15 Katha',
+        plotSize: '15 Katha',
+        distanceFromRoad: '200m-750m',
+        propertyPhotos: [
+          'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
+          'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
+          'assets/images/Properties demo/Gazipur Water Zone.jpg',
+        ],
+        otherPartyId: 'seller_2',
+        otherPartyName: 'Farhan',
+        otherPartyVerified: true,
+        hasHideDueDiligence: true,
+        hasPropertyVideo: true,
+        hasOwnershipHistory: true,
+        deedDocuments: [
+          LegalDocument(id: '1', name: 'Deed document 1.pdf', fileType: 'pdf'),
+          LegalDocument(
+            id: '2',
+            name: 'Deed document 2.docx',
+            fileType: 'docx',
+          ),
+        ],
+        khatianDocuments: [
+          LegalDocument(id: '3', name: 'CS Khatian.docx', fileType: 'docx'),
+          LegalDocument(id: '4', name: 'SA Khatian.docx', fileType: 'docx'),
+        ],
+      ),
+      Deal(
+        id: '7',
+        postId: '#POST-1045',
+        propertyTitle: 'Gazipur Water Zone Property',
+        propertyImageUrl:
+            'assets/images/Properties demo/Gazipur Water Zone.jpg',
+        propertyType: PropertyType.waterLand,
+        location: 'Gazipur Sadar, Gazipur',
+        soldPrice: '75,00,000',
+        status: DealStatus.bought,
+        dealDate: now.subtract(const Duration(days: 3)),
+        description:
+            'Beautiful water body land suitable for fishery or eco-tourism development.',
+        soldLandAmount: '10 Katha',
+        plotSize: '10 Katha',
+        distanceFromRoad: '50m',
+        propertyPhotos: [
+          'assets/images/Properties demo/Gazipur Water Zone.jpg',
+        ],
+        otherPartyId: 'seller_3',
+        otherPartyName: 'Karim',
+        otherPartyVerified: false,
+        hasHideDueDiligence: true,
+        hasPropertyVideo: false,
+        hasOwnershipHistory: true,
       ),
     ];
   }
@@ -267,9 +344,9 @@ class MyDealsController extends GetxController {
 
   /// Navigate to deal details (uses nested navigation to keep bottom nav visible)
   void goToDealDetails(Deal deal) {
-    // Both sold and bought details use SoldDealDetailsView for now
+    // Unified DealDetailsView handles both sold and bought properties
     NestedNavigationService.to(
-      const SoldDealDetailsView(),
+      const DealDetailsView(),
       arguments: {'deal': deal},
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../routes/app_routes.dart';
 import '../widgets/properties_widgets.dart';
 
@@ -36,6 +37,13 @@ class CreateSellPostController extends GetxController {
   final RxDouble plotSizeValue = 0.0.obs; // Reactive value for plot size
   final Rx<LandSizeRange?> plotSizeRange = Rx<LandSizeRange?>(null);
 
+  // Share Unit (Optional) - only visible when checkbox is checked
+  final RxBool hasShareUnit = false.obs;
+  final shareUnitController = TextEditingController();
+  final Rx<LandUnit> shareUnitUnit = LandUnit.katha.obs;
+  final RxDouble shareUnitValue = 0.0.obs; // Reactive value for share unit
+  final Rx<LandSizeRange?> shareUnitRange = Rx<LandSizeRange?>(null);
+
   // Price per katha reactive
   final RxDouble pricePerKathaValue = 0.0.obs;
 
@@ -45,6 +53,7 @@ class CreateSellPostController extends GetxController {
     // Add listeners to update reactive values when text changes
     landAmountController.addListener(_updateLandAmountValue);
     plotSizeController.addListener(_updatePlotSizeValue);
+    shareUnitController.addListener(_updateShareUnitValue);
     pricePerKathaController.addListener(_updatePricePerKathaValue);
   }
 
@@ -54,6 +63,10 @@ class CreateSellPostController extends GetxController {
 
   void _updatePlotSizeValue() {
     plotSizeValue.value = double.tryParse(plotSizeController.text) ?? 0;
+  }
+
+  void _updateShareUnitValue() {
+    shareUnitValue.value = double.tryParse(shareUnitController.text) ?? 0;
   }
 
   void _updatePricePerKathaValue() {
@@ -143,12 +156,7 @@ class CreateSellPostController extends GetxController {
   String get formattedAskingPrice {
     final price = askingPrice;
     if (price == 0) return '৳ 0';
-    if (price >= 10000000) {
-      return '৳ ${(price / 10000000).toStringAsFixed(2)} Cr';
-    } else if (price >= 100000) {
-      return '৳ ${(price / 100000).toStringAsFixed(2)} Lac';
-    }
-    return '৳ ${price.toStringAsFixed(0)}';
+    return CurrencyFormatter.formatWithSymbol(price);
   }
 
   /// Format land amount for display
@@ -163,6 +171,14 @@ class CreateSellPostController extends GetxController {
     final value = plotSizeValue.value;
     if (value == 0) return '';
     return '${value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 2)} ${plotSizeUnit.value.label}';
+  }
+
+  /// Format share unit for display
+  String get formattedShareUnit {
+    if (!hasShareUnit.value) return '';
+    final value = shareUnitValue.value;
+    if (value == 0) return '';
+    return '${value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 2)} ${shareUnitUnit.value.label}';
   }
 
   /// Navigate to next step
@@ -264,6 +280,22 @@ class CreateSellPostController extends GetxController {
     plotSizeUnit.value = unit;
   }
 
+  /// Change share unit unit
+  void changeShareUnitUnit(LandUnit unit) {
+    shareUnitUnit.value = unit;
+  }
+
+  /// Toggle share unit checkbox
+  void toggleShareUnit(bool value) {
+    hasShareUnit.value = value;
+    if (!value) {
+      // Clear share unit data when unchecked
+      shareUnitController.clear();
+      shareUnitValue.value = 0;
+      shareUnitUnit.value = LandUnit.katha;
+    }
+  }
+
   /// Update location
   void updateLocation(LocationData newLocation) {
     location.value = newLocation;
@@ -286,7 +318,10 @@ class CreateSellPostController extends GetxController {
     // Update text field without triggering listener loop
     final formattedValue = value == value.toInt()
         ? value.toInt().toString()
-        : value.toStringAsFixed(3).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+        : value
+              .toStringAsFixed(3)
+              .replaceAll(RegExp(r'0+$'), '')
+              .replaceAll(RegExp(r'\.$'), '');
     if (landAmountController.text != formattedValue) {
       landAmountController.removeListener(_updateLandAmountValue);
       landAmountController.text = formattedValue;
@@ -300,11 +335,31 @@ class CreateSellPostController extends GetxController {
     // Update text field without triggering listener loop
     final formattedValue = value == value.toInt()
         ? value.toInt().toString()
-        : value.toStringAsFixed(3).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+        : value
+              .toStringAsFixed(3)
+              .replaceAll(RegExp(r'0+$'), '')
+              .replaceAll(RegExp(r'\.$'), '');
     if (plotSizeController.text != formattedValue) {
       plotSizeController.removeListener(_updatePlotSizeValue);
       plotSizeController.text = formattedValue;
       plotSizeController.addListener(_updatePlotSizeValue);
+    }
+  }
+
+  /// Update share unit from slider (updates text field)
+  void updateShareUnitFromSlider(double value) {
+    shareUnitValue.value = value;
+    // Update text field without triggering listener loop
+    final formattedValue = value == value.toInt()
+        ? value.toInt().toString()
+        : value
+              .toStringAsFixed(3)
+              .replaceAll(RegExp(r'0+$'), '')
+              .replaceAll(RegExp(r'\.$'), '');
+    if (shareUnitController.text != formattedValue) {
+      shareUnitController.removeListener(_updateShareUnitValue);
+      shareUnitController.text = formattedValue;
+      shareUnitController.addListener(_updateShareUnitValue);
     }
   }
 
@@ -502,6 +557,11 @@ class CreateSellPostController extends GetxController {
     plotSizeUnit.value = LandUnit.katha;
     plotSizeValue.value = 0;
     plotSizeRange.value = null;
+    hasShareUnit.value = false;
+    shareUnitController.clear();
+    shareUnitUnit.value = LandUnit.katha;
+    shareUnitValue.value = 0;
+    shareUnitRange.value = null;
     pricePerKathaValue.value = 0;
     distanceRange.value = null;
     location.value = const LocationData();
@@ -518,12 +578,14 @@ class CreateSellPostController extends GetxController {
   void onClose() {
     landAmountController.removeListener(_updateLandAmountValue);
     plotSizeController.removeListener(_updatePlotSizeValue);
+    shareUnitController.removeListener(_updateShareUnitValue);
     pricePerKathaController.removeListener(_updatePricePerKathaValue);
     titleController.dispose();
     descriptionController.dispose();
     pricePerKathaController.dispose();
     landAmountController.dispose();
     plotSizeController.dispose();
+    shareUnitController.dispose();
     super.onClose();
   }
 }

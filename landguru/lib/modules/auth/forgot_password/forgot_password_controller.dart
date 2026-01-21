@@ -3,16 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_routes.dart';
 
-/// Controller for the Forgot Password flow (4 steps for User)
-/// Step 1: Phone number
-/// Step 2: OTP verification
-/// Step 3: Set new password
-/// Step 4: Success
+/// Controller for the Forgot Password flow
+/// For User (4 steps): Phone → OTP → New Password → Success
+/// For Agent (2 steps): Phone → Request Sent (admin will contact)
 class ForgotPasswordController extends GetxController {
-  // Total steps
-  static const int totalSteps = 4;
+  // Whether the user is an agent (determined by backend after phone submission)
+  final RxBool isAgent = false.obs;
 
-  // Current step (1-4)
+  // Total steps (4 for user, 2 for agent)
+  int get totalSteps => isAgent.value ? 2 : 4;
+
+  // Current step
   final RxInt currentStep = 1.obs;
 
   // Step 1: Phone
@@ -79,26 +80,46 @@ class ForgotPasswordController extends GetxController {
     }
   }
 
-  /// Step 1: Send OTP to phone
-  Future<void> sendOtp() async {
+  /// Step 1: Send reset request to backend
+  /// Backend determines if user is an Agent or regular User
+  Future<void> sendResetRequest() async {
     if (!phoneFormKey.currentState!.validate()) return;
 
     isLoading.value = true;
     try {
-      // TODO: Implement send OTP API call
+      // TODO: Implement API call to check user type and send reset request
+      // API response should include: { isAgent: bool, ... }
       await Future.delayed(const Duration(seconds: 1));
+
+      // Simulating backend response - for testing, set to false for User flow
+      // In production, this will come from API response
+      final bool backendIsAgent = false; // TODO: Get from API response
+
+      isAgent.value = backendIsAgent;
       currentStep.value = 2;
-      _startResendCountdown();
-      Get.toNamed(AppRoutes.FORGOT_PASSWORD_VERIFY_OTP);
+
+      if (isAgent.value) {
+        // Agent: Navigate to request sent confirmation (Step 2 of 2)
+        Get.toNamed(AppRoutes.FORGOT_PASSWORD_AGENT_REQUEST_SENT);
+      } else {
+        // User: Navigate to OTP verification (Step 2 of 4)
+        _startResendCountdown();
+        Get.toNamed(AppRoutes.FORGOT_PASSWORD_VERIFY_OTP);
+      }
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Failed to send OTP. Please try again.',
+        'Failed to send reset request. Please try again.',
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Legacy method for backward compatibility
+  Future<void> sendOtp() async {
+    await sendResetRequest();
   }
 
   /// Step 2: Verify OTP
@@ -219,6 +240,7 @@ class ForgotPasswordController extends GetxController {
   /// Reset all fields
   void resetForm() {
     currentStep.value = 1;
+    isAgent.value = false;
     phoneController.clear();
     clearOtp();
     passwordController.clear();

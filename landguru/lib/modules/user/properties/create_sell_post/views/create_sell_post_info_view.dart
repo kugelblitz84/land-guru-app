@@ -215,6 +215,82 @@ class CreateSellPostInfoView extends GetView<CreateSellPostController> {
                         label: 'Select range',
                       ),
                     ),
+                    SizedBox(height: 20.h),
+
+                    // Share Unit Checkbox
+                    Obx(
+                      () => Row(
+                        children: [
+                          SizedBox(
+                            width: 24.w,
+                            height: 24.h,
+                            child: Checkbox(
+                              value: controller.hasShareUnit.value,
+                              onChanged: (value) =>
+                                  controller.toggleShareUnit(value ?? false),
+                              activeColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4.r),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'Share Unit',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.grey900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Share Unit Input (only visible when checkbox is checked)
+                    Obx(() {
+                      if (!controller.hasShareUnit.value) {
+                        return const SizedBox.shrink();
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 12.h),
+                          MetricsInputField(
+                            label: '',
+                            controller: controller.shareUnitController,
+                            selectedUnit: controller.shareUnitUnit.value,
+                            onUnitChanged: controller.changeShareUnitUnit,
+                            isRequired: false,
+                            hintText: '1.000',
+                          ),
+                          SizedBox(height: 8.h),
+
+                          // Share unit conversions
+                          Builder(builder: (context) {
+                            final value = controller.shareUnitValue.value;
+                            final unit = controller.shareUnitUnit.value;
+                            if (value > 0) {
+                              return MetricsConversionRow(
+                                value: value,
+                                currentUnit: unit,
+                                label: 'In other metrics',
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          }),
+                          SizedBox(height: 12.h),
+
+                          // Share unit range slider
+                          LandSizeRangeSlider(
+                            currentValue: controller.shareUnitValue.value,
+                            currentUnit: controller.shareUnitUnit.value,
+                            onChanged: controller.updateShareUnitFromSlider,
+                            label: 'Select range',
+                          ),
+                        ],
+                      );
+                    }),
                     SizedBox(height: 24.h),
 
                     // Price Per Katha

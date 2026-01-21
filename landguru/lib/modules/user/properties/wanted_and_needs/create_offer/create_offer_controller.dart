@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../core/utils/currency_formatter.dart';
 import '../../../../../routes/app_routes.dart';
 import '../../widgets/properties_widgets.dart';
 
@@ -97,12 +98,7 @@ class CreateOfferController extends GetxController {
   String get formattedAskingPrice {
     final price = askingPrice;
     if (price == 0) return '৳ 0';
-    if (price >= 10000000) {
-      return '৳ ${(price / 10000000).toStringAsFixed(2)} Cr';
-    } else if (price >= 100000) {
-      return '৳ ${(price / 100000).toStringAsFixed(2)} Lac';
-    }
-    return '৳ ${price.toStringAsFixed(0)}';
+    return CurrencyFormatter.formatWithSymbol(price);
   }
 
   /// Format land amount for display

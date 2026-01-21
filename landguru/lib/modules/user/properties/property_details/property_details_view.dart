@@ -149,6 +149,44 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
               ),
               SizedBox(height: 16.h),
 
+              // Share Unit (only shown if property has share unit)
+              if (property.shareUnit != null && property.shareUnit!.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w),
+                  child: Obx(() {
+                    final conversions = controller.getAllConversions(
+                      property.shareUnit!,
+                    );
+                    final convertedValue = controller.getConvertedLandAmount(
+                      property.shareUnit!,
+                    );
+                    final currentUnit = controller.selectedLandUnit.value.label;
+
+                    final conversionsMap = <String, double>{};
+                    conversions.forEach((unit, value) {
+                      if (unit.label != currentUnit) {
+                        conversionsMap[unit.label] = value;
+                      }
+                    });
+
+                    return PropertyDetailRowWithAction(
+                      imageAsset: 'assets/Logos/Land&plotSize.png',
+                      label: 'Share Unit',
+                      value: convertedValue,
+                      actionWidget: ChangeMetricsPopup(
+                        selectedUnit: controller.selectedLandUnit.value,
+                        onUnitChanged: (unit) {
+                          controller.selectedLandUnit.value = unit;
+                        },
+                      ),
+                      conversions: conversionsMap,
+                      currentUnit: currentUnit,
+                    );
+                  }),
+                ),
+              if (property.shareUnit != null && property.shareUnit!.isNotEmpty)
+                SizedBox(height: 16.h),
+
               // Distance from Road
               PropertyDetailRow(
                 imageAsset: 'assets/Logos/DistanceFromRoad.png',
@@ -238,15 +276,21 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
   }
 
   Widget _buildImagePlaceholder() {
-    return Container(
-      color: AppColors.primary.withAlpha(50),
-      child: Center(
-        child: Icon(
-          Icons.image,
-          size: 60.sp,
-          color: AppColors.primary.withAlpha(100),
-        ),
-      ),
+    return Image.asset(
+      'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: AppColors.primary.withAlpha(50),
+          child: Center(
+            child: Icon(
+              Icons.image,
+              size: 60.sp,
+              color: AppColors.primary.withAlpha(100),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -852,6 +896,16 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
     );
   }
 
+  // Agent images for services
+  static const List<String> _agentImages = [
+    'assets/images/User_DP/abrar.jpg',
+    'assets/images/User_DP/Farhan.jpg',
+    'assets/images/User_DP/forhad.jpg',
+    'assets/images/User_DP/jahangir.jpg',
+    'assets/images/User_DP/rahman.jpg',
+    'assets/images/User_DP/sahil.jpg',
+  ];
+
   Widget _buildServicesTakenContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -862,6 +916,7 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
           final index = entry.key;
           final service = entry.value;
           final isLast = index == controller.serviceVerifications.length - 1;
+          final agentImage = _agentImages[index % _agentImages.length];
 
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -958,11 +1013,7 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
                           CircleAvatar(
                             radius: 18.r,
                             backgroundColor: AppColors.grey200,
-                            child: Icon(
-                              Icons.person,
-                              color: AppColors.grey500,
-                              size: 20.sp,
-                            ),
+                            backgroundImage: AssetImage(agentImage),
                           ),
                           SizedBox(width: 10.w),
                           Column(
@@ -1018,13 +1069,15 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
                 onPressed: hasRequested
                     ? null
                     : isOfferFlow && !isLocked
-                        ? () => _submitOfferDirectly()
-                        : () => _showRequestAppointmentDialog(),
+                    ? () => _submitOfferDirectly()
+                    : () => _showRequestAppointmentDialog(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      hasRequested ? AppColors.grey300 : AppColors.primary,
-                  foregroundColor:
-                      hasRequested ? AppColors.grey600 : AppColors.white,
+                  backgroundColor: hasRequested
+                      ? AppColors.grey300
+                      : AppColors.primary,
+                  foregroundColor: hasRequested
+                      ? AppColors.grey600
+                      : AppColors.white,
                   padding: EdgeInsets.symmetric(vertical: 16.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),

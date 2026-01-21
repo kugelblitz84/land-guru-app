@@ -194,19 +194,25 @@ class HomeController extends GetxController {
     Get.toNamed(AppRoutes.CREATE_BUY_POST_INFO);
   }
 
-  /// Navigate to my posts (Active Posts)
+  /// Navigate to my posts (Active Posts) - goes to Properties tab
   void goToMyPosts() {
-    Get.toNamed(AppRoutes.MY_POSTS);
+    // Navigate to Properties tab instead of placeholder route
+    final navController = Get.find<UserBottomNavController>();
+    navController.changeTab(1); // Properties tab
   }
 
   /// Navigate to appointments (Upcoming Meetings)
   void goToAppointments() {
-    Get.toNamed(AppRoutes.APPOINTMENTS);
+    // Navigate to Appointments tab
+    final navController = Get.find<UserBottomNavController>();
+    navController.changeTab(2); // Appointments tab
   }
 
-  /// Navigate to all featured properties
+  /// Navigate to all featured properties - goes to Properties tab
   void goToAllFeaturedProperties() {
-    Get.toNamed(AppRoutes.PROPERTIES_FOR_SALE);
+    // Navigate to Properties tab instead of placeholder route
+    final navController = Get.find<UserBottomNavController>();
+    navController.changeTab(1); // Properties tab
   }
 
   /// Navigate to property details (uses nested navigation to keep bottom nav visible)
@@ -217,7 +223,9 @@ class HomeController extends GetxController {
       const PropertyDetailsView(),
       arguments: property.toMap(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<PropertyDetailsController>(() => PropertyDetailsController());
+        Get.lazyPut<PropertyDetailsController>(
+          () => PropertyDetailsController(),
+        );
       }),
     );
   }

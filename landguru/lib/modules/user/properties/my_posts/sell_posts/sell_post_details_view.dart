@@ -174,6 +174,44 @@ class SellPostDetailsView extends GetView<SellPostDetailsController> {
                     ),
                     SizedBox(height: 16.h),
 
+                    // Share Unit (only shown if property has share unit)
+                    if (post.shareUnit != null && post.shareUnit!.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w),
+                        child: Obx(() {
+                          final conversions = controller.getAllConversions(
+                            post.shareUnit!,
+                          );
+                          final convertedValue = controller
+                              .getConvertedLandAmount(post.shareUnit!);
+                          final currentUnit =
+                              controller.selectedLandUnit.value.label;
+
+                          final conversionsMap = <String, double>{};
+                          conversions.forEach((unit, value) {
+                            if (unit.label != currentUnit) {
+                              conversionsMap[unit.label] = value;
+                            }
+                          });
+
+                          return PropertyDetailRowWithAction(
+                            imageAsset: 'assets/Logos/Land&plotSize.png',
+                            label: 'Share Unit',
+                            value: convertedValue,
+                            actionWidget: ChangeMetricsPopup(
+                              selectedUnit: controller.selectedLandUnit.value,
+                              onUnitChanged: (unit) {
+                                controller.selectedLandUnit.value = unit;
+                              },
+                            ),
+                            conversions: conversionsMap,
+                            currentUnit: currentUnit,
+                          );
+                        }),
+                      ),
+                    if (post.shareUnit != null && post.shareUnit!.isNotEmpty)
+                      SizedBox(height: 16.h),
+
                     // Distance from Road
                     PropertyDetailRow(
                       imageAsset: 'assets/Logos/DistanceFromRoad.png',
@@ -320,15 +358,21 @@ class SellPostDetailsView extends GetView<SellPostDetailsController> {
   }
 
   Widget _buildImagePlaceholder() {
-    return Container(
-      color: AppColors.primary.withAlpha(50),
-      child: Center(
-        child: Icon(
-          Icons.image,
-          size: 60.sp,
-          color: AppColors.primary.withAlpha(100),
-        ),
-      ),
+    return Image.asset(
+      'assets/images/Properties demo/Gazipur Water Zone.jpg',
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: AppColors.primary.withAlpha(50),
+          child: Center(
+            child: Icon(
+              Icons.image,
+              size: 60.sp,
+              color: AppColors.primary.withAlpha(100),
+            ),
+          ),
+        );
+      },
     );
   }
 

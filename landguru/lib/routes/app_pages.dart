@@ -17,11 +17,20 @@ import '../modules/auth/forgot_password/views/forgot_password_phone_view.dart';
 import '../modules/auth/forgot_password/views/forgot_password_otp_view.dart';
 import '../modules/auth/forgot_password/views/forgot_password_new_password_view.dart';
 import '../modules/auth/forgot_password/views/forgot_password_success_view.dart';
+import '../modules/auth/forgot_password/views/forgot_password_agent_request_sent_view.dart';
 
 // User Main Pages
 import '../modules/shared/bottom_nav/user_bottom_nav_view.dart';
 import '../modules/shared/bottom_nav/user_bottom_nav_controller.dart';
+
+// Agent Main Pages
+import '../modules/shared/bottom_nav/agent_bottom_nav_view.dart';
+import '../modules/shared/bottom_nav/agent_bottom_nav_controller.dart';
+import '../modules/shared/shell/agent_shell_controller.dart';
 import '../modules/shared/shell/main_shell_controller.dart';
+import '../modules/agent/dashboard/agent_dashboard_controller.dart';
+import '../modules/agent/dashboard/agent_dashboard_view.dart';
+import '../modules/agent/profile/agent_profile_controller.dart';
 import '../modules/user/home/home_view.dart';
 import '../modules/user/home/home_controller.dart';
 import '../modules/user/profile/profile_controller.dart';
@@ -68,7 +77,14 @@ import '../modules/user/properties/my_posts/offered_posts/offered_post_details_v
 // My Deals
 import '../modules/user/my_deals/my_deals_view.dart';
 import '../modules/user/my_deals/my_deals_controller.dart';
-import '../modules/user/my_deals/sold_deal_details_view.dart';
+import '../modules/user/my_deals/deal_details_view.dart';
+
+// User Profile
+import '../modules/user/profile/profile_view.dart';
+import '../modules/user/profile/edit_profile_view.dart';
+import '../modules/user/profile/edit_profile_controller.dart';
+import '../modules/user/profile/change_password_view.dart';
+import '../modules/user/profile/change_password_controller.dart';
 
 /// Contains all GetPage configurations for the application.
 /// Each page includes its route, page widget, and binding for dependency injection.
@@ -120,7 +136,9 @@ class AppPages {
       binding: BindingsBuilder(() {}),
     ),
 
-    // AUTH - FORGOT PASSWORD FLOW (4 Steps)
+    // AUTH - FORGOT PASSWORD FLOW
+    // User: 4 Steps (Phone → OTP → New Password → Success)
+    // Agent: 2 Steps (Phone → Request Sent)
     GetPage(
       name: AppRoutes.FORGOT_PASSWORD_PHONE,
       page: () => const ForgotPasswordPhoneView(),
@@ -141,6 +159,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.FORGOT_PASSWORD_SUCCESS,
       page: () => const ForgotPasswordSuccessView(),
+      binding: BindingsBuilder(() {}),
+    ),
+    // Agent-specific: Password reset request sent
+    GetPage(
+      name: AppRoutes.FORGOT_PASSWORD_AGENT_REQUEST_SENT,
+      page: () => const ForgotPasswordAgentRequestSentView(),
       binding: BindingsBuilder(() {}),
     ),
 
@@ -424,7 +448,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.MY_DEALS_SOLD_DETAILS,
-      page: () => const SoldDealDetailsView(),
+      page: () => const DealDetailsView(),
       binding: BindingsBuilder(() {}),
     ),
     GetPage(
@@ -436,52 +460,54 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.MY_DEALS_BOUGHT_DETAILS,
-      page: () =>
-          const SoldDealDetailsView(), // Reuse for now, can create separate view later
+      page: () => const DealDetailsView(),
       binding: BindingsBuilder(() {}),
     ),
 
     // PROFILE
     GetPage(
       name: AppRoutes.PROFILE,
-      page: () => const Placeholder(), // TODO: Replace with ProfilePage()
+      page: () => const ProfileView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<ProfileController>(() => ProfileController());
+        Get.lazyPut<ProfileController>(() => ProfileController());
       }),
     ),
     GetPage(
       name: AppRoutes.PROFILE_EDIT,
-      page: () => const Placeholder(), // TODO: Replace with ProfileEditPage()
+      page: () => const EditProfileView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<ProfileEditController>(() => ProfileEditController());
+        Get.lazyPut<EditProfileController>(() => EditProfileController());
       }),
     ),
     GetPage(
       name: AppRoutes.PROFILE_CHANGE_PASSWORD,
-      page: () =>
-          const Placeholder(), // TODO: Replace with ProfileChangePasswordPage()
+      page: () => const ChangePasswordView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<ChangePasswordController>(() => ChangePasswordController());
+        Get.lazyPut<ChangePasswordController>(() => ChangePasswordController());
       }),
     ),
 
     // AGENT - MAIN NAVIGATION SHELL
     GetPage(
       name: AppRoutes.AGENT_MAIN,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentMainPage() containing BottomNavigationBar
+      page: () => const AgentBottomNavView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentMainController>(() => AgentMainController());
+        // Initialize agent shell controller (shared across tabs)
+        Get.put<AgentShellController>(AgentShellController(), permanent: true);
+        Get.lazyPut<AgentBottomNavController>(() => AgentBottomNavController());
+        // Initialize dashboard controller for Home tab
+        Get.lazyPut<AgentDashboardController>(() => AgentDashboardController());
+        // Initialize profile controller for Profile tab
+        Get.lazyPut<AgentProfileController>(() => AgentProfileController());
       }),
     ),
 
     // AGENT - DASHBOARD / HOME
     GetPage(
       name: AppRoutes.AGENT_DASHBOARD,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentDashboardPage()
+      page: () => const AgentDashboardView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentDashboardController>(() => AgentDashboardController());
+        Get.lazyPut<AgentDashboardController>(() => AgentDashboardController());
       }),
     ),
 

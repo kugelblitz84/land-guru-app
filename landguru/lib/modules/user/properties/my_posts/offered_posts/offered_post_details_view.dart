@@ -26,6 +26,7 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
   // Parsed values (in the original unit - Katha)
   double _landSizeValue = 0;
   double _plotSizeValue = 0;
+  double _shareUnitValue = 0;
 
   @override
   void initState() {
@@ -42,6 +43,9 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
     );
     _plotSizeValue = LandValueHelper.parseNumericValue(
       offeredPost.plotSize ?? '',
+    );
+    _shareUnitValue = LandValueHelper.parseNumericValue(
+      offeredPost.shareUnit ?? '',
     );
   }
 
@@ -159,6 +163,31 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
                   ),
                   SizedBox(height: 16.h),
 
+                  // Share Unit (only shown if property has share unit)
+                  if (offeredPost.shareUnit != null &&
+                      offeredPost.shareUnit!.isNotEmpty &&
+                      _shareUnitValue > 0)
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      child: PropertyDetailRowWithAction(
+                        imageAsset: 'assets/Logos/Land&plotSize.png',
+                        label: 'Share Unit',
+                        value: _getConvertedValue(_shareUnitValue),
+                        actionWidget: ChangeMetricsPopup(
+                          selectedUnit: _selectedLandUnit,
+                          onUnitChanged: (newUnit) {
+                            setState(() => _selectedLandUnit = newUnit);
+                          },
+                        ),
+                        conversions: _getAllConversions(_shareUnitValue),
+                        currentUnit: _selectedLandUnit.label,
+                      ),
+                    ),
+                  if (offeredPost.shareUnit != null &&
+                      offeredPost.shareUnit!.isNotEmpty &&
+                      _shareUnitValue > 0)
+                    SizedBox(height: 16.h),
+
                   // Distance from Road
                   PropertyDetailRow(
                     imageAsset: 'assets/Logos/DistanceFromRoad.png',
@@ -221,15 +250,21 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
   }
 
   Widget _buildImagePlaceholder() {
-    return Container(
-      color: AppColors.primary.withAlpha(50),
-      child: Center(
-        child: Icon(
-          Icons.image,
-          size: 60.sp,
-          color: AppColors.primary.withAlpha(100),
-        ),
-      ),
+    return Image.asset(
+      'assets/images/Properties demo/Luxury 3 Bed Apartment.jpg',
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: AppColors.primary.withAlpha(50),
+          child: Center(
+            child: Icon(
+              Icons.image,
+              size: 60.sp,
+              color: AppColors.primary.withAlpha(100),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -406,16 +441,10 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
                 CircleAvatar(
                   radius: 30.r,
                   backgroundColor: AppColors.grey200,
-                  backgroundImage: offeredPost.buyerImageUrl != null
-                      ? AssetImage(offeredPost.buyerImageUrl!)
-                      : null,
-                  child: offeredPost.buyerImageUrl == null
-                      ? Icon(
-                          Icons.person,
-                          color: AppColors.grey500,
-                          size: 28.sp,
-                        )
-                      : null,
+                  backgroundImage: AssetImage(
+                    offeredPost.buyerImageUrl ??
+                        'assets/images/User_DP/sahil.jpg',
+                  ),
                 ),
                 SizedBox(width: 12.w),
                 Column(

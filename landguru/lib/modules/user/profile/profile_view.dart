@@ -12,19 +12,6 @@ class ProfileView extends GetView<ProfileController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          'Profile',
-          style: TextStyle(
-            color: AppColors.grey900,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
       body: Obx(
         () => controller.isLoading.value
             ? const Center(child: CircularProgressIndicator())
@@ -32,78 +19,125 @@ class ProfileView extends GetView<ProfileController> {
                 onRefresh: controller.refresh,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Column(
-                      children: [
-                        SizedBox(height: 24.h),
+                  child: Column(
+                    children: [
+                      SizedBox(height: 60.h),
 
-                        // Profile Avatar
-                        _buildProfileAvatar(),
+                      // Profile Avatar with edit button
+                      _buildProfileAvatar(),
 
-                        SizedBox(height: 16.h),
+                      SizedBox(height: 16.h),
 
-                        // User Name
-                        Obx(
-                          () => Text(
-                            controller.userName.value,
-                            style: TextStyle(
-                              fontSize: 24.sp,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.grey900,
-                            ),
+                      // User Name
+                      Obx(
+                        () => Text(
+                          controller.userName.value,
+                          style: TextStyle(
+                            fontSize: 22.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.grey900,
                           ),
                         ),
-                        SizedBox(height: 4.h),
+                      ),
 
-                        // User Phone
-                        Obx(
-                          () => Text(
-                            controller.userPhone.value,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: AppColors.grey600,
-                            ),
+                      SizedBox(height: 8.h),
+
+                      // Verified Badge
+                      Obx(
+                        () => controller.isVerified.value
+                            ? Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 6.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success,
+                                  borderRadius: BorderRadius.circular(20.r),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.verified,
+                                      color: AppColors.white,
+                                      size: 16.sp,
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      'Verified',
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+
+                      SizedBox(height: 8.h),
+
+                      // User Email
+                      Obx(
+                        () => Text(
+                          controller.userEmail.value,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.black,
                           ),
                         ),
+                      ),
 
-                        SizedBox(height: 32.h),
+                      SizedBox(height: 32.h),
 
-                        // Menu Items
-                        _buildMenuItem(
-                          icon: Icons.person_outline,
-                          title: 'Edit Profile',
-                          onTap: controller.goToEditProfile,
+                      // Menu Items Card
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(16.r),
+                            border: Border.all(color: AppColors.grey300),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.grey200.withAlpha(50),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _buildMenuItem(
+                                icon: Icons.person_outline,
+                                iconColor: AppColors.primary,
+                                title: 'Edit Profile Information',
+                                onTap: controller.goToEditProfile,
+                              ),
+                              Divider(height: 1, color: AppColors.grey300),
+                              _buildMenuItem(
+                                icon: Icons.lock_outline,
+                                iconColor: AppColors.primary,
+                                title: 'Change Password',
+                                onTap: controller.goToChangePassword,
+                              ),
+                            ],
+                          ),
                         ),
-                        _buildMenuItem(
-                          icon: Icons.lock_outline,
-                          title: 'Change Password',
-                          onTap: controller.goToChangePassword,
-                        ),
-                        _buildMenuItem(
-                          icon: Icons.notifications_outlined,
-                          title: 'Notification Settings',
-                          onTap: () {},
-                        ),
-                        _buildMenuItem(
-                          icon: Icons.help_outline,
-                          title: 'Help & Support',
-                          onTap: () {},
-                        ),
-                        _buildMenuItem(
-                          icon: Icons.info_outline,
-                          title: 'About',
-                          onTap: () {},
-                        ),
+                      ),
 
-                        SizedBox(height: 24.h),
+                      SizedBox(height: 16.h),
 
-                        // Logout Button
-                        _buildLogoutButton(),
+                      // Logout Card
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: _buildLogoutButton(),
+                      ),
 
-                        SizedBox(height: 32.h),
-                      ],
-                    ),
+                      SizedBox(height: 32.h),
+                    ],
                   ),
                 ),
               ),
@@ -112,61 +146,90 @@ class ProfileView extends GetView<ProfileController> {
   }
 
   Widget _buildProfileAvatar() {
-    return Container(
-      width: 100.w,
-      height: 100.h,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withAlpha(150),
-            AppColors.primaryDark,
-          ],
+    return Stack(
+      children: [
+        // Profile Image
+        Container(
+          width: 120.w,
+          height: 120.h,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.grey200, width: 3),
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/images/User_DP/MainUser.jpg',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: AppColors.grey200,
+                  child: Icon(
+                    Icons.person,
+                    color: AppColors.grey400,
+                    size: 60.sp,
+                  ),
+                );
+              },
+            ),
+          ),
         ),
-      ),
-      child: Icon(
-        Icons.person,
-        color: AppColors.white,
-        size: 50.sp,
-      ),
+
+        // Edit Button
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: GestureDetector(
+            onTap: controller.goToEditProfile,
+            child: Container(
+              width: 36.w,
+              height: 36.h,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.white, width: 2),
+              ),
+              child: Icon(Icons.edit, color: AppColors.white, size: 18.sp),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildMenuItem({
     required IconData icon,
+    required Color iconColor,
     required String title,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 8.h),
+      borderRadius: BorderRadius.circular(12.r),
+      child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-        decoration: BoxDecoration(
-          color: AppColors.grey100,
-          borderRadius: BorderRadius.circular(12.r),
-        ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.grey700, size: 24.sp),
+            Container(
+              width: 40.w,
+              height: 40.h,
+              decoration: BoxDecoration(
+                color: iconColor.withAlpha(20),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(icon, color: iconColor, size: 22.sp),
+            ),
             SizedBox(width: 16.w),
             Expanded(
               child: Text(
                 title,
                 style: TextStyle(
-                  fontSize: 16.sp,
+                  fontSize: 15.sp,
                   fontWeight: FontWeight.w500,
                   color: AppColors.grey900,
                 ),
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: AppColors.grey400,
-              size: 24.sp,
-            ),
+            Icon(Icons.chevron_right, color: AppColors.grey400, size: 24.sp),
           ],
         ),
       ),
@@ -178,37 +241,47 @@ class ProfileView extends GetView<ProfileController> {
       () => GestureDetector(
         onTap: controller.isLoggingOut.value ? null : _showLogoutDialog,
         child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 16.h),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           decoration: BoxDecoration(
-            color: AppColors.error.withAlpha(26),
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.error.withAlpha(77)),
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: AppColors.grey300),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.grey200.withAlpha(50),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (controller.isLoggingOut.value)
-                SizedBox(
-                  width: 20.w,
-                  height: 20.h,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.error,
-                  ),
-                )
-              else
-                Icon(
-                  Icons.logout,
-                  color: AppColors.error,
-                  size: 22.sp,
+              Container(
+                width: 40.w,
+                height: 40.h,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withAlpha(20),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
-              SizedBox(width: 12.w),
+                child: controller.isLoggingOut.value
+                    ? Center(
+                        child: SizedBox(
+                          width: 20.w,
+                          height: 20.h,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      )
+                    : Icon(Icons.logout, color: AppColors.error, size: 22.sp),
+              ),
+              SizedBox(width: 16.w),
               Text(
                 controller.isLoggingOut.value ? 'Logging out...' : 'Logout',
                 style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w500,
                   color: AppColors.error,
                 ),
               ),
@@ -221,56 +294,92 @@ class ProfileView extends GetView<ProfileController> {
 
   void _showLogoutDialog() {
     Get.dialog(
-      AlertDialog(
+      Dialog(
+        backgroundColor: AppColors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(20.r),
         ),
-        title: Text(
-          'Logout',
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.grey900,
+        child: Padding(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60.w,
+                height: 60.h,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withAlpha(20),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.logout, color: AppColors.error, size: 30.sp),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.grey900,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Are you sure you want to logout from your account?',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14.sp, color: AppColors.grey600),
+              ),
+              SizedBox(height: 24.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        side: BorderSide(color: AppColors.grey300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.grey700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        controller.logout();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      child: Text(
+                        'Logout',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-        content: Text(
-          'Are you sure you want to logout?',
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: AppColors.grey600,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.grey600,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Get.back();
-              controller.logout();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-            ),
-            child: Text(
-              'Logout',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.white,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

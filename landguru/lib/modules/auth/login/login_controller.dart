@@ -28,7 +28,7 @@ class LoginController extends GetxController {
       await Future.delayed(const Duration(seconds: 2)); // Simulated delay
 
       // TODO: Get user role from backend and navigate accordingly
-      // For now, navigate to user main
+      // For now, navigate to user main (for development/testing)
       Get.offAllNamed(AppRoutes.MAIN);
     } catch (e) {
       Get.snackbar(

@@ -80,6 +80,7 @@ class OfferedPost {
   final String? description;
   final String? sellableLandAmount;
   final String? plotSize;
+  final String? shareUnit; // Optional - only for properties with share units
   final String? distanceFromRoad;
   final String? location;
   final List<String>? propertyPhotos;
@@ -111,6 +112,7 @@ class OfferedPost {
     this.description,
     this.sellableLandAmount,
     this.plotSize,
+    this.shareUnit,
     this.distanceFromRoad,
     this.location,
     this.propertyPhotos,

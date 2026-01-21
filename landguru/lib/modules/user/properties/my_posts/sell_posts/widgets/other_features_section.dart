@@ -5,6 +5,16 @@ import '../models/sell_post_models.dart';
 
 /// Other Features Section for Active status (expandable sections)
 class OtherFeaturesSection extends StatelessWidget {
+  // Agent images for services
+  static const List<String> _agentImages = [
+    'assets/images/User_DP/abrar.jpg',
+    'assets/images/User_DP/Farhan.jpg',
+    'assets/images/User_DP/forhad.jpg',
+    'assets/images/User_DP/jahangir.jpg',
+    'assets/images/User_DP/rahman.jpg',
+    'assets/images/User_DP/sahil.jpg',
+  ];
+
   final List<DueDiligenceItem>? dueDiligenceChecklist;
   final List<OwnershipHistoryItem>? ownershipHistory;
   final List<ServiceVerificationItem>? servicesTaken;
@@ -512,6 +522,16 @@ class PentagraphMapSection extends StatelessWidget {
 
 /// Services Taken Section for Active status
 class ServicesTakenSection extends StatelessWidget {
+  // Agent images for services
+  static const List<String> _agentImages = [
+    'assets/images/User_DP/abrar.jpg',
+    'assets/images/User_DP/Farhan.jpg',
+    'assets/images/User_DP/forhad.jpg',
+    'assets/images/User_DP/jahangir.jpg',
+    'assets/images/User_DP/rahman.jpg',
+    'assets/images/User_DP/sahil.jpg',
+  ];
+
   final List<ServiceVerificationItem> services;
   final bool isExpanded;
   final VoidCallback onToggle;
@@ -601,6 +621,8 @@ class ServicesTakenSection extends StatelessWidget {
                     final index = entry.key;
                     final service = entry.value;
                     final isLast = index == services.length - 1;
+                    final agentImage =
+                        _agentImages[index % _agentImages.length];
 
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,11 +730,7 @@ class ServicesTakenSection extends StatelessWidget {
                                     CircleAvatar(
                                       radius: 18.r,
                                       backgroundColor: AppColors.grey200,
-                                      child: Icon(
-                                        Icons.person,
-                                        color: AppColors.grey500,
-                                        size: 20.sp,
-                                      ),
+                                      backgroundImage: AssetImage(agentImage),
                                     ),
                                     SizedBox(width: 10.w),
                                     Column(
