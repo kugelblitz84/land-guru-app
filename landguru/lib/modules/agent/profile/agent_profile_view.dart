@@ -24,11 +24,15 @@ class AgentProfileView extends GetView<AgentProfileController> {
                       children: [
                         SizedBox(height: 20.h),
                         _buildProfileHeader(),
-                        SizedBox(height: 24.h),
+                        SizedBox(height: 20.h),
                         _buildStatsRow(),
-                        SizedBox(height: 24.h),
-                        _buildMenuSection(),
-                        SizedBox(height: 32.h),
+                        SizedBox(height: 16.h),
+                        _buildAssignedLocationSection(),
+                        SizedBox(height: 16.h),
+                        _buildServicesSection(),
+                        SizedBox(height: 16.h),
+                        _buildViewProfileButton(),
+                        SizedBox(height: 12.h),
                         _buildLogoutButton(),
                         SizedBox(height: 24.h),
                       ],
@@ -50,11 +54,11 @@ class AgentProfileView extends GetView<AgentProfileController> {
           Stack(
             children: [
               Container(
-                width: 90.w,
-                height: 90.w,
+                width: 100.w,
+                height: 100.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary, width: 3),
+                  border: Border.all(color: AppColors.grey200, width: 3),
                 ),
                 child: ClipOval(
                   child: Image.asset(
@@ -77,22 +81,16 @@ class AgentProfileView extends GetView<AgentProfileController> {
                 bottom: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: () {
-                    // TODO: Edit profile photo
-                  },
+                  onTap: controller.goToEditProfile,
                   child: Container(
-                    width: 28.w,
-                    height: 28.w,
+                    width: 32.w,
+                    height: 32.w,
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.white, width: 2),
                     ),
-                    child: Icon(
-                      Icons.camera_alt,
-                      color: AppColors.white,
-                      size: 14.sp,
-                    ),
+                    child: Icon(Icons.edit, color: AppColors.white, size: 16.sp),
                   ),
                 ),
               ),
@@ -100,251 +98,341 @@ class AgentProfileView extends GetView<AgentProfileController> {
           ),
           SizedBox(height: 12.h),
 
-          // Name with verified badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Obx(
-                () => Text(
-                  controller.displayName,
-                  style: TextStyle(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.grey900,
-                  ),
-                ),
-              ),
-              Obx(
-                () => controller.isVerified.value
-                    ? Padding(
-                        padding: EdgeInsets.only(left: 6.w),
-                        child: Icon(
-                          Icons.verified,
-                          color: AppColors.primary,
-                          size: 20.sp,
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
-          SizedBox(height: 4.h),
-
-          // Agent type and ID
+          // Name
           Obx(
             () => Text(
-              '${controller.agentType.value} • ${controller.agentId.value}',
-              style: TextStyle(fontSize: 13.sp, color: AppColors.grey600),
+              controller.displayName,
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.grey900,
+              ),
             ),
           ),
           SizedBox(height: 4.h),
 
-          // Email
+          // Agent ID and Type
           Obx(
-            () => Text(
-              controller.email.value,
-              style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Stats row - Tasks completed and earnings
-  Widget _buildStatsRow() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 20.w),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withAlpha(15),
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildStatItem(
-                icon: Icons.task_alt,
-                label: 'Tasks Completed',
-                value: controller.totalTasksCompleted.toString(),
-              ),
-            ),
-            Container(
-              width: 1,
-              height: 40.h,
-              color: AppColors.primary.withAlpha(50),
-            ),
-            Expanded(
-              child: _buildStatItem(
-                icon: Icons.account_balance_wallet,
-                label: 'Total Earned',
-                value: '৳${_formatCurrency(controller.totalEarned.value)}',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Column(
-      children: [
-        Icon(icon, color: AppColors.primary, size: 24.sp),
-        SizedBox(height: 8.h),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.grey900,
-          ),
-        ),
-        SizedBox(height: 2.h),
-        Text(
-          label,
-          style: TextStyle(fontSize: 11.sp, color: AppColors.grey600),
-        ),
-      ],
-    );
-  }
-
-  /// Menu section with profile options
-  Widget _buildMenuSection() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Settings',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.grey700,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: AppColors.grey200),
-            ),
-            child: Column(
+            () => Column(
               children: [
-                _buildMenuItem(
-                  icon: Icons.person_outline,
-                  title: 'Edit Profile',
-                  onTap: controller.goToEditProfile,
+                Text(
+                  'Agent ID: ${controller.agentId.value}',
+                  style: TextStyle(fontSize: 12.sp, color: AppColors.grey600),
                 ),
-                _buildMenuDivider(),
-                _buildMenuItem(
-                  icon: Icons.lock_outline,
-                  title: 'Change Password',
-                  onTap: controller.goToChangePassword,
-                ),
-                _buildMenuDivider(),
-                _buildMenuItem(
-                  icon: Icons.location_on_outlined,
-                  title: 'Assigned Location',
-                  subtitle: controller.assignedLocation.value,
-                  onTap: () {},
-                ),
-                _buildMenuDivider(),
-                _buildMenuItem(
-                  icon: Icons.work_outline,
-                  title: 'Services You Provide',
-                  subtitle: controller.servicesProvided.join(', '),
-                  onTap: () {},
-                ),
-                _buildMenuDivider(),
-                _buildMenuItem(
-                  icon: Icons.help_outline,
-                  title: 'Help & Support',
-                  onTap: () {},
-                ),
-                _buildMenuDivider(),
-                _buildMenuItem(
-                  icon: Icons.info_outline,
-                  title: 'About',
-                  onTap: () {},
+                Text(
+                  'Agent Type: ${controller.agentType.value}',
+                  style: TextStyle(fontSize: 12.sp, color: AppColors.grey600),
                 ),
               ],
             ),
           ),
+          SizedBox(height: 10.h),
+
+          // Verified badge
+          Obx(
+            () => controller.isVerified.value
+                ? Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.success,
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          color: AppColors.white,
+                          size: 14.sp,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          'Verified',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-        child: Row(
-          children: [
-            Container(
-              width: 36.w,
-              height: 36.w,
+  /// Stats row - Tasks completed and earnings as separate cards
+  Widget _buildStatsRow() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Row(
+        children: [
+          // Total Tasks Completed Card
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: AppColors.grey100,
-                borderRadius: BorderRadius.circular(8.r),
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.grey200),
               ),
-              child: Icon(icon, color: AppColors.grey700, size: 20.sp),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.grey900,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'TOTAL TASK\nCOMPLETED',
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.success,
+                          height: 1.3,
+                        ),
+                      ),
+                      Icon(
+                        Icons.check_box,
+                        color: AppColors.success,
+                        size: 20.sp,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Obx(
+                    () => Text(
+                      controller.totalTasksCompleted.toString(),
+                      style: TextStyle(
+                        fontSize: 28.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.grey900,
+                      ),
                     ),
                   ),
-                  if (subtitle != null) ...[
-                    SizedBox(height: 2.h),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        color: AppColors.grey500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: AppColors.grey400, size: 22.sp),
+          ),
+          SizedBox(width: 12.w),
+          // Total Earned Card
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.grey200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'TOTAL EARNED',
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.success,
+                        ),
+                      ),
+                      Text(
+                        '৳',
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Obx(
+                    () => Text(
+                      controller.totalEarned.value.toStringAsFixed(0),
+                      style: TextStyle(
+                        fontSize: 28.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.grey900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Assigned Location Section
+  Widget _buildAssignedLocationSection() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight.withAlpha(30),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.location_on,
+              color: AppColors.primary,
+              size: 20.sp,
+            ),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Obx(
+                () => RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: AppColors.grey800,
+                      height: 1.4,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Assigned Location: ',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      TextSpan(text: controller.assignedLocation.value),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuDivider() {
-    return Divider(
-      height: 1,
-      thickness: 1,
-      color: AppColors.grey200,
-      indent: 62.w,
+  /// Services you Provide Section
+  Widget _buildServicesSection() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.grey200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.work_outline,
+                  color: AppColors.primary,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  'Services you Provide:',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.grey900,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+            Obx(
+              () => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: controller.servicesProvided
+                    .asMap()
+                    .entries
+                    .map((entry) => Padding(
+                          padding: EdgeInsets.only(bottom: 6.h),
+                          child: Text(
+                            '${entry.key + 1}. ${entry.value}',
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: AppColors.grey700,
+                              height: 1.4,
+                            ),
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              'These services were selected on time of the creation of your account. If you want to change, contact your assigned admin.',
+              style: TextStyle(
+                fontSize: 11.sp,
+                color: AppColors.grey500,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// View Profile Information Button
+  Widget _buildViewProfileButton() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: InkWell(
+        onTap: controller.goToEditProfile,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.grey200),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40.w,
+                height: 40.w,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight.withAlpha(50),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Icon(
+                  Icons.person_outline,
+                  color: AppColors.primary,
+                  size: 22.sp,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  'View Profile Information',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.grey900,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: AppColors.grey400,
+                size: 24.sp,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -352,34 +440,42 @@ class AgentProfileView extends GetView<AgentProfileController> {
   Widget _buildLogoutButton() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: SizedBox(
-        width: double.infinity,
-        height: 48.h,
-        child: OutlinedButton.icon(
-          onPressed: controller.logout,
-          icon: Icon(Icons.logout, size: 20.sp),
-          label: Text(
-            'Logout',
-            style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
+      child: InkWell(
+        onTap: controller.logout,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          decoration: BoxDecoration(
+            color: AppColors.error.withAlpha(15),
+            borderRadius: BorderRadius.circular(12.r),
           ),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.error,
-            side: BorderSide(color: AppColors.error),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.r),
-            ),
+          child: Row(
+            children: [
+              Container(
+                width: 40.w,
+                height: 40.w,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Icon(
+                  Icons.logout,
+                  color: AppColors.error,
+                  size: 22.sp,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.error,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
-  }
-
-  String _formatCurrency(double value) {
-    if (value >= 100000) {
-      return '${(value / 100000).toStringAsFixed(1)}L';
-    } else if (value >= 1000) {
-      return '${(value / 1000).toStringAsFixed(1)}K';
-    }
-    return value.toStringAsFixed(0);
   }
 }

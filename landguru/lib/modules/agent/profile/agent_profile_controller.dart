@@ -18,20 +18,25 @@ class AgentProfileController extends GetxController {
   final RxString phone = '+880 1712-345678'.obs;
 
   // Stats
-  final RxInt totalTasksCompleted = 156.obs;
-  final RxDouble totalEarned = 245000.0.obs;
+  final RxInt totalTasksCompleted = 12.obs;
+  final RxDouble totalEarned = 4000.0.obs;
 
   // Assigned location
   final RxString assignedLocation =
       'Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.'
           .obs;
 
-  // Services provided
+  // Services provided - full list from design
   final RxList<String> servicesProvided = <String>[
-    'Document Verification',
-    'Ownership History Check',
-    'Pentagraph Map Verification',
-    'Legal Consultation',
+    'Ownership History Validation',
+    'Pentagraph Map Validation',
+    'Physical estimate and border demarcation',
+    'Document Organization',
+    'Deed Writing Service',
+    'Namjari/DCR Update/ Pouro City Corp Record Update',
+    'Inheritance Dispute Analysis',
+    'Government Aquisition Risk',
+    'Court Case Verification',
   ].obs;
 
   /// Get display name with title

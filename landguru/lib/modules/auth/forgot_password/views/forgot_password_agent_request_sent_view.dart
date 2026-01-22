@@ -121,20 +121,20 @@ class ForgotPasswordAgentRequestSentView extends StatelessWidget {
           // Main checkmark icon
           Icon(Icons.check, size: 50.sp, color: AppColors.white),
           // Small badge circle at bottom right
-          Positioned(
-            bottom: 8.h,
-            right: 8.w,
-            child: Container(
-              width: 20.w,
-              height: 20.h,
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.success, width: 2),
-              ),
-              child: Icon(Icons.check, size: 12.sp, color: AppColors.success),
-            ),
-          ),
+          // Positioned(
+          //   bottom: 8.h,
+          //   right: 8.w,
+          //   child: Container(
+          //     width: 20.w,
+          //     height: 20.h,
+          //     decoration: BoxDecoration(
+          //       color: AppColors.white,
+          //       shape: BoxShape.circle,
+          //       border: Border.all(color: AppColors.success, width: 2),
+          //     ),
+          //     child: Icon(Icons.check, size: 12.sp, color: AppColors.success),
+          //   ),
+          // ),
         ],
       ),
     );

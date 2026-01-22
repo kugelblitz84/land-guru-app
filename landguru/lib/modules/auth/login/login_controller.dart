@@ -29,7 +29,7 @@ class LoginController extends GetxController {
 
       // TODO: Get user role from backend and navigate accordingly
       // For now, navigate to user main (for development/testing)
-      Get.offAllNamed(AppRoutes.MAIN);
+      Get.offAllNamed(AppRoutes.AGENT_MAIN);
     } catch (e) {
       Get.snackbar(
         'Error',

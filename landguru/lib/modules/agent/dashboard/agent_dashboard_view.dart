@@ -175,10 +175,7 @@ class AgentDashboardContentView extends GetView<AgentDashboardController> {
                     separatorBuilder: (_, __) => SizedBox(width: 10.w),
                     itemBuilder: (context, index) {
                       final task = controller.requiresScheduling[index];
-                      return _SchedulingCard(
-                        task: task,
-                        onViewDetails: () => controller.goToTaskDetails(task),
-                      );
+                      return _SchedulingCard(task: task, onViewDetails: () {});
                     },
                   ),
                 ),

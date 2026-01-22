@@ -924,8 +924,8 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
               Column(
                 children: [
                   Container(
-                    width: 24.w,
-                    height: 24.h,
+                    width: 18.w,
+                    height: 18.h,
                     decoration: BoxDecoration(
                       color: AppColors.white,
                       shape: BoxShape.circle,
@@ -933,8 +933,8 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
                     ),
                     child: Center(
                       child: Container(
-                        width: 8.w,
-                        height: 8.h,
+                        width: 6.w,
+                        height: 6.h,
                         decoration: BoxDecoration(
                           color: AppColors.primary,
                           shape: BoxShape.circle,

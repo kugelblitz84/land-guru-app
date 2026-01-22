@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'app_routes.dart';
@@ -30,7 +29,14 @@ import '../modules/shared/shell/agent_shell_controller.dart';
 import '../modules/shared/shell/main_shell_controller.dart';
 import '../modules/agent/dashboard/agent_dashboard_controller.dart';
 import '../modules/agent/dashboard/agent_dashboard_view.dart';
+import '../modules/agent/appointments/agent_appointments_controller.dart';
+import '../modules/agent/appointments/agent_appointments_view.dart';
+import '../modules/agent/my_tasks/my_tasks_controller.dart';
+import '../modules/agent/my_tasks/task_details_controller.dart';
+import '../modules/agent/my_tasks/task_details_view.dart';
 import '../modules/agent/profile/agent_profile_controller.dart';
+import '../modules/agent/profile/agent_edit_profile_controller.dart';
+import '../modules/agent/profile/agent_edit_profile_view.dart';
 import '../modules/user/home/home_view.dart';
 import '../modules/user/home/home_controller.dart';
 import '../modules/user/profile/profile_controller.dart';
@@ -202,27 +208,7 @@ class AppPages {
       }),
     ),
 
-    // PROPERTIES - LISTING & BROWSING
-    GetPage(
-      name: AppRoutes.PROPERTIES,
-      page: () => const Placeholder(), // TODO: Replace with PropertiesPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<PropertiesController>(() => PropertiesController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.PROPERTIES_FOR_SALE,
-      page: () =>
-          const Placeholder(), // TODO: Replace with PropertiesForSalePage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.PROPERTIES_WANTED,
-      page: () =>
-          const Placeholder(), // TODO: Replace with PropertiesWantedPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    // Unified Property Details (handles both locked and unlocked states)
+    // PROPERTY DETAILS - Unified view (handles both locked and unlocked states)
     GetPage(
       name: AppRoutes.PROPERTY_DETAILS,
       page: () => const PropertyDetailsView(),
@@ -251,28 +237,8 @@ class AppPages {
         );
       }),
     ),
-    GetPage(
-      name: AppRoutes.BUY_POST_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with BuyPostDetailsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<BuyPostDetailsController>(() => BuyPostDetailsController());
-      }),
-    ),
 
-    // PROPERTIES - MY POSTS
-    GetPage(
-      name: AppRoutes.MY_POSTS,
-      page: () => const Placeholder(), // TODO: Replace with MyPostsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<MyPostsController>(() => MyPostsController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.MY_SELL_POSTS,
-      page: () => const Placeholder(), // TODO: Replace with MySellPostsPage()
-      binding: BindingsBuilder(() {}),
-    ),
+    // MY POSTS - SELL POST DETAILS
     GetPage(
       name: AppRoutes.MY_SELL_POST_DETAILS,
       page: () => const SellPostDetailsView(),
@@ -291,30 +257,15 @@ class AppPages {
         );
       }),
     ),
-    GetPage(
-      name: AppRoutes.MY_BUY_POSTS,
-      page: () => const Placeholder(), // TODO: Replace with MyBuyPostsPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.MY_BUY_POST_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with MyBuyPostDetailsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<MyBuyPostDetailsController>(() => MyBuyPostDetailsController());
-      }),
-    ),
+
+    // MY POSTS - BUY POST OFFER DETAILS
     GetPage(
       name: AppRoutes.MY_BUY_POST_OFFER_DETAILS,
       page: () => const BuyPostOfferDetailsView(),
       binding: BindingsBuilder(() {}),
     ),
-    GetPage(
-      name: AppRoutes.MY_OFFERED_POSTS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with MyOfferedPostsPage()
-      binding: BindingsBuilder(() {}),
-    ),
+
+    // MY POSTS - OFFERED POST DETAILS
     GetPage(
       name: AppRoutes.MY_OFFERED_POST_DETAILS,
       page: () => const OfferedPostDetailsView(),
@@ -397,12 +348,6 @@ class AppPages {
         );
       }),
     ),
-    GetPage(
-      name: AppRoutes.OFFER_FROM_EXISTING_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with OfferFromExistingDetailsPage()
-      binding: BindingsBuilder(() {}),
-    ),
 
     // APPOINTMENTS
     GetPage(
@@ -411,24 +356,6 @@ class AppPages {
       binding: BindingsBuilder(() {
         Get.lazyPut<AppointmentsController>(() => AppointmentsController());
       }),
-    ),
-    GetPage(
-      name: AppRoutes.APPOINTMENTS_MY_REQUESTS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AppointmentsMyRequestsPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.APPOINTMENTS_UPCOMING,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AppointmentsUpcomingPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.APPOINTMENTS_PAST,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AppointmentsPastPage()
-      binding: BindingsBuilder(() {}),
     ),
 
     // MY DEALS
@@ -464,7 +391,7 @@ class AppPages {
       binding: BindingsBuilder(() {}),
     ),
 
-    // PROFILE
+    // USER PROFILE
     GetPage(
       name: AppRoutes.PROFILE,
       page: () => const ProfileView(),
@@ -487,6 +414,10 @@ class AppPages {
       }),
     ),
 
+    // ==========================================
+    // AGENT ROUTES
+    // ==========================================
+
     // AGENT - MAIN NAVIGATION SHELL
     GetPage(
       name: AppRoutes.AGENT_MAIN,
@@ -497,6 +428,12 @@ class AppPages {
         Get.lazyPut<AgentBottomNavController>(() => AgentBottomNavController());
         // Initialize dashboard controller for Home tab
         Get.lazyPut<AgentDashboardController>(() => AgentDashboardController());
+        // Initialize my tasks controller for My Tasks tab
+        Get.lazyPut<AgentMyTasksController>(() => AgentMyTasksController());
+        // Initialize appointments controller for Appointments tab
+        Get.lazyPut<AgentAppointmentsController>(
+          () => AgentAppointmentsController(),
+        );
         // Initialize profile controller for Profile tab
         Get.lazyPut<AgentProfileController>(() => AgentProfileController());
       }),
@@ -520,239 +457,60 @@ class AppPages {
       }),
     ),
 
-    // AGENT - MY TASKS
-    GetPage(
-      name: AppRoutes.AGENT_MY_TASKS,
-      page: () => const Placeholder(), // TODO: Replace with AgentMyTasksPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentMyTasksController>(() => AgentMyTasksController());
-      }),
-    ),
+    // AGENT - TASK DETAILS (for all task states)
     GetPage(
       name: AppRoutes.AGENT_TASK_DETAILS_NEW,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentTaskDetailsNewPage()
+      page: () => const AgentTaskDetailsView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentTaskDetailsController>(() => AgentTaskDetailsController());
+        Get.delete<AgentTaskDetailsController>(force: true);
+        Get.put<AgentTaskDetailsController>(AgentTaskDetailsController());
       }),
     ),
     GetPage(
       name: AppRoutes.AGENT_TASK_DETAILS_ACTIVE,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentTaskDetailsActivePage()
+      page: () => const AgentTaskDetailsView(),
       binding: BindingsBuilder(() {
-        // AgentTaskDetailsController should persist or be reused
+        Get.delete<AgentTaskDetailsController>(force: true);
+        Get.put<AgentTaskDetailsController>(AgentTaskDetailsController());
       }),
     ),
     GetPage(
       name: AppRoutes.AGENT_TASK_DETAILS_IN_REVIEW,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentTaskDetailsInReviewPage()
-      binding: BindingsBuilder(() {}),
+      page: () => const AgentTaskDetailsView(),
+      binding: BindingsBuilder(() {
+        Get.delete<AgentTaskDetailsController>(force: true);
+        Get.put<AgentTaskDetailsController>(AgentTaskDetailsController());
+      }),
     ),
     GetPage(
       name: AppRoutes.AGENT_TASK_DETAILS_DONE,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentTaskDetailsDonePage()
-      binding: BindingsBuilder(() {}),
+      page: () => const AgentTaskDetailsView(),
+      binding: BindingsBuilder(() {
+        Get.delete<AgentTaskDetailsController>(force: true);
+        Get.put<AgentTaskDetailsController>(AgentTaskDetailsController());
+      }),
     ),
 
     // AGENT - APPOINTMENTS
     GetPage(
       name: AppRoutes.AGENT_APPOINTMENTS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentAppointmentsPage()
+      page: () => const AgentAppointmentsView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentAppointmentsController>(() => AgentAppointmentsController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_APPOINTMENTS_UPCOMING,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentAppointmentsUpcomingPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_APPOINTMENTS_PAST,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentAppointmentsPastPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_APPOINTMENT_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentAppointmentDetailsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentAppointmentDetailsController>(() => AgentAppointmentDetailsController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_SCHEDULE_APPOINTMENT,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentScheduleAppointmentPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentScheduleAppointmentController>(() => AgentScheduleAppointmentController());
+        Get.lazyPut<AgentAppointmentsController>(
+          () => AgentAppointmentsController(),
+        );
       }),
     ),
 
-    // AGENT - PROPERTIES & POSTS (if needed for future features)
-    GetPage(
-      name: AppRoutes.AGENT_PROPERTIES,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentPropertiesPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentPropertiesController>(() => AgentPropertiesController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_PROPERTY_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentPropertyDetailsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentPropertyDetailsController>(() => AgentPropertyDetailsController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_ASSIGNED_POSTS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentAssignedPostsPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_POST_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentPostDetailsPage()
-      binding: BindingsBuilder(() {}),
-    ),
-
-    // AGENT - SERVICES & VERIFICATION
-    GetPage(
-      name: AppRoutes.AGENT_SERVICES,
-      page: () => const Placeholder(), // TODO: Replace with AgentServicesPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentServicesController>(() => AgentServicesController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_SERVICE_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentServiceDetailsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentServiceDetailsController>(() => AgentServiceDetailsController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_SERVICE_ASSIGNMENT,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentServiceAssignmentPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_SERVICE_SUBMIT,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentServiceSubmitPage()
-      binding: BindingsBuilder(() {}),
-    ),
-
-    // AGENT - CLIENTS & DEALS
-    GetPage(
-      name: AppRoutes.AGENT_CLIENTS,
-      page: () => const Placeholder(), // TODO: Replace with AgentClientsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentClientsController>(() => AgentClientsController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_CLIENT_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentClientDetailsPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_DEALS,
-      page: () => const Placeholder(), // TODO: Replace with AgentDealsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentDealsController>(() => AgentDealsController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_DEAL_DETAILS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentDealDetailsPage()
-      binding: BindingsBuilder(() {}),
-    ),
-
-    // AGENT - REPORTS & DOCUMENTS
-    GetPage(
-      name: AppRoutes.AGENT_REPORTS,
-      page: () => const Placeholder(), // TODO: Replace with AgentReportsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentReportsController>(() => AgentReportsController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_REPORTS_GENERATE,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentReportsGeneratePage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_DOCUMENTS,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentDocumentsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentDocumentsController>(() => AgentDocumentsController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_DOCUMENTS_UPLOAD,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentDocumentsUploadPage()
-      binding: BindingsBuilder(() {}),
-    ),
-
-    // AGENT - PROFILE & SETTINGS
-    GetPage(
-      name: AppRoutes.AGENT_PROFILE,
-      page: () => const Placeholder(), // TODO: Replace with AgentProfilePage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentProfileController>(() => AgentProfileController());
-      }),
-    ),
+    // AGENT - PROFILE EDIT
     GetPage(
       name: AppRoutes.AGENT_PROFILE_EDIT,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentProfileEditPage()
+      page: () => const AgentEditProfileView(),
       binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentProfileEditController>(() => AgentProfileEditController());
+        Get.lazyPut<AgentEditProfileController>(
+          () => AgentEditProfileController(),
+        );
       }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_PROFILE_CHANGE_PASSWORD,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentProfileChangePasswordPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentChangePasswordController>(() => AgentChangePasswordController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_SETTINGS,
-      page: () => const Placeholder(), // TODO: Replace with AgentSettingsPage()
-      binding: BindingsBuilder(() {
-        // Get.lazyPut<AgentSettingsController>(() => AgentSettingsController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_SETTINGS_AVAILABILITY,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentSettingsAvailabilityPage()
-      binding: BindingsBuilder(() {}),
-    ),
-    GetPage(
-      name: AppRoutes.AGENT_SETTINGS_SERVICES,
-      page: () =>
-          const Placeholder(), // TODO: Replace with AgentSettingsServicesPage()
-      binding: BindingsBuilder(() {}),
     ),
   ];
 }

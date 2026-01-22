@@ -91,9 +91,9 @@ class ForgotPasswordController extends GetxController {
       // API response should include: { isAgent: bool, ... }
       await Future.delayed(const Duration(seconds: 1));
 
-      // Simulating backend response - for testing, set to false for User flow
+      // Simulating backend response - set to true for Agent flow
       // In production, this will come from API response
-      final bool backendIsAgent = false; // TODO: Get from API response
+      final bool backendIsAgent = true; // TODO: Get from API response
 
       isAgent.value = backendIsAgent;
       currentStep.value = 2;

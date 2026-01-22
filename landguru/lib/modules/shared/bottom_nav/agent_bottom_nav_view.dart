@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../agent/dashboard/agent_dashboard_view.dart';
+import '../../agent/my_tasks/my_tasks_view.dart';
+import '../../agent/appointments/agent_appointments_view.dart';
 import '../../agent/profile/agent_profile_view.dart';
 import '../shell/agent_shell_wrapper.dart';
 import 'nested_navigator.dart';
@@ -40,20 +42,13 @@ class AgentBottomNavView extends GetView<AgentBottomNavController> {
               // Tab 1: My Tasks - with shell header
               _buildNestedTab(
                 index: 1,
-                child: _buildShellContent(
-                  _buildPlaceholderContent('My Tasks', Icons.task_alt),
-                ),
+                child: _buildShellContent(const AgentMyTasksContentView()),
               ),
 
               // Tab 2: Appointments - with shell header
               _buildNestedTab(
                 index: 2,
-                child: _buildShellContent(
-                  _buildPlaceholderContent(
-                    'Appointments',
-                    Icons.calendar_today,
-                  ),
-                ),
+                child: _buildShellContent(const AgentAppointmentsContentView()),
               ),
 
               // Tab 3: Profile - without shell header (has its own layout)

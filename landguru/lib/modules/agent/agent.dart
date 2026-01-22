@@ -9,6 +9,7 @@ export 'dashboard/models/dashboard_models.dart';
 // My Tasks
 export 'my_tasks/my_tasks_controller.dart';
 export 'my_tasks/my_tasks_view.dart';
+export 'my_tasks/models/task_models.dart';
 export 'my_tasks/task_details_controller.dart';
 export 'my_tasks/task_details_view.dart';
 
@@ -23,3 +24,5 @@ export 'notifications/agent_notifications_view.dart';
 // Profile
 export 'profile/agent_profile_controller.dart';
 export 'profile/agent_profile_view.dart';
+export 'profile/agent_edit_profile_controller.dart';
+export 'profile/agent_edit_profile_view.dart';
