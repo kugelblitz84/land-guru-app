@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 import '../../../../core/enums/property_type.dart';
 import '../../../../core/enums/post_type.dart';
 import '../../../../core/services/nested_navigation_service.dart';
-import '../../../../routes/app_routes.dart';
 import 'models/my_post.dart';
 import 'models/my_post_status.dart';
 import 'sell_posts/sell_post_details_controller.dart';
@@ -337,7 +336,9 @@ class MyPostsController extends GetxController {
           'status': post.status.name, // pending, quoted, active, draft
         },
         binding: BindingsBuilder(() {
-          Get.lazyPut<SellPostDetailsController>(() => SellPostDetailsController());
+          Get.lazyPut<SellPostDetailsController>(
+            () => SellPostDetailsController(),
+          );
         }),
       );
     } else {

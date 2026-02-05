@@ -48,8 +48,8 @@ class _NestedGetPageRoute<T> extends GetPageRoute<T> {
   @override
   Widget buildContent(BuildContext context) {
     // Set Get.arguments when this route is active
-    if (settings?.arguments != null) {
-      Get.routing.args = settings?.arguments;
+    if (settings.arguments != null) {
+      Get.routing.args = settings.arguments;
     }
     return super.buildContent(context);
   }

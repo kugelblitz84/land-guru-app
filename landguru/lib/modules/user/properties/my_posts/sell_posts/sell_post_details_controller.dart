@@ -341,8 +341,11 @@ class SellPostDetailsController extends GetxController {
   /// Get converted land amount based on selected unit
   String getConvertedLandAmount(String value) {
     final kathaValue = _getLandValueInKatha(value);
-    final sqft = LandUnitConverter.toSqft(kathaValue, LandUnit.katha);
-    final converted = LandUnitConverter.fromSqft(sqft, selectedLandUnit.value);
+    final converted = LandUnitConverter.convert(
+      kathaValue,
+      LandUnit.katha,
+      selectedLandUnit.value,
+    );
 
     String formattedNumber;
     if (converted >= 1) {
@@ -358,8 +361,7 @@ class SellPostDetailsController extends GetxController {
   /// Get all conversions for a land value
   Map<LandUnit, double> getAllConversions(String value) {
     final kathaValue = _getLandValueInKatha(value);
-    final sqft = LandUnitConverter.toSqft(kathaValue, LandUnit.katha);
-    return LandUnitConverter.getAllConversions(sqft, LandUnit.sqft);
+    return LandUnitConverter.getAllConversions(kathaValue, LandUnit.katha);
   }
 
   // === Status-specific Actions ===

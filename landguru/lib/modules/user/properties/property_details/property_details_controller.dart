@@ -422,9 +422,9 @@ class PropertyDetailsController extends GetxController {
     final originalUnit = detectOriginalUnit(originalAmount);
 
     // Convert to selected unit
-    final sqft = LandUnitConverter.toSqft(value, originalUnit);
-    final convertedValue = LandUnitConverter.fromSqft(
-      sqft,
+    final convertedValue = LandUnitConverter.convert(
+      value,
+      originalUnit,
       selectedLandUnit.value,
     );
 

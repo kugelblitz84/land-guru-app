@@ -50,8 +50,11 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
   }
 
   String _getConvertedValue(double kathaValue) {
-    final sqft = LandUnitConverter.toSqft(kathaValue, LandUnit.katha);
-    final converted = LandUnitConverter.fromSqft(sqft, _selectedLandUnit);
+    final converted = LandUnitConverter.convert(
+      kathaValue,
+      LandUnit.katha,
+      _selectedLandUnit,
+    );
 
     String formattedNumber;
     if (converted >= 1) {
@@ -65,10 +68,9 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
   }
 
   Map<String, double> _getAllConversions(double kathaValue) {
-    final sqft = LandUnitConverter.toSqft(kathaValue, LandUnit.katha);
     final conversions = LandUnitConverter.getAllConversions(
-      sqft,
-      LandUnit.sqft,
+      kathaValue,
+      LandUnit.katha,
     );
     final currentUnit = _selectedLandUnit.label;
 

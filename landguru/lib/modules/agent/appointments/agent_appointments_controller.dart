@@ -190,7 +190,6 @@ class AgentAppointmentsController extends GetxController {
   /// Get filtered appointments based on selected tab
   List<AgentAppointment> get filteredAppointments {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
 
     if (selectedTab.value == AgentAppointmentTab.upcoming) {
       return allAppointments

@@ -1,6 +1,9 @@
 class AppRoutes {
   AppRoutes._();
 
+  // BOOTSTRAP
+  static const BOOTSTRAP = '/bootstrap';
+
   // AUTH - LOGIN (Common for both User and Agent)
   static const LOGIN = '/login';
 

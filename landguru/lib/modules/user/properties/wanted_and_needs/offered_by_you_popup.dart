@@ -69,10 +69,7 @@ class _OfferedByYouPopupState extends State<OfferedByYouPopup> {
 
   String _formatValue(double value, LandUnit unit) {
     if (value == 0) return 'Not specified';
-    final converted = LandUnitConverter.fromSqft(
-      LandUnitConverter.toSqft(value, LandUnit.katha),
-      unit,
-    );
+    final converted = LandUnitConverter.convert(value, LandUnit.katha, unit);
     if (converted >= 1) {
       return 'Min ${converted.toStringAsFixed(converted.truncateToDouble() == converted ? 0 : 2)} ${unit.label}';
     }

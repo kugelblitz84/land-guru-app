@@ -1,5 +1,11 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../core/services/api_error_handler.dart';
+import '../../../core/services/auth_service.dart';
+import '../../../core/services/upload_service.dart';
 import '../../../routes/app_routes.dart';
 
 /// Service for the Signup flow (5 steps)
@@ -21,7 +27,8 @@ class SignupController extends GetxController {
 
   // Step 2: OTP
   final otpFormKey = GlobalKey<FormState>();
-  final RxList<TextEditingController> otpControllers = <TextEditingController>[].obs;
+  final RxList<TextEditingController> otpControllers =
+      <TextEditingController>[].obs;
   final RxInt resendCountdown = 0.obs;
   final RxBool canResend = true.obs;
 
@@ -39,6 +46,8 @@ class SignupController extends GetxController {
   final postalCodeController = TextEditingController();
   final fullAddressController = TextEditingController();
   final RxString profileImagePath = ''.obs;
+  final RxString profileImageLocalPath = ''.obs;
+  final RxBool isProfileImageUploading = false.obs;
   final RxString selectedDivision = ''.obs;
   final RxString selectedDistrict = ''.obs;
   final RxString selectedUpazilla = ''.obs;
@@ -54,6 +63,8 @@ class SignupController extends GetxController {
   // Loading state
   final RxBool isLoading = false.obs;
 
+  final ImagePicker _imagePicker = ImagePicker();
+
   // Dropdown options (will be populated from API)
   final RxList<String> divisions = <String>[
     'Dhaka',
@@ -68,7 +79,17 @@ class SignupController extends GetxController {
   final RxList<String> districts = <String>[].obs;
   final RxList<String> upazillas = <String>[].obs;
   final RxList<String> unions = <String>[].obs;
-  final RxList<String> wards = <String>['1', '2', '3', '4', '5', '6', '7', '8', '9'].obs;
+  final RxList<String> wards = <String>[
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+  ].obs;
 
   @override
   void onInit() {
@@ -126,39 +147,51 @@ class SignupController extends GetxController {
     if (!phoneFormKey.currentState!.validate()) return;
 
     isLoading.value = true;
-    try {
-      // TODO: Implement send OTP API call
-      await Future.delayed(const Duration(seconds: 1));
-      currentStep.value = 2;
-      Get.toNamed(AppRoutes.SIGNUP_VERIFY_OTP);
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to send OTP. Please try again.',
-          snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isLoading.value = false;
+    final authService = Get.find<AuthService>();
+    final result = await ApiErrorHandler.call(
+      () => authService.sendOtp(
+        phone: phoneController.text.trim(),
+        forgetPassword: false,
+      ),
+    );
+    isLoading.value = false;
+
+    if (!result.isSuccess) {
+      profileImageLocalPath.value = '';
+      return;
     }
+
+    currentStep.value = 2;
+    Get.toNamed(AppRoutes.SIGNUP_VERIFY_OTP);
   }
 
   /// Step 2: Verify OTP
   Future<void> verifyOtp() async {
     if (otpString.length != 4) {
-      Get.snackbar('Error', 'Please enter the complete OTP',
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'Error',
+        'Please enter the complete OTP',
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
     isLoading.value = true;
-    try {
-      // TODO: Implement verify OTP API call
-      await Future.delayed(const Duration(seconds: 1));
-      currentStep.value = 3;
-      Get.toNamed(AppRoutes.SIGNUP_SET_PASSWORD);
-    } catch (e) {
-      Get.snackbar('Error', 'Invalid OTP. Please try again.',
-          snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isLoading.value = false;
+    final authService = Get.find<AuthService>();
+    final result = await ApiErrorHandler.call(
+      () => authService.verifyOtp(
+        phone: phoneController.text.trim(),
+        otp: otpString,
+      ),
+    );
+    isLoading.value = false;
+
+    if (!result.isSuccess) {
+      return;
     }
+
+    currentStep.value = 3;
+    Get.toNamed(AppRoutes.SIGNUP_SET_PASSWORD);
   }
 
   /// Step 2: Resend OTP
@@ -169,17 +202,28 @@ class SignupController extends GetxController {
     resendCountdown.value = 60;
 
     try {
-      // TODO: Implement resend OTP API call
-      await Future.delayed(const Duration(milliseconds: 500));
-      Get.snackbar('Success', 'OTP sent successfully',
-          snackPosition: SnackPosition.BOTTOM);
+      final authService = Get.find<AuthService>();
+      final result = await ApiErrorHandler.call(
+        () => authService.sendOtp(
+          phone: phoneController.text.trim(),
+          forgetPassword: false,
+        ),
+      );
+      if (!result.isSuccess) {
+        canResend.value = true;
+        return;
+      }
+
+      Get.snackbar(
+        'Success',
+        'OTP sent successfully',
+        snackPosition: SnackPosition.BOTTOM,
+      );
 
       // Start countdown
       _startResendCountdown();
-    } catch (e) {
+    } catch (_) {
       canResend.value = true;
-      Get.snackbar('Error', 'Failed to resend OTP',
-          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
@@ -201,91 +245,201 @@ class SignupController extends GetxController {
     if (!passwordFormKey.currentState!.validate()) return;
 
     isLoading.value = true;
-    try {
-      // TODO: Implement set password API call
-      await Future.delayed(const Duration(seconds: 1));
-      currentStep.value = 4;
-      Get.toNamed(AppRoutes.SIGNUP_PERSONAL_INFO);
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to set password. Please try again.',
-          snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isLoading.value = false;
-    }
+    currentStep.value = 4;
+    Get.toNamed(AppRoutes.SIGNUP_PERSONAL_INFO);
+    isLoading.value = false;
   }
 
   /// Step 4: Save personal info and go to identity verification
   Future<void> savePersonalInfo() async {
     if (!personalInfoFormKey.currentState!.validate()) return;
 
-    isLoading.value = true;
-    try {
-      // TODO: Implement save personal info API call
-      await Future.delayed(const Duration(seconds: 1));
-      currentStep.value = 5;
-      Get.toNamed(AppRoutes.SIGNUP_IDENTITY_VERIFICATION);
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to save info. Please try again.',
-          snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isLoading.value = false;
+    if (passwordController.text.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Please set a password first',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
     }
+
+    isLoading.value = true;
+    final authService = Get.find<AuthService>();
+    final result = await ApiErrorHandler.call(
+      () => authService.completeSignup(
+        phone: phoneController.text.trim(),
+        password: passwordController.text,
+        fullName: nameController.text.trim(),
+        email: emailController.text.trim(),
+        photoUrl: profileImagePath.value.isEmpty
+            ? null
+            : profileImagePath.value,
+        division: selectedDivision.value,
+        district: selectedDistrict.value,
+        upazila: selectedUpazilla.value,
+        unionOrCityCorp: selectedUnion.value,
+        wardNo: selectedWard.value,
+        postalCode: postalCodeController.text.trim(),
+        fullAddress: fullAddressController.text.trim(),
+      ),
+    );
+    isLoading.value = false;
+
+    if (!result.isSuccess) {
+      return;
+    }
+
+    currentStep.value = 5;
+    Get.toNamed(AppRoutes.SIGNUP_IDENTITY_VERIFICATION);
   }
 
   /// Step 5: Complete registration
   Future<void> completeRegistration({bool skipIdentity = false}) async {
     if (!skipIdentity && nidFrontImagePath.value.isEmpty) {
-      Get.snackbar('Error', 'Please upload NID front side',
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'Error',
+        'Please upload NID front side',
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
     if (!skipIdentity && nidBackImagePath.value.isEmpty) {
-      Get.snackbar('Error', 'Please upload NID back side',
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'Error',
+        'Please upload NID back side',
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
     isLoading.value = true;
-    try {
-      // TODO: Implement complete registration API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      Get.snackbar('Success', 'Registration completed successfully!',
-          snackPosition: SnackPosition.BOTTOM);
-
-      // Navigate to main screen
-      Get.offAllNamed(AppRoutes.MAIN);
-    } catch (e) {
-      Get.snackbar('Error', 'Registration failed. Please try again.',
-          snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isLoading.value = false;
+    if (!skipIdentity) {
+      final authService = Get.find<AuthService>();
+      final result = await ApiErrorHandler.call(
+        () => authService.completeSignupIdentity(
+          phone: phoneController.text.trim(),
+          nidFrontUrl: nidFrontImagePath.value,
+          nidBackUrl: nidBackImagePath.value,
+          tinCertificateUrl: tinCertificatePath.value,
+        ),
+      );
+      if (!result.isSuccess) {
+        isLoading.value = false;
+        return;
+      }
     }
+
+    isLoading.value = false;
+
+    Get.snackbar(
+      'Success',
+      'Registration completed successfully!',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+
+    // Navigate to main screen
+    Get.offAllNamed(AppRoutes.MAIN);
   }
 
   /// Pick profile image
   Future<void> pickProfileImage() async {
-    // TODO: Implement image picker
-    // For now, just simulate
-    profileImagePath.value = 'selected_profile_image.jpg';
+    final pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (pickedFile == null) {
+      return;
+    }
+
+    profileImageLocalPath.value = pickedFile.path;
+    isProfileImageUploading.value = true;
+    final uploadService = Get.find<UploadService>();
+    final result = await ApiErrorHandler.call(
+      () => uploadService.uploadFile(
+        file: File(pickedFile.path),
+        contentType: _guessContentType(pickedFile.path),
+        type: 'AVATAR',
+      ),
+    );
+    if (result.isSuccess && result.data != null) {
+      profileImagePath.value = result.data!;
+    }
+    isProfileImageUploading.value = false;
   }
 
   /// Pick NID front image
   Future<void> pickNidFrontImage() async {
-    // TODO: Implement image picker
-    nidFrontImagePath.value = 'nid_front.jpg';
+    final pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (pickedFile == null) return;
+
+    nidFrontImagePath.value = pickedFile.path;
+    final uploadService = Get.find<UploadService>();
+    final result = await ApiErrorHandler.call(
+      () => uploadService.uploadFile(
+        file: File(pickedFile.path),
+        contentType: _guessContentType(pickedFile.path),
+        type: 'DEED',
+      ),
+    );
+    if (result.isSuccess && result.data != null) {
+      nidFrontImagePath.value = result.data!;
+    } else {
+      nidFrontImagePath.value = '';
+    }
   }
 
   /// Pick NID back image
   Future<void> pickNidBackImage() async {
-    // TODO: Implement image picker
-    nidBackImagePath.value = 'nid_back.jpg';
+    final pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (pickedFile == null) return;
+
+    nidBackImagePath.value = pickedFile.path;
+    final uploadService = Get.find<UploadService>();
+    final result = await ApiErrorHandler.call(
+      () => uploadService.uploadFile(
+        file: File(pickedFile.path),
+        contentType: _guessContentType(pickedFile.path),
+        type: 'DEED',
+      ),
+    );
+    if (result.isSuccess && result.data != null) {
+      nidBackImagePath.value = result.data!;
+    } else {
+      nidBackImagePath.value = '';
+    }
   }
 
   /// Pick TIN certificate
   Future<void> pickTinCertificate() async {
-    // TODO: Implement file picker
-    tinCertificatePath.value = 'tin_certificate.pdf';
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    final path = result.files.single.path;
+    if (path == null) return;
+
+    tinCertificatePath.value = path;
+    final uploadService = Get.find<UploadService>();
+    final uploadResult = await ApiErrorHandler.call(
+      () => uploadService.uploadFile(
+        file: File(path),
+        contentType: _guessContentType(path),
+        type: 'DEED',
+      ),
+    );
+    if (uploadResult.isSuccess && uploadResult.data != null) {
+      tinCertificatePath.value = uploadResult.data!;
+    } else {
+      tinCertificatePath.value = '';
+    }
   }
 
   /// Toggle password visibility
@@ -404,6 +558,8 @@ class SignupController extends GetxController {
     postalCodeController.clear();
     fullAddressController.clear();
     profileImagePath.value = '';
+    profileImageLocalPath.value = '';
+    isProfileImageUploading.value = false;
     selectedDivision.value = '';
     selectedDistrict.value = '';
     selectedUpazilla.value = '';
@@ -429,5 +585,22 @@ class SignupController extends GetxController {
     postalCodeController.dispose();
     fullAddressController.dispose();
     super.onClose();
+  }
+
+  String _guessContentType(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
+      return 'image/jpeg';
+    }
+    if (lower.endsWith('.png')) {
+      return 'image/png';
+    }
+    if (lower.endsWith('.webp')) {
+      return 'image/webp';
+    }
+    if (lower.endsWith('.pdf')) {
+      return 'application/pdf';
+    }
+    return 'application/octet-stream';
   }
 }

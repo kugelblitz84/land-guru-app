@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../../models/my_post_status.dart';
 
 /// Extended model for Sell Post Details (includes all property info)

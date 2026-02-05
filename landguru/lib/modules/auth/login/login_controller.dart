@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/services/api_error_handler.dart';
+import '../../../core/services/auth_service.dart';
+import '../../../core/services/user_type_service.dart';
 import '../../../routes/app_routes.dart';
 
 /// Controller for the Login screen
@@ -23,21 +26,25 @@ class LoginController extends GetxController {
     if (!formKey.currentState!.validate()) return;
 
     isLoading.value = true;
-    try {
-      // TODO: Implement login API call
-      await Future.delayed(const Duration(seconds: 2)); // Simulated delay
+    final authService = Get.find<AuthService>();
+    final userTypeService = Get.find<UserTypeService>();
 
-      // TODO: Get user role from backend and navigate accordingly
-      // For now, navigate to user main (for development/testing)
+    final result = await ApiErrorHandler.call(
+      () => authService.login(
+        phone: phoneController.text.trim(),
+        password: passwordController.text,
+      ),
+    );
+    isLoading.value = false;
+
+    if (!result.isSuccess) {
+      return;
+    }
+
+    if (userTypeService.isAgent) {
       Get.offAllNamed(AppRoutes.AGENT_MAIN);
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Login failed. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
+    } else {
+      Get.offAllNamed(AppRoutes.MAIN);
     }
   }
 

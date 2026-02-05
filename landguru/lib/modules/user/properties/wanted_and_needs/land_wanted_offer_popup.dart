@@ -63,8 +63,9 @@ class _LandWantedOfferPopupState extends State<LandWantedOfferPopup> {
   /// Format value for display
   String _formatValue(double value, LandUnit unit) {
     if (value == 0) return 'Not specified';
-    final converted = LandUnitConverter.fromSqft(
-      LandUnitConverter.toSqft(value, LandUnit.katha), // Original is in Katha
+    final converted = LandUnitConverter.convert(
+      value,
+      LandUnit.katha, // Original is in Katha
       unit,
     );
     if (converted >= 1) {
@@ -296,7 +297,9 @@ class _LandWantedOfferPopupState extends State<LandWantedOfferPopup> {
           CircleAvatar(
             radius: 35.r,
             backgroundColor: AppColors.grey300,
-            backgroundImage: const AssetImage('assets/images/User_DP/sahil.jpg'),
+            backgroundImage: const AssetImage(
+              'assets/images/User_DP/sahil.jpg',
+            ),
           ),
           SizedBox(width: 12.w),
           // Name and details

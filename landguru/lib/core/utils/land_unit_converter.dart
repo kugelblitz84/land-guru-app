@@ -48,4 +48,12 @@ class LandUnitConverter {
     final sqft = toSqft(value, fromUnit);
     return {for (final unit in LandUnit.values) unit: fromSqft(sqft, unit)};
   }
+
+  /// Convert a value directly between units
+  static double convert(double value, LandUnit fromUnit, LandUnit toUnit) {
+    if (fromUnit == toUnit) {
+      return value;
+    }
+    return fromSqft(toSqft(value, fromUnit), toUnit);
+  }
 }

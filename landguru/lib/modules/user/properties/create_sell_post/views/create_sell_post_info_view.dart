@@ -267,18 +267,20 @@ class CreateSellPostInfoView extends GetView<CreateSellPostController> {
                           SizedBox(height: 8.h),
 
                           // Share unit conversions
-                          Builder(builder: (context) {
-                            final value = controller.shareUnitValue.value;
-                            final unit = controller.shareUnitUnit.value;
-                            if (value > 0) {
-                              return MetricsConversionRow(
-                                value: value,
-                                currentUnit: unit,
-                                label: 'In other metrics',
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          }),
+                          Builder(
+                            builder: (context) {
+                              final value = controller.shareUnitValue.value;
+                              final unit = controller.shareUnitUnit.value;
+                              if (value > 0) {
+                                return MetricsConversionRow(
+                                  value: value,
+                                  currentUnit: unit,
+                                  label: 'In other metrics',
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
                           SizedBox(height: 12.h),
 
                           // Share unit range slider
@@ -306,6 +308,38 @@ class CreateSellPostInfoView extends GetView<CreateSellPostController> {
                       final askingPrice = controller.askingPrice;
                       return AskingPriceDisplay(askingPrice: askingPrice);
                     }),
+                    SizedBox(height: 12.h),
+                    Obx(
+                      () => Row(
+                        children: [
+                          SizedBox(
+                            width: 24.w,
+                            height: 24.h,
+                            child: Checkbox(
+                              value: controller.isNegotiable.value,
+                              onChanged: (_) => controller.toggleIsNegotiable(),
+                              activeColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4.r),
+                              ),
+                              side: BorderSide(
+                                color: AppColors.grey400,
+                                width: 1.2,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'Negotiable Price',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.grey900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     SizedBox(height: 32.h),
 
                     // Location Section
@@ -354,7 +388,9 @@ class CreateSellPostInfoView extends GetView<CreateSellPostController> {
                   height: 52.h,
                   child: Obx(
                     () => ElevatedButton(
-                      onPressed: controller.isSavingDraft.value
+                      onPressed:
+                          (controller.isSavingDraft.value ||
+                              controller.isLoading.value)
                           ? null
                           : controller.validateAndNextFromInfo,
                       style: ElevatedButton.styleFrom(
@@ -364,25 +400,36 @@ class CreateSellPostInfoView extends GetView<CreateSellPostController> {
                         ),
                         elevation: 0,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Next',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.white,
+                      child: controller.isLoading.value
+                          ? SizedBox(
+                              width: 20.sp,
+                              height: 20.sp,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.white,
+                                ),
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Next',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                                SizedBox(width: 8.w),
+                                Icon(
+                                  Icons.arrow_forward,
+                                  color: AppColors.white,
+                                  size: 20.sp,
+                                ),
+                              ],
                             ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Icon(
-                            Icons.arrow_forward,
-                            color: AppColors.white,
-                            size: 20.sp,
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ),

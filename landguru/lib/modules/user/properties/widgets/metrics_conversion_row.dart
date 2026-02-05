@@ -37,10 +37,7 @@ class LandValueHelper {
     String notSpecifiedText = 'Not specified',
   }) {
     if (value == 0) return notSpecifiedText;
-    final converted = LandUnitConverter.fromSqft(
-      LandUnitConverter.toSqft(value, fromUnit),
-      unit,
-    );
+    final converted = LandUnitConverter.convert(value, fromUnit, unit);
     String formattedNumber;
     if (converted >= 1) {
       formattedNumber = converted.toStringAsFixed(

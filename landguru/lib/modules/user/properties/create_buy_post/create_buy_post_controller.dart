@@ -234,12 +234,65 @@ class CreateBuyPostController extends GetxController {
 
   /// Change land size unit
   void changeLandSizeUnit(LandUnit unit) {
-    landSizeUnit.value = unit;
+    _convertMetricValue(
+      unitState: landSizeUnit,
+      valueState: landSizeValue,
+      controller: minLandSizeController,
+      listener: _updateLandSizeValue,
+      newUnit: unit,
+    );
   }
 
   /// Change plot size unit
   void changePlotSizeUnit(LandUnit unit) {
-    plotSizeUnit.value = unit;
+    _convertMetricValue(
+      unitState: plotSizeUnit,
+      valueState: plotSizeValue,
+      controller: minPlotSizeController,
+      listener: _updatePlotSizeValue,
+      newUnit: unit,
+    );
+  }
+
+  void _convertMetricValue({
+    required Rx<LandUnit> unitState,
+    required RxDouble valueState,
+    required TextEditingController controller,
+    required VoidCallback listener,
+    required LandUnit newUnit,
+  }) {
+    final oldUnit = unitState.value;
+    if (oldUnit == newUnit) {
+      return;
+    }
+
+    final converted = LandUnitConverter.convert(
+      valueState.value,
+      oldUnit,
+      newUnit,
+    );
+
+    unitState.value = newUnit;
+    valueState.value = converted;
+    _setMetricControllerText(controller, listener, converted);
+  }
+
+  void _setMetricControllerText(
+    TextEditingController controller,
+    VoidCallback listener,
+    double value,
+  ) {
+    final formattedValue = value == value.toInt()
+        ? value.toInt().toString()
+        : value
+              .toStringAsFixed(3)
+              .replaceAll(RegExp(r'0+$'), '')
+              .replaceAll(RegExp(r'\.$'), '');
+    if (controller.text != formattedValue) {
+      controller.removeListener(listener);
+      controller.text = formattedValue;
+      controller.addListener(listener);
+    }
   }
 
   /// Update location

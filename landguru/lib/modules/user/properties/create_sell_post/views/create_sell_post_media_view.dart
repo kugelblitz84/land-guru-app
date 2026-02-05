@@ -178,7 +178,10 @@ class CreateSellPostMediaView extends GetView<CreateSellPostController> {
                   height: 52.h,
                   child: Obx(
                     () => ElevatedButton(
-                      onPressed: controller.isSavingDraft.value
+                      onPressed:
+                          (controller.isSavingDraft.value ||
+                              controller.isLoading.value ||
+                              controller.isUploadingMedia.value)
                           ? null
                           : controller.validateAndNextFromMedia,
                       style: ElevatedButton.styleFrom(
@@ -188,25 +191,36 @@ class CreateSellPostMediaView extends GetView<CreateSellPostController> {
                         ),
                         elevation: 0,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Next',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.white,
+                      child: controller.isLoading.value
+                          ? SizedBox(
+                              width: 20.sp,
+                              height: 20.sp,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.white,
+                                ),
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Next',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                                SizedBox(width: 8.w),
+                                Icon(
+                                  Icons.arrow_forward,
+                                  color: AppColors.white,
+                                  size: 20.sp,
+                                ),
+                              ],
                             ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Icon(
-                            Icons.arrow_forward,
-                            color: AppColors.white,
-                            size: 20.sp,
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ),

@@ -177,30 +177,4 @@ class UserBottomNavView extends GetView<UserBottomNavController> {
       ),
     );
   }
-
-  /// Placeholder content for tabs not yet implemented
-  Widget _buildPlaceholderContent(String title, IconData icon) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 80.sp, color: AppColors.grey400),
-          SizedBox(height: 16.h),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.bold,
-              color: AppColors.grey600,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Coming Soon',
-            style: TextStyle(fontSize: 16.sp, color: AppColors.grey500),
-          ),
-        ],
-      ),
-    );
-  }
 }

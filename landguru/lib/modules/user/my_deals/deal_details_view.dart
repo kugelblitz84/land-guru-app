@@ -154,8 +154,11 @@ class _DealDetailsViewState extends State<DealDetailsView> {
   }
 
   String _getConvertedLandAmount(double kathaValue) {
-    final sqft = LandUnitConverter.toSqft(kathaValue, LandUnit.katha);
-    final converted = LandUnitConverter.fromSqft(sqft, _selectedLandUnit);
+    final converted = LandUnitConverter.convert(
+      kathaValue,
+      LandUnit.katha,
+      _selectedLandUnit,
+    );
 
     String formattedNumber;
     if (converted >= 1) {
@@ -169,8 +172,7 @@ class _DealDetailsViewState extends State<DealDetailsView> {
   }
 
   Map<LandUnit, double> _getAllConversions(double kathaValue) {
-    final sqft = LandUnitConverter.toSqft(kathaValue, LandUnit.katha);
-    return LandUnitConverter.getAllConversions(sqft, LandUnit.sqft);
+    return LandUnitConverter.getAllConversions(kathaValue, LandUnit.katha);
   }
 
   @override

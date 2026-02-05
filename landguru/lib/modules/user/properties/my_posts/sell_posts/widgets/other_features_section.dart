@@ -5,16 +5,6 @@ import '../models/sell_post_models.dart';
 
 /// Other Features Section for Active status (expandable sections)
 class OtherFeaturesSection extends StatelessWidget {
-  // Agent images for services
-  static const List<String> _agentImages = [
-    'assets/images/User_DP/abrar.jpg',
-    'assets/images/User_DP/Farhan.jpg',
-    'assets/images/User_DP/forhad.jpg',
-    'assets/images/User_DP/jahangir.jpg',
-    'assets/images/User_DP/rahman.jpg',
-    'assets/images/User_DP/sahil.jpg',
-  ];
-
   final List<DueDiligenceItem>? dueDiligenceChecklist;
   final List<OwnershipHistoryItem>? ownershipHistory;
   final List<ServiceVerificationItem>? servicesTaken;

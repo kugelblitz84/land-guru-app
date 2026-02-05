@@ -87,8 +87,9 @@ class CreateOfferController extends GetxController {
 
   /// Calculate asking price
   double get askingPrice {
-    final landInKatha = LandUnitConverter.fromSqft(
-      LandUnitConverter.toSqft(landAmountValue.value, landAmountUnit.value),
+    final landInKatha = LandUnitConverter.convert(
+      landAmountValue.value,
+      landAmountUnit.value,
       LandUnit.katha,
     );
     return pricePerKathaValue.value * landInKatha;

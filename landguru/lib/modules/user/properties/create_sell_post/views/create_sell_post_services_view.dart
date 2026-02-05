@@ -136,33 +136,50 @@ class CreateSellPostServicesView extends GetView<CreateSellPostController> {
             child: SizedBox(
               width: double.infinity,
               height: 52.h,
-              child: ElevatedButton(
-                onPressed: controller.validateAndNextFromServices,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r),
+              child: Obx(
+                () => ElevatedButton(
+                  onPressed:
+                      (controller.isLoading.value ||
+                          controller.isSavingDraft.value)
+                      ? null
+                      : controller.validateAndNextFromServices,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    elevation: 0,
                   ),
-                  elevation: 0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Next',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.white,
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Icon(
-                      Icons.arrow_forward,
-                      color: AppColors.white,
-                      size: 20.sp,
-                    ),
-                  ],
+                  child: controller.isLoading.value
+                      ? SizedBox(
+                          width: 20.sp,
+                          height: 20.sp,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.white,
+                            ),
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Next',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.white,
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: AppColors.white,
+                              size: 20.sp,
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),

@@ -98,8 +98,11 @@ class AgentTaskDetailsController extends GetxController {
     if (value == 0) return 'Not specified';
 
     // Convert from Katha (assumed source unit) to selected unit
-    final sqft = LandUnitConverter.toSqft(value, LandUnit.katha);
-    final converted = LandUnitConverter.fromSqft(sqft, selectedLandUnit.value);
+    final converted = LandUnitConverter.convert(
+      value,
+      LandUnit.katha,
+      selectedLandUnit.value,
+    );
 
     String formattedNumber;
     if (converted >= 1) {

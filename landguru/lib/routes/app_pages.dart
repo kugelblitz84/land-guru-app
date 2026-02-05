@@ -18,6 +18,10 @@ import '../modules/auth/forgot_password/views/forgot_password_new_password_view.
 import '../modules/auth/forgot_password/views/forgot_password_success_view.dart';
 import '../modules/auth/forgot_password/views/forgot_password_agent_request_sent_view.dart';
 
+// Bootstrap
+import '../core/Bootstrap/bootstrap_view.dart';
+import '../core/Bootstrap/bootstrap_controller.dart';
+
 // User Main Pages
 import '../modules/shared/bottom_nav/user_bottom_nav_view.dart';
 import '../modules/shared/bottom_nav/user_bottom_nav_controller.dart';
@@ -98,10 +102,16 @@ class AppPages {
   AppPages._();
 
   /// Initial route when app starts
-  static const INITIAL = AppRoutes.LOGIN;
+  static const INITIAL = AppRoutes.BOOTSTRAP;
 
   /// All available routes/pages in the app
   static final routes = <GetPage>[
+    // BOOTSTRAP
+    GetPage(
+      name: AppRoutes.BOOTSTRAP,
+      page: () => const BootstrapView(),
+      binding: BootstrapBinding(),
+    ),
     // AUTH - LOGIN (Common for both User and Agent)
     GetPage(
       name: AppRoutes.LOGIN,

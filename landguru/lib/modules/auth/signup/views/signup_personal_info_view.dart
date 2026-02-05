@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -42,10 +44,7 @@ class SignupPersonalInfoView extends GetView<SignupController> {
                   SizedBox(height: 16.h),
 
                   // Step Progress Indicator
-                  const StepProgressIndicator(
-                    currentStep: 4,
-                    totalSteps: 5,
-                  ),
+                  const StepProgressIndicator(currentStep: 4, totalSteps: 5),
 
                   SizedBox(height: 24.h),
 
@@ -63,10 +62,7 @@ class SignupPersonalInfoView extends GetView<SignupController> {
                   // Subtitle
                   Text(
                     'Please fill up your details to create your account.',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: AppColors.grey600,
-                    ),
+                    style: TextStyle(fontSize: 14.sp, color: AppColors.grey600),
                   ),
                   SizedBox(height: 24.h),
 
@@ -88,8 +84,47 @@ class SignupPersonalInfoView extends GetView<SignupController> {
                                   width: 2,
                                 ),
                               ),
-                              child: controller.profileImagePath.value.isEmpty
-                                  ? Stack(
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  if (controller
+                                      .profileImageLocalPath
+                                      .value
+                                      .isNotEmpty)
+                                    ClipOval(
+                                      child: Image.file(
+                                        File(
+                                          controller
+                                              .profileImageLocalPath
+                                              .value,
+                                        ),
+                                        width: 100.w,
+                                        height: 100.h,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  else if (controller
+                                      .profileImagePath
+                                      .value
+                                      .isNotEmpty)
+                                    ClipOval(
+                                      child: Image.network(
+                                        controller.profileImagePath.value,
+                                        width: 100.w,
+                                        height: 100.h,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Icon(
+                                                Icons.person,
+                                                size: 60.sp,
+                                                color: AppColors.primary,
+                                              );
+                                            },
+                                      ),
+                                    )
+                                  else
+                                    Stack(
                                       alignment: Alignment.center,
                                       children: [
                                         Icon(
@@ -114,14 +149,24 @@ class SignupPersonalInfoView extends GetView<SignupController> {
                                           ),
                                         ),
                                       ],
-                                    )
-                                  : ClipOval(
-                                      child: Icon(
-                                        Icons.person,
-                                        size: 60.sp,
-                                        color: AppColors.primary,
+                                    ),
+                                  if (controller.isProfileImageUploading.value)
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.white.withAlpha(180),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: SizedBox(
+                                        width: 28.w,
+                                        height: 28.h,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          color: AppColors.primary,
+                                        ),
                                       ),
                                     ),
+                                ],
+                              ),
                             ),
                             SizedBox(height: 8.h),
                             Text(
@@ -323,10 +368,7 @@ class SignupPersonalInfoView extends GetView<SignupController> {
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(
-              fontSize: 14.sp,
-              color: AppColors.grey400,
-            ),
+            hintStyle: TextStyle(fontSize: 14.sp, color: AppColors.grey400),
             filled: true,
             fillColor: fillColor ?? AppColors.grey100,
             contentPadding: EdgeInsets.symmetric(
@@ -368,49 +410,41 @@ class SignupPersonalInfoView extends GetView<SignupController> {
           ),
         ),
         SizedBox(height: 8.h),
-        Obx(
-          () => TextFormField(
-            controller: controller.fullAddressController,
-            maxLines: 3,
-            onTap: () {
-              controller.markFullAddressAsCustomized();
-            },
-            onChanged: (_) {
-              controller.markFullAddressAsCustomized();
-            },
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: AppColors.grey900,
+        TextFormField(
+          controller: controller.fullAddressController,
+          maxLines: 3,
+          onTap: () {
+            controller.markFullAddressAsCustomized();
+          },
+          onChanged: (_) {
+            controller.markFullAddressAsCustomized();
+          },
+          style: TextStyle(fontSize: 16.sp, color: AppColors.grey900),
+          decoration: InputDecoration(
+            hintText:
+                'Holding #45, Ward #03, Bogura Pourashava, Bogura Sadar, Bogura-5800, Rajshahi',
+            hintStyle: TextStyle(fontSize: 14.sp, color: AppColors.grey400),
+            filled: true,
+            fillColor: AppColors.grey100,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 16.h,
             ),
-            decoration: InputDecoration(
-              hintText:
-                  'Holding #45, Ward #03, Bogura Pourashava, Bogura Sadar, Bogura-5800, Rajshahi',
-              hintStyle: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.grey400,
-              ),
-              filled: true,
-              fillColor: AppColors.grey100,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16.w,
-                vertical: 16.h,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(color: AppColors.error),
-              ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: AppColors.error),
             ),
           ),
         ),
@@ -450,10 +484,7 @@ class SignupPersonalInfoView extends GetView<SignupController> {
                 value: value.value.isEmpty ? null : value.value,
                 hint: Text(
                   hint,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: AppColors.grey400,
-                  ),
+                  style: TextStyle(fontSize: 14.sp, color: AppColors.grey400),
                 ),
                 isExpanded: true,
                 icon: Icon(

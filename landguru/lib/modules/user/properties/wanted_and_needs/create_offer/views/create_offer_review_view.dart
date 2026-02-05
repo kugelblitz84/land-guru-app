@@ -340,8 +340,8 @@ class CreateOfferReviewView extends GetView<CreateOfferController> {
                 SizedBox(height: 4.h),
                 Obx(() {
                   // Access reactive values to trigger observation
-                  final _ = controller.landAmountValue.value;
-                  final __ = controller.pricePerKathaValue.value;
+                  controller.landAmountValue.value;
+                  controller.pricePerKathaValue.value;
                   return Text(
                     'Asking Price: ${controller.formattedAskingPrice}',
                     style: TextStyle(

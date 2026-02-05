@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:landguru/core/core.dart';
 import '../../../routes/app_routes.dart';
 
 /// Controller for User Profile screen
@@ -31,7 +32,7 @@ class ProfileController extends GetxController {
   final RxBool isNidVerified = true.obs;
   final RxString tinNumber = '44***99'.obs;
   final RxBool isTinVerified = true.obs;
-
+  final _token = Get.find<TokenService>();
   @override
   void onInit() {
     super.onInit();
@@ -70,8 +71,8 @@ class ProfileController extends GetxController {
     isLoggingOut.value = true;
     try {
       // TODO: Clear local storage / tokens
-      await Future.delayed(const Duration(milliseconds: 500));
-
+      //await Future.delayed(const Duration(milliseconds: 500));
+      _token.clear();
       // Navigate to login and clear all previous routes
       Get.offAllNamed(AppRoutes.LOGIN);
     } catch (e) {

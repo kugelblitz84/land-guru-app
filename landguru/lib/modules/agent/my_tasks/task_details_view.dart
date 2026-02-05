@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/enums/land_unit.dart';
 import '../../user/properties/widgets/metrics_conversion_row.dart';
 import '../../user/properties/property_details/widgets/property_details_widgets.dart';
 import 'models/task_models.dart';

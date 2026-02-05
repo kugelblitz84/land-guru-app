@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import '../../../../../core/enums/property_type.dart';
 import '../../../../../core/services/nested_navigation_service.dart';
-import '../../../../../routes/app_routes.dart';
 import 'models/buy_post_models.dart';
 import 'buy_post_offer_details_view.dart';
 

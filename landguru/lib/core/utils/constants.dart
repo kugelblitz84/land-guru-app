@@ -3,7 +3,8 @@ class AppConstants {
   AppConstants._();
 
   // API
-  static const String baseUrl = 'https://api.landguru.com';
+  static const String baseUrl =
+      'https://land-backend-production.up.railway.app';
   static const Duration apiTimeout = Duration(seconds: 30);
 
   // Storage Keys

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../widgets/auth_widgets.dart';
+import '../../widgets/otp_input_field.dart';
 import '../forgot_password_controller.dart';
 
 /// Forgot Password Step 2: Verify OTP
@@ -73,7 +73,9 @@ class ForgotPasswordOtpView extends GetView<ForgotPasswordController> {
                               height: 1.5,
                             ),
                             children: [
-                              const TextSpan(text: 'We sent a 4-digit code to '),
+                              const TextSpan(
+                                text: 'We sent a 4-digit code to ',
+                              ),
                               TextSpan(
                                 text: controller.formattedPhoneNumber,
                                 style: TextStyle(
@@ -81,14 +83,20 @@ class ForgotPasswordOtpView extends GetView<ForgotPasswordController> {
                                   color: AppColors.grey900,
                                 ),
                               ),
-                              const TextSpan(text: '.\nEnter it below to verify your identity'),
+                              const TextSpan(
+                                text:
+                                    '.\nEnter it below to verify your identity',
+                              ),
                             ],
                           ),
                         ),
                         SizedBox(height: 32.h),
 
                         // OTP Input Fields
-                        _buildOtpFields(),
+                        OtpInputField(
+                          length: 4,
+                          controllers: controller.otpControllers,
+                        ),
 
                         SizedBox(height: 24.h),
 
@@ -146,64 +154,6 @@ class ForgotPasswordOtpView extends GetView<ForgotPasswordController> {
           },
         ),
       ),
-    );
-  }
-
-  Widget _buildOtpFields() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(4, (index) {
-        return SizedBox(
-          width: 70.w,
-          height: 60.h,
-          child: TextFormField(
-            controller: controller.otpControllers[index],
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            maxLength: 1,
-            style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.grey900,
-            ),
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
-            decoration: InputDecoration(
-              counterText: '',
-              filled: true,
-              fillColor: controller.otpControllers[index].text.isNotEmpty
-                  ? AppColors.primary.withAlpha(26)
-                  : AppColors.grey100,
-              contentPadding: EdgeInsets.zero,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(
-                  color: controller.otpControllers[index].text.isNotEmpty
-                      ? AppColors.primary.withAlpha(77)
-                      : Colors.transparent,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
-              ),
-            ),
-            onChanged: (value) {
-              if (value.isNotEmpty && index < 3) {
-                FocusScope.of(Get.context!).nextFocus();
-              }
-              if (value.isEmpty && index > 0) {
-                FocusScope.of(Get.context!).previousFocus();
-              }
-            },
-          ),
-        );
-      }),
     );
   }
 }
