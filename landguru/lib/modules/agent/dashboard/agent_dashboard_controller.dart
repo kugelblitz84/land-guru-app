@@ -5,6 +5,18 @@ import 'models/dashboard_models.dart';
 
 /// Controller for the Agent Dashboard/Home screen
 class AgentDashboardController extends GetxController {
+  static String _cachedAssignedLocation = '';
+  static DashboardStats _cachedStats = DashboardStats(
+    newRequests: 0,
+    activeJobs: 0,
+    doneThisMonth: 0,
+    currentMonth: 'Jan',
+  );
+  static List<SchedulingTask> _cachedRequiresScheduling = <SchedulingTask>[];
+  static List<ScheduleItem> _cachedTodaySchedule = <ScheduleItem>[];
+  static String _cachedTodayDateLabel = '';
+  static bool _hasCachedData = false;
+
   // State
   final RxBool isLoading = false.obs;
 
@@ -55,7 +67,12 @@ class AgentDashboardController extends GetxController {
   }
 
   /// Load dashboard data
-  Future<void> loadDashboardData() async {
+  Future<void> loadDashboardData({bool forceRefresh = false}) async {
+    if (!forceRefresh && _hasCachedData) {
+      _restoreFromCache();
+      return;
+    }
+
     isLoading.value = true;
     try {
       // TODO: Load agent dashboard data from API
@@ -136,6 +153,7 @@ class AgentDashboardController extends GetxController {
           itemType: ScheduleItemType.siteVisit,
         ),
       ];
+      _syncCache();
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -195,6 +213,23 @@ class AgentDashboardController extends GetxController {
 
   /// Refresh dashboard
   Future<void> refresh() async {
-    await loadDashboardData();
+    await loadDashboardData(forceRefresh: true);
+  }
+
+  void _restoreFromCache() {
+    assignedLocation.value = _cachedAssignedLocation;
+    stats.value = _cachedStats;
+    requiresScheduling.assignAll(_cachedRequiresScheduling);
+    todaySchedule.assignAll(_cachedTodaySchedule);
+    todayDateLabel.value = _cachedTodayDateLabel;
+  }
+
+  void _syncCache() {
+    _cachedAssignedLocation = assignedLocation.value;
+    _cachedStats = stats.value;
+    _cachedRequiresScheduling = List<SchedulingTask>.from(requiresScheduling);
+    _cachedTodaySchedule = List<ScheduleItem>.from(todaySchedule);
+    _cachedTodayDateLabel = todayDateLabel.value;
+    _hasCachedData = true;
   }
 }

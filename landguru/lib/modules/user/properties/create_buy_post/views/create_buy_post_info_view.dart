@@ -220,6 +220,8 @@ class CreateBuyPostInfoView extends GetView<CreateBuyPostController> {
                     Obx(
                       () => BudgetRangeSlider(
                         selectedRange: controller.budgetRange.value,
+                        minBudgetController: controller.minBudgetController,
+                        maxBudgetController: controller.maxBudgetController,
                         onChanged: controller.updateBudgetRange,
                       ),
                     ),

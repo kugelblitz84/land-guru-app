@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
+import '../services/agent_profile_store.dart';
 import '../services/auth_service.dart';
+import '../services/user_profile_store.dart';
 import '../services/user_type_service.dart';
 import '../../routes/app_routes.dart';
 
@@ -23,8 +25,14 @@ class BootstrapController extends GetxController {
     _navigated = true;
 
     if (authService.isLoggedIn && userTypeService.isAgent) {
+      final agentProfileStore = Get.find<AgentProfileStore>();
+      agentProfileStore.hydrateFromSession();
+      await agentProfileStore.refreshProfile(showError: false);
       Get.offAllNamed(AppRoutes.AGENT_MAIN);
     } else if (authService.isLoggedIn && userTypeService.isUser) {
+      final userProfileStore = Get.find<UserProfileStore>();
+      userProfileStore.hydrateFromSession();
+      await userProfileStore.refreshProfile(showError: false);
       Get.offAllNamed(AppRoutes.MAIN);
     } else {
       Get.offAllNamed(AppRoutes.LOGIN);

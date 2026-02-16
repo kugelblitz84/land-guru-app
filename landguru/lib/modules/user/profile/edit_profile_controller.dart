@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'profile_controller.dart';
+import 'package:landguru/core/core.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'profile_services.dart';
 
 /// Controller for Edit Profile screen
 class EditProfileController extends GetxController {
@@ -17,7 +20,11 @@ class EditProfileController extends GetxController {
   // State
   final RxBool isLoading = false.obs;
   final RxBool isSaving = false.obs;
+  final RxBool isImageUploading = false.obs;
   final RxString profileImage = ''.obs;
+  final _profileServices = Get.find<ProfileServices>();
+  final _profileStore = Get.find<UserProfileStore>();
+  final _imagePicker = ImagePicker();
 
   // Dropdown values
   final RxString selectedDivision = 'Rajshahi'.obs;
@@ -86,66 +93,110 @@ class EditProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _profileStore.hydrateFromSession();
     loadCurrentProfile();
+    _profileStore.refreshProfile(showError: false).then((_) {
+      loadCurrentProfile();
+    });
   }
 
   /// Load current profile data
   void loadCurrentProfile() {
-    // Get data from ProfileController if available
-    if (Get.isRegistered<ProfileController>()) {
-      final profileController = Get.find<ProfileController>();
-      fullNameController.text = profileController.userName.value;
-      phoneController.text = profileController.userPhone.value;
-      emailController.text = profileController.userEmail.value;
-      postalCodeController.text = profileController.postalCode.value;
-      fullAddressController.text = profileController.fullAddress.value;
-      profileImage.value = profileController.profileImage.value;
+    fullNameController.text = _profileStore.userName.value;
+    phoneController.text = _profileStore.userPhone.value;
+    emailController.text = _profileStore.userEmail.value;
+    postalCodeController.text = _profileStore.postalCode.value;
+    fullAddressController.text = _profileStore.fullAddress.value;
+    profileImage.value = _profileStore.profileImage.value;
 
-      selectedDivision.value = profileController.division.value;
-      selectedDistrict.value = profileController.district.value;
-      selectedUpazilla.value = profileController.upazilla.value;
-      selectedPouroshova.value = profileController.pouroshova.value;
-      selectedWardNo.value = profileController.wardNo.value;
+    selectedDivision.value = _ensureOption(
+      divisions,
+      _profileStore.division.value,
+    );
+    selectedDistrict.value = _ensureOption(
+      districts,
+      _profileStore.district.value,
+    );
+    selectedUpazilla.value = _ensureOption(
+      upazillas,
+      _profileStore.upazilla.value,
+    );
+    selectedPouroshova.value = _ensureOption(
+      pouroshovas,
+      _profileStore.pouroshova.value,
+    );
+    selectedWardNo.value = _ensureOption(
+      wardNumbers,
+      _profileStore.wardNo.value,
+    );
 
-      nidNumber.value = profileController.nidNumber.value;
-      isNidVerified.value = profileController.isNidVerified.value;
-      tinNumber.value = profileController.tinNumber.value;
-      isTinVerified.value = profileController.isTinVerified.value;
-    }
+    nidNumber.value = _profileStore.nidNumber.value;
+    isNidVerified.value = _profileStore.isNidVerified.value;
+    tinNumber.value = _profileStore.tinNumber.value;
+    isTinVerified.value = _profileStore.isTinVerified.value;
   }
 
   /// Pick new profile image
   Future<void> pickImage() async {
-    // TODO: Implement image picker
-    Get.snackbar(
-      'Info',
-      'Image picker not implemented yet',
-      snackPosition: SnackPosition.BOTTOM,
+    final pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
     );
+    if (pickedFile == null) {
+      return;
+    }
+
+    isImageUploading.value = true;
+    final uploadService = Get.find<UploadService>();
+    final result = await ApiErrorHandler.call(
+      () => uploadService.uploadFile(
+        file: File(pickedFile.path),
+        contentType: _guessContentType(pickedFile.path),
+        type: 'AVATAR',
+      ),
+    );
+
+    if (result.isSuccess && result.data != null) {
+      profileImage.value = result.data!;
+    }
+
+    isImageUploading.value = false;
   }
 
   /// Save profile changes
   Future<void> saveProfile() async {
     if (!formKey.currentState!.validate()) return;
+    if (isImageUploading.value) {
+      Get.snackbar(
+        'Please wait',
+        'Profile image upload is still in progress.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
 
     isSaving.value = true;
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
+      final result = await ApiErrorHandler.call(
+        () => _profileServices.updateUserProfile(
+          fullName: fullNameController.text.trim(),
+          email: emailController.text.trim(),
+          division: selectedDivision.value.trim(),
+          district: selectedDistrict.value.trim(),
+          upazila: selectedUpazilla.value.trim(),
+          unionOrCityCorp: selectedPouroshova.value.trim(),
+          wardNo: selectedWardNo.value.trim(),
+          postalCode: postalCodeController.text.trim(),
+          fullAddress: fullAddressController.text.trim(),
+          photoUrl: profileImage.value.trim(),
+        ),
+      );
 
-      // Update ProfileController if available
-      if (Get.isRegistered<ProfileController>()) {
-        final profileController = Get.find<ProfileController>();
-        profileController.userName.value = fullNameController.text;
-        profileController.userEmail.value = emailController.text;
-        profileController.postalCode.value = postalCodeController.text;
-        profileController.fullAddress.value = fullAddressController.text;
-        profileController.division.value = selectedDivision.value;
-        profileController.district.value = selectedDistrict.value;
-        profileController.upazilla.value = selectedUpazilla.value;
-        profileController.pouroshova.value = selectedPouroshova.value;
-        profileController.wardNo.value = selectedWardNo.value;
+      if (!result.isSuccess || result.data == null) {
+        return;
       }
+
+      await _profileStore.refreshProfile(forceRefresh: true, showError: false);
 
       Get.back();
       Get.snackbar(
@@ -164,6 +215,30 @@ class EditProfileController extends GetxController {
     } finally {
       isSaving.value = false;
     }
+  }
+
+  String _ensureOption(List<String> options, String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      return options.isNotEmpty ? options.first : '';
+    }
+
+    if (!options.contains(normalized)) {
+      options.add(normalized);
+    }
+
+    return normalized;
+  }
+
+  String _guessContentType(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.png')) {
+      return 'image/png';
+    }
+    if (lower.endsWith('.webp')) {
+      return 'image/webp';
+    }
+    return 'image/jpeg';
   }
 
   @override

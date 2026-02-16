@@ -60,20 +60,26 @@ class AgentShellHeader extends StatelessWidget {
             border: Border.all(color: AppColors.grey200, width: 2),
           ),
           child: ClipOval(
-            child: Image.asset(
-              'assets/images/User_DP/sahil.jpg',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: AppColors.grey200,
-                  child: Icon(
-                    Icons.person,
-                    color: AppColors.grey400,
-                    size: 28.sp,
-                  ),
+            child: Obx(() {
+              final avatar = controller.agentAvatar.value.trim();
+              if (avatar.isNotEmpty) {
+                return Image.network(
+                  avatar,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return _buildAvatarFallback();
+                  },
                 );
-              },
-            ),
+              }
+
+              return Image.asset(
+                'assets/images/User_DP/sahil.jpg',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildAvatarFallback();
+                },
+              );
+            }),
           ),
         ),
         // Online indicator
@@ -95,6 +101,13 @@ class AgentShellHeader extends StatelessWidget {
               : const SizedBox.shrink(),
         ),
       ],
+    );
+  }
+
+  Widget _buildAvatarFallback() {
+    return Container(
+      color: AppColors.grey200,
+      child: Icon(Icons.person, color: AppColors.grey400, size: 28.sp),
     );
   }
 

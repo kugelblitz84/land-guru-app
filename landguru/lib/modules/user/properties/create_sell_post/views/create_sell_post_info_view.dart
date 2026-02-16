@@ -295,9 +295,9 @@ class CreateSellPostInfoView extends GetView<CreateSellPostController> {
                     }),
                     SizedBox(height: 24.h),
 
-                    // Price Per Katha
+                    // Asking Price Per Unit
                     _buildPriceField(
-                      label: 'Price Per Katha',
+                      label: 'Asking Price Per Unit',
                       controller: controller.pricePerKathaController,
                       isRequired: true,
                     ),
@@ -308,38 +308,6 @@ class CreateSellPostInfoView extends GetView<CreateSellPostController> {
                       final askingPrice = controller.askingPrice;
                       return AskingPriceDisplay(askingPrice: askingPrice);
                     }),
-                    SizedBox(height: 12.h),
-                    Obx(
-                      () => Row(
-                        children: [
-                          SizedBox(
-                            width: 24.w,
-                            height: 24.h,
-                            child: Checkbox(
-                              value: controller.isNegotiable.value,
-                              onChanged: (_) => controller.toggleIsNegotiable(),
-                              activeColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4.r),
-                              ),
-                              side: BorderSide(
-                                color: AppColors.grey400,
-                                width: 1.2,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            'Negotiable Price',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.grey900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                     SizedBox(height: 32.h),
 
                     // Location Section

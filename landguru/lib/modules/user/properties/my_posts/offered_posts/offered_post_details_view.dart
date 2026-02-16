@@ -4,9 +4,10 @@ import 'package:get/get.dart';
 import '../../../../../core/services/nested_navigation_service.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../routes/app_routes.dart';
-import '../../property_details/widgets/property_details_widgets.dart';
+import '../../for_sale/property_details/widgets/property_details_widgets.dart';
 import '../../widgets/metrics_conversion_row.dart';
 import 'models/offered_post_models.dart';
+import 'services/my_offered_posts_service.dart';
 
 /// Details View for an Offered Post
 class OfferedPostDetailsView extends StatefulWidget {
@@ -34,6 +35,23 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
     final args = Get.arguments as Map<String, dynamic>;
     offeredPost = args['offeredPost'] as OfferedPost;
     _parseValues();
+    _loadOfferedPostDetails();
+  }
+
+  Future<void> _loadOfferedPostDetails() async {
+    final offerId = offeredPost.id.trim();
+    if (offerId.isEmpty) return;
+
+    try {
+      final service = Get.find<MyOfferedPostsService>();
+      final details = await service.getMyOfferedPostDetails(offerId: offerId);
+      if (!mounted) return;
+
+      setState(() {
+        offeredPost = details;
+        _parseValues();
+      });
+    } catch (_) {}
   }
 
   /// Parse the numeric values from the post strings
@@ -239,15 +257,31 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
       child: SizedBox(
         height: 220.h,
         width: double.infinity,
-        child: offeredPost.propertyImageUrl != null
-            ? Image.asset(
-                offeredPost.propertyImageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildImagePlaceholder(),
-              )
-            : _buildImagePlaceholder(),
+        child: _buildPrimaryImage(),
       ),
+    );
+  }
+
+  Widget _buildPrimaryImage() {
+    final image = offeredPost.propertyImageUrl?.trim();
+    if (image == null || image.isEmpty) {
+      return _buildImagePlaceholder();
+    }
+
+    final isNetwork =
+        image.startsWith('http://') || image.startsWith('https://');
+    if (isNetwork) {
+      return Image.network(
+        image,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+      );
+    }
+
+    return Image.asset(
+      image,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
     );
   }
 
@@ -411,6 +445,13 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
   }
 
   Widget _buildOfferedToSection() {
+    final buyerName = offeredPost.buyerName.trim().isNotEmpty
+        ? offeredPost.buyerName.trim()
+        : 'Unknown Buyer';
+    final timestamp = offeredPost.timestamp.trim();
+    final timestampPrefix = offeredPost.timestampPrefix.trim();
+    final hasTimestamp = timestamp.isNotEmpty;
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12.w),
       child: Column(
@@ -440,72 +481,115 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 30.r,
-                  backgroundColor: AppColors.grey200,
-                  backgroundImage: AssetImage(
-                    offeredPost.buyerImageUrl ??
-                        'assets/images/User_DP/sahil.jpg',
-                  ),
-                ),
+                _buildBuyerAvatar(),
                 SizedBox(width: 12.w),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      offeredPost.buyerName,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.grey900,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        buyerName,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.grey900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    SizedBox(height: 4.h),
-                    if (offeredPost.buyerVerified)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8.w,
-                          vertical: 2.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.success,
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.check_circle,
-                              size: 10.sp,
-                              color: AppColors.white,
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              'Verified',
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.w600,
+                      SizedBox(height: 4.h),
+                      if (offeredPost.buyerVerified)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 2.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.success,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 10.sp,
                                 color: AppColors.white,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 4.w),
+                              Text(
+                                'Verified',
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        hasTimestamp
+                            ? '${timestampPrefix.isNotEmpty ? '$timestampPrefix ' : ''}$timestamp'
+                            : 'Time not available',
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: AppColors.grey500,
                         ),
                       ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      '${offeredPost.timestampPrefix} ${offeredPost.timestamp}',
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        color: AppColors.grey500,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBuyerAvatar() {
+    final image = offeredPost.buyerImageUrl?.trim();
+    final avatarSize = 60.r;
+
+    if (image == null || image.isEmpty) {
+      return _buildBuyerAvatarFallback(avatarSize);
+    }
+
+    final isNetwork =
+        image.startsWith('http://') || image.startsWith('https://');
+
+    return ClipOval(
+      child: SizedBox(
+        width: avatarSize,
+        height: avatarSize,
+        child: isNetwork
+            ? Image.network(
+                image,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    _buildBuyerAvatarFallback(avatarSize),
+              )
+            : Image.asset(
+                image,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    _buildBuyerAvatarFallback(avatarSize),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildBuyerAvatarFallback(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: AppColors.grey200,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(Icons.person, color: AppColors.grey500, size: 28.sp),
     );
   }
 

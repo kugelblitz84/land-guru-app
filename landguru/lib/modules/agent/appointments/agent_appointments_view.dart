@@ -39,18 +39,34 @@ class AgentAppointmentsContentView
             }
             return RefreshIndicator(
               onRefresh: controller.refresh,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  children: [
-                    // Sort button
-                    _buildSortButton(),
-                    SizedBox(height: 12.h),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.metrics.pixels >=
+                      notification.metrics.maxScrollExtent - 120) {
+                    controller.loadMoreAppointmentsIfNeeded();
+                  }
+                  return false;
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    children: [
+                      // Sort button
+                      _buildSortButton(),
+                      SizedBox(height: 12.h),
 
-                    // Appointments list
-                    _buildAppointmentsList(),
-                    SizedBox(height: 24.h),
-                  ],
+                      // Appointments list
+                      _buildAppointmentsList(),
+                      if (controller.isLoadingMore.value)
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      SizedBox(height: 24.h),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -127,28 +143,47 @@ class AgentAppointmentsContentView
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          GestureDetector(
-            onTap: () {
-              // TODO: Implement sort functionality
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Date',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
+          Obx(
+            () => PopupMenuButton<String>(
+              onSelected: controller.changeSortBy,
+              offset: Offset(0, 30.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              itemBuilder: (context) {
+                return controller.sortOptions.map((option) {
+                  return PopupMenuItem<String>(
+                    value: option,
+                    child: Text(
+                      option,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  );
+                }).toList();
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    controller.sortBy.value,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  SizedBox(width: 4.w),
+                  Icon(
+                    Icons.arrow_downward,
+                    size: 16.sp,
                     color: AppColors.primary,
                   ),
-                ),
-                SizedBox(width: 4.w),
-                Icon(
-                  Icons.arrow_downward,
-                  size: 16.sp,
-                  color: AppColors.primary,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

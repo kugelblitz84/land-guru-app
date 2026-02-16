@@ -41,8 +41,21 @@ class OfferedPostsContentView extends StatelessWidget {
               onRefresh: controller.refresh,
               child: ListView.builder(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: controller.filteredOfferedPosts.length,
+                itemCount:
+                    controller.filteredOfferedPosts.length +
+                    (controller.isLoadingMore.value ? 1 : 0),
                 itemBuilder: (context, index) {
+                  if (index >= controller.filteredOfferedPosts.length) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (index == controller.filteredOfferedPosts.length - 1) {
+                    controller.loadMoreIfNeeded();
+                  }
+
                   return _buildOfferedPostCard(
                     context,
                     controller,
@@ -159,17 +172,7 @@ class OfferedPostsContentView extends StatelessWidget {
             // Property image
             ClipRRect(
               borderRadius: BorderRadius.circular(12.r),
-              child: post.propertyImageUrl != null
-                  ? Image.asset(
-                      post.propertyImageUrl!,
-                      width: 80.w,
-                      height: 80.h,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildImagePlaceholder(post.propertyType);
-                      },
-                    )
-                  : _buildImagePlaceholder(post.propertyType),
+              child: _buildPostImage(post),
             ),
             SizedBox(width: 12.w),
 
@@ -295,6 +298,33 @@ class OfferedPostsContentView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPostImage(OfferedPost post) {
+    final image = post.propertyImageUrl?.trim();
+    if (image == null || image.isEmpty) {
+      return _buildImagePlaceholder(post.propertyType);
+    }
+
+    final isNetwork =
+        image.startsWith('http://') || image.startsWith('https://');
+    if (isNetwork) {
+      return Image.network(
+        image,
+        width: 80.w,
+        height: 80.h,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(post.propertyType),
+      );
+    }
+
+    return Image.asset(
+      image,
+      width: 80.w,
+      height: 80.h,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildImagePlaceholder(post.propertyType),
     );
   }
 

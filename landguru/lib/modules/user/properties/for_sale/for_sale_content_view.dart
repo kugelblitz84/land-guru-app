@@ -31,14 +31,32 @@ class ForSaleContentView extends GetView<PropertiesController> {
               if (controller.propertiesForSale.isEmpty) {
                 return _buildEmptyState();
               }
-              return ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: controller.propertiesForSale.length,
-                itemBuilder: (context, index) {
-                  return _buildPropertyCard(
-                    controller.propertiesForSale[index],
-                  );
+              return NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.metrics.pixels >=
+                      notification.metrics.maxScrollExtent - 240) {
+                    controller.loadMoreForSaleIfNeeded();
+                  }
+                  return false;
                 },
+                child: ListView.builder(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  itemCount:
+                      controller.propertiesForSale.length +
+                      (controller.isLoadingMoreForSale.value ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index >= controller.propertiesForSale.length) {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.h),
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    return _buildPropertyCard(
+                      controller.propertiesForSale[index],
+                    );
+                  },
+                ),
               );
             }),
           ),
@@ -147,19 +165,7 @@ class ForSaleContentView extends GetView<PropertiesController> {
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(16.r),
                   ),
-                  child: property.imageUrl != null
-                      ? Image.asset(
-                          property.imageUrl!,
-                          height: 180.h,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return _buildImagePlaceholder(
-                              property.propertyType,
-                            );
-                          },
-                        )
-                      : _buildImagePlaceholder(property.propertyType),
+                  child: _buildPropertyImage(property),
                 ),
 
                 // Tags
@@ -274,6 +280,39 @@ class ForSaleContentView extends GetView<PropertiesController> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPropertyImage(PropertyListing property) {
+    final imageUrl = property.imageUrl;
+
+    if (imageUrl == null || imageUrl.trim().isEmpty) {
+      return _buildImagePlaceholder(property.propertyType);
+    }
+
+    final isNetworkImage =
+        imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
+
+    if (isNetworkImage) {
+      return Image.network(
+        imageUrl,
+        height: 180.h,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildImagePlaceholder(property.propertyType);
+        },
+      );
+    }
+
+    return Image.asset(
+      imageUrl,
+      height: 180.h,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return _buildImagePlaceholder(property.propertyType);
+      },
     );
   }
 

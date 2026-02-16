@@ -5,9 +5,14 @@ import '../../../../core/theme/app_colors.dart';
 import '../task_details_controller.dart';
 
 /// Show Set Appointment popup as a centered dialog
-Future<bool?> showSetAppointmentPopup(BuildContext context) {
+Future<bool?> showSetAppointmentPopup(
+  BuildContext context, {
+  bool resetForm = true,
+}) {
   final controller = Get.find<AgentTaskDetailsController>();
-  controller.resetAppointmentForm();
+  if (resetForm) {
+    controller.resetAppointmentForm();
+  }
 
   return showDialog<bool>(
     context: context,

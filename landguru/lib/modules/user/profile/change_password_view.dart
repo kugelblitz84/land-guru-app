@@ -29,126 +29,149 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
           ),
         ),
       ),
-      body: Form(
-        key: controller.formKey,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 24.h),
-
-              // Description
-              Text(
-                'Keep your account secure by regularly updating your password.',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppColors.grey600,
-                  height: 1.5,
+      body: SafeArea(
+        child: Form(
+          key: controller.formKey,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(
+                  16.w,
+                  0,
+                  16.w,
+                  16.h + MediaQuery.of(context).viewInsets.bottom,
                 ),
-              ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 24.h),
 
-              SizedBox(height: 32.h),
+                        // Description
+                        Text(
+                          'Keep your account secure by regularly updating your password.',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.grey600,
+                            height: 1.5,
+                          ),
+                        ),
 
-              // Current Password
-              _buildLabel('Current Password', isRequired: true),
-              SizedBox(height: 8.h),
-              Obx(
-                () => _buildPasswordField(
-                  controller: controller.currentPasswordController,
-                  hintText: 'Enter current password',
-                  obscureText: !controller.showCurrentPassword.value,
-                  onToggleVisibility:
-                      controller.toggleCurrentPasswordVisibility,
-                  validator: controller.validateCurrentPassword,
-                ),
-              ),
+                        SizedBox(height: 32.h),
 
-              SizedBox(height: 24.h),
+                        // Current Password
+                        _buildLabel('Current Password', isRequired: true),
+                        SizedBox(height: 8.h),
+                        Obx(
+                          () => _buildPasswordField(
+                            controller: controller.currentPasswordController,
+                            hintText: 'Enter current password',
+                            obscureText: !controller.showCurrentPassword.value,
+                            onToggleVisibility:
+                                controller.toggleCurrentPasswordVisibility,
+                            validator: controller.validateCurrentPassword,
+                          ),
+                        ),
 
-              // New Password
-              _buildLabel('Set New Password', isRequired: true),
-              SizedBox(height: 8.h),
-              Obx(
-                () => _buildPasswordField(
-                  controller: controller.newPasswordController,
-                  hintText: 'Atleast 8 characters minimum',
-                  obscureText: !controller.showNewPassword.value,
-                  onToggleVisibility: controller.toggleNewPasswordVisibility,
-                  validator: controller.validateNewPassword,
-                ),
-              ),
+                        SizedBox(height: 24.h),
 
-              SizedBox(height: 24.h),
+                        // New Password
+                        _buildLabel('Set New Password', isRequired: true),
+                        SizedBox(height: 8.h),
+                        Obx(
+                          () => _buildPasswordField(
+                            controller: controller.newPasswordController,
+                            hintText: 'Atleast 8 characters minimum',
+                            obscureText: !controller.showNewPassword.value,
+                            onToggleVisibility:
+                                controller.toggleNewPasswordVisibility,
+                            validator: controller.validateNewPassword,
+                          ),
+                        ),
 
-              // Confirm Password
-              _buildLabel('Confirm Password', isRequired: true),
-              SizedBox(height: 8.h),
-              Obx(
-                () => _buildPasswordField(
-                  controller: controller.confirmPasswordController,
-                  hintText: 'Re-enter password',
-                  obscureText: !controller.showConfirmPassword.value,
-                  onToggleVisibility:
-                      controller.toggleConfirmPasswordVisibility,
-                  validator: controller.validateConfirmPassword,
-                ),
-              ),
+                        SizedBox(height: 24.h),
 
-              const Spacer(),
+                        // Confirm Password
+                        _buildLabel('Confirm Password', isRequired: true),
+                        SizedBox(height: 8.h),
+                        Obx(
+                          () => _buildPasswordField(
+                            controller: controller.confirmPasswordController,
+                            hintText: 'Re-enter password',
+                            obscureText: !controller.showConfirmPassword.value,
+                            onToggleVisibility:
+                                controller.toggleConfirmPasswordVisibility,
+                            validator: controller.validateConfirmPassword,
+                          ),
+                        ),
 
-              // Update Password Button
-              Obx(
-                () => SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: controller.isLoading.value
-                        ? null
-                        : controller.updatePassword,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.white,
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      disabledBackgroundColor: AppColors.primary.withAlpha(150),
-                    ),
-                    child: controller.isLoading.value
-                        ? SizedBox(
-                            height: 20.h,
-                            width: 20.w,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.white,
-                            ),
-                          )
-                        : Text(
-                            'Update Password',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
+                        const Spacer(),
+
+                        // Update Password Button
+                        Obx(
+                          () => SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: controller.isLoading.value
+                                  ? null
+                                  : controller.updatePassword,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: AppColors.white,
+                                padding: EdgeInsets.symmetric(vertical: 16.h),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                disabledBackgroundColor: AppColors.primary
+                                    .withAlpha(150),
+                              ),
+                              child: controller.isLoading.value
+                                  ? SizedBox(
+                                      height: 20.h,
+                                      width: 20.w,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Update Password',
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                             ),
                           ),
+                        ),
+
+                        SizedBox(height: 16.h),
+
+                        // Forgot Password Link
+                        Center(
+                          child: GestureDetector(
+                            onTap: controller.goToForgotPassword,
+                            child: Text(
+                              'Forgot Password ?',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: AppColors.grey500,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(height: 32.h),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Forgot Password Link
-              Center(
-                child: GestureDetector(
-                  onTap: controller.goToForgotPassword,
-                  child: Text(
-                    'Forgot Password ?',
-                    style: TextStyle(fontSize: 14.sp, color: AppColors.grey500),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 32.h),
-            ],
+              );
+            },
           ),
         ),
       ),

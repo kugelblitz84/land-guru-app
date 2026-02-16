@@ -167,7 +167,7 @@ class AgentDashboardContentView extends GetView<AgentDashboardController> {
           () => controller.requiresScheduling.isEmpty
               ? _buildEmptyState('No tasks requiring scheduling')
               : SizedBox(
-                  height: 175.h,
+                  height: 178.h,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     clipBehavior: Clip.none,
@@ -521,7 +521,7 @@ class _SchedulingCard extends StatelessWidget {
           // View Details Button
           SizedBox(
             width: double.infinity,
-            height: 34.h,
+            height: 30.h,
             child: ElevatedButton(
               onPressed: onViewDetails,
               style: ElevatedButton.styleFrom(

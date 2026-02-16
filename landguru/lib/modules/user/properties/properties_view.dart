@@ -28,21 +28,31 @@ class PropertiesContentView extends GetView<PropertiesController> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Search bar with filter
-        _buildSearchBar(),
-
-        SizedBox(height: 12.h),
-
-        // Tab bar
-        _buildTabBar(),
-
-        SizedBox(height: 12.h),
-
-        // Content based on selected tab
-        Expanded(child: Obx(() => _buildTabContent())),
-      ],
+    return DefaultTabController(
+      length: 3,
+      initialIndex: controller.selectedTabIndex.value,
+      child: Column(
+        children: [
+          _buildSearchBar(),
+          SizedBox(height: 12.h),
+          _buildTabBar(),
+          SizedBox(height: 12.h),
+          Expanded(
+            child: TabBarView(
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                Obx(
+                  () => controller.isLoading.value
+                      ? const Center(child: CircularProgressIndicator())
+                      : const ForSaleContentView(),
+                ),
+                const WantedContentView(),
+                const MyPostsContentView(),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -124,68 +134,36 @@ class PropertiesContentView extends GetView<PropertiesController> {
 
   Widget _buildTabBar() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      padding: EdgeInsets.symmetric(horizontal: 14.w),
       child: Container(
-        padding: EdgeInsets.all(10.w),
+        height: 45.h,
+        padding: EdgeInsets.all(5.w),
         decoration: BoxDecoration(
           color: AppColors.grey200,
           borderRadius: BorderRadius.circular(12.r),
         ),
-        child: Row(
-          children: [
-            Expanded(child: _buildTab(0, 'For Sale')),
-            Expanded(child: _buildTab(1, 'Wanted/Needs')),
-            Expanded(child: _buildTab(2, 'My Posts')),
+        child: TabBar(
+          onTap: controller.changeTab,
+          dividerColor: Colors.transparent,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicator: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          labelColor: AppColors.white,
+          unselectedLabelColor: AppColors.grey600,
+          labelStyle: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w500),
+          unselectedLabelStyle: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
+          ),
+          tabs: const [
+            Tab(text: 'For Sale'),
+            Tab(text: 'Wanted/Needs'),
+            Tab(text: 'My Posts'),
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildTab(int index, String label) {
-    return Obx(() {
-      final isSelected = controller.selectedTabIndex.value == index;
-      return GestureDetector(
-        onTap: () => controller.changeTab(index),
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                color: isSelected ? AppColors.white : AppColors.grey600,
-              ),
-            ),
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildTabContent() {
-    if (controller.isLoading.value) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    switch (controller.selectedTabIndex.value) {
-      case 0:
-        return const ForSaleContentView();
-      case 1:
-        return const WantedContentView();
-      case 2:
-        return _buildMyPostsContent();
-      default:
-        return const ForSaleContentView();
-    }
-  }
-
-  Widget _buildMyPostsContent() {
-    return const MyPostsContentView();
   }
 }

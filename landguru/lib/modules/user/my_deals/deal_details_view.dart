@@ -5,7 +5,7 @@ import '../../../core/enums/property_type.dart';
 import '../../../core/services/nested_navigation_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../properties/widgets/metrics_conversion_row.dart';
-import '../properties/property_details/widgets/property_details_widgets.dart';
+import '../properties/for_sale/property_details/widgets/property_details_widgets.dart';
 import 'models/deal_models.dart';
 import 'resell_property/resell_property.dart';
 

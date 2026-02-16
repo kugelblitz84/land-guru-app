@@ -46,8 +46,21 @@ class BuyPostsContentView extends StatelessWidget {
               onRefresh: controller.refresh,
               child: ListView.builder(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: controller.filteredBuyPosts.length,
+                itemCount:
+                    controller.filteredBuyPosts.length +
+                    (controller.isLoadingMore.value ? 1 : 0),
                 itemBuilder: (context, index) {
+                  if (index >= controller.filteredBuyPosts.length) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (index == controller.filteredBuyPosts.length - 1) {
+                    controller.loadMoreIfNeeded();
+                  }
+
                   return _buildBuyPostCard(
                     context,
                     controller,
@@ -217,7 +230,8 @@ class BuyPostsContentView extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        if (post.hasOffers) {
+        controller.onPostTap(post);
+        if (post.status != BuyPostStatus.draft && post.hasOffers) {
           BuyPostOffersPopup.show(context, controller, post);
         }
       },

@@ -7,13 +7,13 @@ import 'home_controller.dart';
 /// User Home/Dashboard screen - Full version with Scaffold
 /// Use this for standalone navigation (not within shell)
 class HomeView extends GetView<HomeController> {
-  const HomeView({super.key});
-
+  HomeView({super.key});
+  //final arg = Get.arguments as int?;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: SafeArea(child: const HomeContentView()),
+      body: SafeArea(child: HomeContentView()),
     );
   }
 }
@@ -21,7 +21,9 @@ class HomeView extends GetView<HomeController> {
 /// Home content view - Content only, no Scaffold
 /// Used within MainShellWrapper for tab-based navigation
 class HomeContentView extends GetView<HomeController> {
-  const HomeContentView({super.key});
+  const HomeContentView({super.key, this.arg});
+
+  final int? arg;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +40,7 @@ class HomeContentView extends GetView<HomeController> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(height: 8.h),
-
+                      //Text(arg.toString()),
                       // Quick Action Cards
                       _buildQuickActionCards(),
 
@@ -308,17 +310,30 @@ class HomeContentView extends GetView<HomeController> {
                     top: Radius.circular(16.r),
                   ),
                   child: property.imageUrl != null
-                      ? Image.asset(
-                          property.imageUrl!,
-                          height: 180.h,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return _buildImagePlaceholder(
-                              property.propertyType,
-                            );
-                          },
-                        )
+                      ? ((property.imageUrl!.startsWith('http://') ||
+                                property.imageUrl!.startsWith('https://'))
+                            ? Image.network(
+                                property.imageUrl!,
+                                height: 180.h,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return _buildImagePlaceholder(
+                                    property.propertyType,
+                                  );
+                                },
+                              )
+                            : Image.asset(
+                                property.imageUrl!,
+                                height: 180.h,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return _buildImagePlaceholder(
+                                    property.propertyType,
+                                  );
+                                },
+                              ))
                       : _buildImagePlaceholder(property.propertyType),
                 ),
 

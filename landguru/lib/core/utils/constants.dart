@@ -18,5 +18,5 @@ class AppConstants {
   // Validation
   static const int minPasswordLength = 8;
   static const int phoneNumberLength = 11;
-  static const int otpLength = 6;
+  static const int otpLength = 4;
 }

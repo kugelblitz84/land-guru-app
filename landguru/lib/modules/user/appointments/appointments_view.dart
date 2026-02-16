@@ -32,24 +32,36 @@ class AppointmentsContentView extends StatelessWidget {
     }
     final controller = Get.find<AppointmentsController>();
 
+    return DefaultTabController(
+      length: 2,
+      initialIndex: controller.selectedTab.value == AppointmentTab.upcoming
+          ? 0
+          : 1,
+      child: Column(
+        children: [
+          SizedBox(height: 8.h),
+          _buildPrimaryTabs(controller),
+          SizedBox(height: 16.h),
+          Expanded(
+            child: TabBarView(
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _buildTabContent(controller),
+                _buildTabContent(controller),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabContent(AppointmentsController controller) {
     return Column(
       children: [
-        SizedBox(height: 8.h),
-
-        // Primary tabs (Upcoming / Past)
-        _buildPrimaryTabs(controller),
-
-        SizedBox(height: 16.h),
-
-        // Secondary filter chips
         _buildSecondaryFilters(controller),
-
         SizedBox(height: 16.h),
-
-        // Section header
         _buildSectionHeader(controller),
-
-        // Appointments list
         Expanded(
           child: Obx(() {
             if (controller.isLoading.value) {
@@ -87,71 +99,28 @@ class AppointmentsContentView extends StatelessWidget {
           color: AppColors.grey300,
           borderRadius: BorderRadius.circular(12.r),
         ),
-        child: Obx(
-          () => Row(
-            children: [
-              // Upcoming tab
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => controller.changeTab(AppointmentTab.upcoming),
-                  child: Container(
-                    margin: EdgeInsets.all(6.w),
-                    decoration: BoxDecoration(
-                      color:
-                          controller.selectedTab.value ==
-                              AppointmentTab.upcoming
-                          ? AppColors.primary
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Upcoming',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color:
-                              controller.selectedTab.value ==
-                                  AppointmentTab.upcoming
-                              ? AppColors.white
-                              : AppColors.grey600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Past tab
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => controller.changeTab(AppointmentTab.past),
-                  child: Container(
-                    margin: EdgeInsets.all(4.w),
-                    decoration: BoxDecoration(
-                      color: controller.selectedTab.value == AppointmentTab.past
-                          ? AppColors.primary
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Past',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color:
-                              controller.selectedTab.value ==
-                                  AppointmentTab.past
-                              ? AppColors.white
-                              : AppColors.grey600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        child: TabBar(
+          onTap: (index) => controller.changeTab(
+            index == 0 ? AppointmentTab.upcoming : AppointmentTab.past,
           ),
+          dividerColor: Colors.transparent,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicatorPadding: EdgeInsets.all(6.w),
+          indicator: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+          labelColor: AppColors.white,
+          unselectedLabelColor: AppColors.grey600,
+          labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+          ),
+          tabs: const [
+            Tab(text: 'Upcoming'),
+            Tab(text: 'Past'),
+          ],
         ),
       ),
     );

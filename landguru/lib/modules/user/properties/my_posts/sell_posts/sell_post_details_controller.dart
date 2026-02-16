@@ -1,5 +1,8 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import '../../../../../core/services/nested_navigation_service.dart';
+import '../../../../../core/services/services.dart';
+import '../../../../../routes/app_routes.dart';
 import '../../widgets/metrics_conversion_row.dart';
 import '../models/my_post_status.dart';
 import 'models/sell_post_models.dart';
@@ -8,10 +11,14 @@ import 'widgets/quoted_popups.dart';
 /// Controller for Sell Post Details screen
 /// Handles all 4 states: Pending, Quoted, Active, Draft
 class SellPostDetailsController extends GetxController {
+  final SellPostDetailsService _sellPostDetailsService =
+      Get.find<SellPostDetailsService>();
+
   // State
   final RxBool isLoading = false.obs;
   final RxBool isDescriptionExpanded = false.obs;
   final Rxn<SellPostDetails> postDetails = Rxn<SellPostDetails>();
+  final RxnInt draftLastCompletedStep = RxnInt();
 
   // Post info from arguments
   final RxString postId = ''.obs;
@@ -60,12 +67,104 @@ class SellPostDetailsController extends GetxController {
 
   /// Load post details based on status
   Future<void> loadPostDetails() async {
+    if (postId.value.isEmpty) return;
+
     isLoading.value = true;
     try {
-      await Future.delayed(const Duration(milliseconds: 800));
+      final result = await ApiErrorHandler.call(
+        () => _sellPostDetailsService.getSellPostById(postId.value),
+      );
 
-      // Mock data based on status
-      postDetails.value = _getMockPostDetails();
+      if (!result.isSuccess || result.data == null) {
+        return;
+      }
+
+      final payload = result.data!;
+      final resolvedStatus = _parseStatus(payload.statusRaw);
+      postStatus.value = resolvedStatus;
+      draftLastCompletedStep.value = payload.lastCompletedStep;
+
+      final billBreakdown = payload.billBreakdown;
+      final mandatoryFee = _asDouble(
+        billBreakdown?['mandatoryServiceFee'] ?? billBreakdown?['mandatoryFee'],
+      );
+      final optionalFee = _asDouble(
+        billBreakdown?['optionalServiceFee'] ?? billBreakdown?['optionalFee'],
+      );
+      final totalPayable = _asDouble(
+        billBreakdown?['totalPayable'] ?? payload.raw['askingPrice'],
+      );
+      final quotationRevisions = _asInt(
+        billBreakdown?['quotationRevisions'] ??
+            billBreakdown?['requoteCount'] ??
+            payload.raw['requoteCount'],
+      );
+
+      final normalizedServices = payload.selectedServices
+          .map((service) => service.replaceAll('_', ' '))
+          .map(
+            (service) => service
+                .split(' ')
+                .where((part) => part.isNotEmpty)
+                .map(
+                  (part) =>
+                      '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
+                )
+                .join(' '),
+          )
+          .toList();
+
+      postDetails.value = SellPostDetails(
+        id: payload.id,
+        postId: payload.postId,
+        title: payload.title,
+        price: payload.priceFormatted,
+        status: resolvedStatus,
+        isVerified: payload.isVerified,
+        imageUrl: payload.photos.isNotEmpty ? payload.photos.first : null,
+        propertyPhotos: payload.photos,
+        description: payload.description,
+        propertyType: _toDisplayPropertyType(payload.propertyTypeRaw),
+        sellableLandAmount: payload.sellableLandAmount,
+        plotSize: payload.plotSize,
+        shareUnit: payload.shareUnit,
+        distanceFromRoad: payload.distanceFromRoad,
+        location: payload.location,
+        timestamp: payload.postedTime,
+        timestampPrefix: _mapTimestampPrefix(resolvedStatus),
+        billBreakdown: resolvedStatus == MyPostStatus.quoted
+            ? BillBreakdown(
+                mandatoryServices: [
+                  ServiceFeeItem(name: 'Mandatory Services', fee: mandatoryFee),
+                ],
+                optionalServices: [
+                  ServiceFeeItem(name: 'Optional Services', fee: optionalFee),
+                ],
+                totalPayable: totalPayable,
+                mandatoryServiceFees: mandatoryFee,
+                optionalServiceFees: optionalFee,
+                quotationRevisions: quotationRevisions,
+              )
+            : null,
+        deedDocuments: payload.deedFiles
+            .map((file) => LegalDocument(name: _fileName(file), size: '-'))
+            .toList(),
+        khatianDocuments: payload.khatianFiles
+            .map((file) => LegalDocument(name: _fileName(file), size: '-'))
+            .toList(),
+        servicesTaken: resolvedStatus == MyPostStatus.active
+            ? normalizedServices
+                  .map(
+                    (service) => ServiceVerificationItem(
+                      serviceName: service,
+                      assignedAgent: 'Assigned Agent',
+                      agentRole: '',
+                      isVerified: true,
+                    ),
+                  )
+                  .toList()
+            : null,
+      );
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -77,236 +176,50 @@ class SellPostDetailsController extends GetxController {
     }
   }
 
-  SellPostDetails _getMockPostDetails() {
-    // Common property photos
-    final photos = [
-      'assets/images/Properties Listing - For Sale Images/5 katha plot in purbachal.jpg',
-      'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-      'assets/images/Properties Listing - For Sale Images/Gazipur Water Zone.jpg',
-    ];
-
-    // Common legal documents
-    final deedDocs = [
-      const LegalDocument(
-        name: 'Deed document 1.pdf',
-        size: '1.5MB',
-        iconType: 'pdf',
-      ),
-      const LegalDocument(
-        name: 'Deed document 2.docx',
-        size: '2.2MB',
-        iconType: 'docx',
-      ),
-    ];
-
-    final khatianDocs = [
-      const LegalDocument(
-        name: 'CS Khatian.pdf',
-        size: '1.5MB',
-        iconType: 'pdf',
-      ),
-      const LegalDocument(
-        name: 'SA Khatian.docx',
-        size: '2.2MB',
-        iconType: 'docx',
-      ),
-      const LegalDocument(
-        name: 'RS Khatian.pdf',
-        size: '3.5MB',
-        iconType: 'pdf',
-      ),
-    ];
-
-    switch (postStatus.value) {
-      case MyPostStatus.pending:
-        return SellPostDetails(
-          id: '1',
-          postId: '#POST-1042',
-          title: '5 Katha Plot in Purbachal',
-          price: '2,00,00,000',
-          status: MyPostStatus.pending,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/5 katha plot in purbachal.jpg',
-          propertyPhotos: photos,
-          description:
-              'A stunning newly renovated villa featuring an open-concept living area, chef\'s kitchen with top-tier appliances, and a private backyards oasis...',
-          propertyType: 'Flat',
-          sellableLandAmount: '15 Katha',
-          plotSize: '15 Katha',
-          distanceFromRoad: '200m-750m',
-          location:
-              'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          timestamp: '2h ago',
-          timestampPrefix: 'Submitted:',
-          deedDocuments: deedDocs,
-          khatianDocuments: khatianDocs,
-        );
-
-      case MyPostStatus.quoted:
-        return SellPostDetails(
-          id: '2',
-          postId: '#POST-1042',
-          title: 'Villa in Kurigram',
-          price: '4,00,00,000',
-          status: MyPostStatus.quoted,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/5 katha plot in purbachal.jpg',
-          propertyPhotos: photos,
-          description:
-              'A stunning newly renovated villa featuring an open-concept living area, chef\'s kitchen with top-tier appliances, and a private backyards oasis...',
-          propertyType: 'Flat',
-          sellableLandAmount: '15 Katha',
-          plotSize: '15 Katha',
-          distanceFromRoad: '200m-750m',
-          location:
-              'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          timestamp: '2h ago',
-          timestampPrefix: 'Submitted:',
-          billBreakdown: const BillBreakdown(
-            mandatoryServices: [
-              ServiceFeeItem(name: 'Ownership History Validation', fee: 3000),
-              ServiceFeeItem(name: 'Pentagraph Map', fee: 0),
-              ServiceFeeItem(
-                name: 'Physical estimate & Border Demarcation',
-                fee: 0,
-              ),
-              ServiceFeeItem(name: 'Document Organization', fee: 0),
-            ],
-            optionalServices: [
-              ServiceFeeItem(
-                name: 'Property Registration/ Deed Writing Service',
-                fee: 3000,
-              ),
-              ServiceFeeItem(
-                name: 'Namjari/ DCR/ Poura City Corp Record Update',
-                fee: 0,
-              ),
-              ServiceFeeItem(name: 'Inheritance Dispute Analysis', fee: 0),
-              ServiceFeeItem(name: 'Government Acquisition Risk', fee: 0),
-              ServiceFeeItem(name: 'Court case verification', fee: 0),
-            ],
-            totalPayable: 6000,
-            lastRequoteAmount: 0,
-            mandatoryServiceFees: 0,
-            optionalServiceFees: 0,
-            quotationRevisions: 0,
-          ),
-          deedDocuments: deedDocs,
-          khatianDocuments: khatianDocs,
-        );
-
-      case MyPostStatus.active:
-        return SellPostDetails(
-          id: '3',
-          postId: '#POST-1042',
-          title: 'Modern Duplex Villa',
-          price: '40,00,000',
-          status: MyPostStatus.active,
-          isVerified: true,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-          propertyPhotos: photos,
-          description:
-              'A stunning newly renovated villa featuring an open-concept living area, chef\'s kitchen with top-tier appliances, and a private backyards oasis...',
-          propertyType: 'Flat',
-          sellableLandAmount: '15 Katha',
-          plotSize: '15 Katha',
-          distanceFromRoad: '200m-750m',
-          location:
-              'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          timestamp: '2h ago',
-          timestampPrefix: 'Posted:',
-          deedDocuments: deedDocs,
-          khatianDocuments: khatianDocs,
-          dueDiligenceChecklist: const [
-            DueDiligenceItem(title: 'Fraud Detection Passed', isPassed: true),
-            DueDiligenceItem(
-              title: 'Inheritance dispute analysis checked',
-              isPassed: true,
-            ),
-            DueDiligenceItem(
-              title: 'Multiple ownership checked',
-              isPassed: true,
-            ),
-            DueDiligenceItem(
-              title: 'Government acquisition risk checked',
-              isPassed: true,
-            ),
-            DueDiligenceItem(
-              title: 'Court case verification passed',
-              isPassed: true,
-            ),
-          ],
-          ownershipHistory: const [
-            OwnershipHistoryItem(
-              name: 'Farhan',
-              period: '2022 - Present',
-              isCurrent: true,
-            ),
-            OwnershipHistoryItem(name: 'Mithila Akhter', period: '2010 - 2022'),
-            OwnershipHistoryItem(
-              name: 'Trusted Developer',
-              period: '2007 - 2010',
-            ),
-          ],
-          servicesTaken: const [
-            ServiceVerificationItem(
-              serviceName: 'Ownership History Validation',
-              assignedAgent: 'Rahman',
-              agentRole: 'Lawyer',
-              isVerified: true,
-            ),
-            ServiceVerificationItem(
-              serviceName: 'Pentagraph Map Validation',
-              assignedAgent: 'Abrar',
-              agentRole: 'Field Assistant',
-              isVerified: true,
-            ),
-            ServiceVerificationItem(
-              serviceName: 'Deed Writing Service',
-              assignedAgent: 'Sahil',
-              agentRole: 'Lawyer',
-              isVerified: true,
-            ),
-            ServiceVerificationItem(
-              serviceName: 'Document Organization',
-              assignedAgent: 'Jahangir',
-              agentRole: 'Lawyer',
-              isVerified: true,
-            ),
-            ServiceVerificationItem(
-              serviceName: 'Namjari/DCR Record',
-              assignedAgent: 'Forhad',
-              agentRole: 'Lawyer',
-              isVerified: true,
-            ),
-          ],
-        );
-
-      case MyPostStatus.draft:
-        return SellPostDetails(
-          id: '4',
-          postId: '#POST-1043',
-          title: 'Gazipur Water Zone',
-          price: '95,12,000',
-          status: MyPostStatus.draft,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/Gazipur Water Zone.jpg',
-          propertyPhotos: photos.sublist(0, 3),
-          description:
-              'A stunning newly renovated villa featuring an open-concept living area, chef\'s kitchen with top-tier appliances, and a private backyards oasis...',
-          propertyType: 'Flat',
-          sellableLandAmount: '15 Katha',
-          plotSize: '15 Katha',
-          distanceFromRoad: '200m-750m',
-          location:
-              'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          timestamp: '2h ago',
-          timestampPrefix: 'Edited:',
-          deedDocuments: deedDocs,
-          khatianDocuments: khatianDocs,
-        );
+  String _toDisplayPropertyType(String rawType) {
+    final normalized = rawType.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
+    switch (normalized) {
+      case 'plainland':
+      case 'land':
+        return 'Plain Land';
+      case 'waterland':
+      case 'water':
+        return 'Water Land';
+      case 'flat':
+      default:
+        return 'Flat';
     }
+  }
+
+  String _mapTimestampPrefix(MyPostStatus status) {
+    switch (status) {
+      case MyPostStatus.pending:
+        return 'Submitted:';
+      case MyPostStatus.active:
+        return 'Posted:';
+      case MyPostStatus.draft:
+        return 'Edited:';
+      case MyPostStatus.quoted:
+      default:
+        return 'Submitted:';
+    }
+  }
+
+  String _fileName(String path) {
+    final normalized = path.replaceAll('\\', '/');
+    final parts = normalized.split('/');
+    final value = parts.isNotEmpty ? parts.last : path;
+    return value.trim().isEmpty ? 'Document' : value;
+  }
+
+  double _asDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  int _asInt(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
   // === UI Actions ===
@@ -368,11 +281,20 @@ class SellPostDetailsController extends GetxController {
 
   /// Edit post (for Draft status)
   void editPost() {
-    // TODO: Navigate to edit post flow
-    Get.snackbar(
-      'Edit',
-      'Navigate to edit post',
-      snackPosition: SnackPosition.BOTTOM,
+    if (postStatus.value != MyPostStatus.draft || postId.value.isEmpty) {
+      return;
+    }
+
+    final lastCompletedStep = draftLastCompletedStep.value ?? 1;
+    final resumeStep = (lastCompletedStep + 1).clamp(1, 4);
+
+    Get.toNamed(
+      AppRoutes.CREATE_SELL_POST_INFO,
+      arguments: {
+        'draftPostId': postId.value,
+        'lastCompletedStep': lastCompletedStep,
+        'resumeStep': resumeStep,
+      },
     );
   }
 
@@ -383,12 +305,75 @@ class SellPostDetailsController extends GetxController {
 
   /// Delete post (for Draft status)
   Future<void> deletePost() async {
-    // TODO: Show confirmation dialog and delete
-    Get.snackbar(
-      'Delete',
-      'Post deletion requested',
-      snackPosition: SnackPosition.BOTTOM,
+    if (postId.value.isEmpty) return;
+
+    final context = Get.context;
+    if (context == null) return;
+
+    final confirmed =
+        await Get.dialog<bool>(
+          AlertDialog(
+            title: const Text('Delete Post'),
+            content: const Text(
+              'Are you sure you want to delete this post? This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(result: false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Get.back(result: true),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed) return;
+
+    isLoading.value = true;
+    try {
+      final result = await ApiErrorHandler.call(
+        () => _sellPostDetailsService.deleteSellPost(postId.value),
+        errorTitle: 'Delete Failed',
+      );
+
+      if (!result.isSuccess) {
+        return;
+      }
+
+      Get.snackbar(
+        'Deleted',
+        'Post deleted successfully',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      NestedNavigationService.back(result: true);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Update post using API (PATCH /sell-posts/{postId})
+  Future<bool> updatePost({required Map<String, dynamic> payload}) async {
+    if (postId.value.isEmpty) return false;
+
+    final result = await ApiErrorHandler.call(
+      () => _sellPostDetailsService.updateSellPost(
+        postId: postId.value,
+        payload: payload,
+      ),
+      errorTitle: 'Update Failed',
     );
+
+    if (!result.isSuccess) {
+      return false;
+    }
+
+    await loadPostDetails();
+    return true;
   }
 
   /// Request requote (for Quoted status)
@@ -400,22 +385,31 @@ class SellPostDetailsController extends GetxController {
       Get.context!,
       billBreakdown: post.billBreakdown!,
       onSubmit: (mandatoryFee, optionalFee) async {
-        // Close the requote dialog
-        Get.back();
+        final result = await ApiErrorHandler.call(
+          () => _sellPostDetailsService.requoteSellPost(
+            postId: post.id,
+            proposedMandatoryFee: mandatoryFee,
+            proposedOptionalFee: optionalFee,
+          ),
+          errorTitle: 'Requote Failed',
+        );
 
-        // Simulate API call
-        await Future.delayed(const Duration(milliseconds: 500));
+        if (!result.isSuccess) {
+          return;
+        }
 
-        // Show success dialog
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
+
         final totalRequoted = mandatoryFee + optionalFee;
         RequoteSubmittedDialog.show(
           Get.context!,
           propertyTitle: post.title,
           requotedAmount: totalRequoted,
-          requotedTimes: post.billBreakdown!.quotationRevisions,
+          requotedTimes: post.billBreakdown!.quotationRevisions + 1,
           onClose: () {
             Get.back();
-            // Refresh post details to reflect changes
             loadPostDetails();
           },
         );

@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../user/properties/widgets/metrics_conversion_row.dart';
-import '../../user/properties/property_details/widgets/property_details_widgets.dart';
+import '../../user/properties/for_sale/property_details/widgets/property_details_widgets.dart';
 import 'models/task_models.dart';
 import 'task_details_controller.dart';
 import 'widgets/task_details_popups.dart';
@@ -475,7 +475,10 @@ class AgentTaskDetailsView extends GetView<AgentTaskDetailsController> {
         ),
         GestureDetector(
           onTap: () async {
-            final result = await showSetAppointmentPopup(Get.context!);
+            final result = await showSetAppointmentPopup(
+              Get.context!,
+              resetForm: true,
+            );
             if (result == true) {
               await showScheduleFixedPopup(Get.context!);
             }
@@ -546,7 +549,10 @@ class AgentTaskDetailsView extends GetView<AgentTaskDetailsController> {
               GestureDetector(
                 onTap: () async {
                   controller.rescheduleAppointment();
-                  final result = await showSetAppointmentPopup(Get.context!);
+                  final result = await showSetAppointmentPopup(
+                    Get.context!,
+                    resetForm: false,
+                  );
                   if (result == true) {
                     await showScheduleFixedPopup(Get.context!);
                   }
@@ -980,6 +986,22 @@ class AgentTaskDetailsView extends GetView<AgentTaskDetailsController> {
           // Work log entries
           Obx(() {
             final workLog = controller.task.value?.workLog ?? [];
+            if (workLog.isEmpty) {
+              return Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                decoration: BoxDecoration(
+                  color: AppColors.grey50,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColors.grey200),
+                ),
+                child: Text(
+                  'No work log updates yet.',
+                  style: TextStyle(fontSize: 12.sp, color: AppColors.grey600),
+                ),
+              );
+            }
+
             return Column(
               children: workLog
                   .map((entry) => _buildWorkLogEntry(entry))

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:landguru/core/core.dart';
 import '../../../routes/app_routes.dart';
+import 'profile_services.dart';
 
 /// Controller for Change Password screen
 class ChangePasswordController extends GetxController {
@@ -19,6 +21,7 @@ class ChangePasswordController extends GetxController {
 
   // State
   final RxBool isLoading = false.obs;
+  final _profileServices = Get.find<ProfileServices>();
 
   /// Toggle current password visibility
   void toggleCurrentPasswordVisibility() {
@@ -71,8 +74,17 @@ class ChangePasswordController extends GetxController {
 
     isLoading.value = true;
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
+      final result = await ApiErrorHandler.call(
+        () => _profileServices.changePassword(
+          currentPassword: currentPasswordController.text,
+          newPassword: newPasswordController.text,
+          confirmPassword: confirmPasswordController.text,
+        ),
+      );
+
+      if (!result.isSuccess) {
+        return;
+      }
 
       // Show success message
       Get.back();

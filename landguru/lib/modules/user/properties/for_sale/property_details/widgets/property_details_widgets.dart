@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/theme/app_colors.dart';
 import '../models/property_details_models.dart';
 
 /// Property Title Section (Title, Price, Post ID)
@@ -562,16 +562,35 @@ class PropertyPhotosSection extends StatelessWidget {
                   margin: EdgeInsets.only(right: 8.w),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.r),
-                    child: Image.asset(
-                      photos[index],
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.grey200,
-                          child: Icon(Icons.image, color: AppColors.grey400),
-                        );
-                      },
-                    ),
+                    child:
+                        (photos[index].startsWith('http://') ||
+                            photos[index].startsWith('https://'))
+                        ? Image.network(
+                            photos[index],
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: AppColors.grey200,
+                                child: Icon(
+                                  Icons.image,
+                                  color: AppColors.grey400,
+                                ),
+                              );
+                            },
+                          )
+                        : Image.asset(
+                            photos[index],
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: AppColors.grey200,
+                                child: Icon(
+                                  Icons.image,
+                                  color: AppColors.grey400,
+                                ),
+                              );
+                            },
+                          ),
                   ),
                 );
               },
@@ -690,12 +709,14 @@ class HowToBuySection extends StatelessWidget {
 class PostedBySection extends StatelessWidget {
   final String name;
   final bool isVerified;
+  final String? avatarUrl;
   final String postedTime;
 
   const PostedBySection({
     super.key,
     required this.name,
     required this.isVerified,
+    this.avatarUrl,
     required this.postedTime,
   });
 
@@ -718,13 +739,7 @@ class PostedBySection extends StatelessWidget {
           Row(
             children: [
               // Avatar
-              CircleAvatar(
-                radius: 22.r,
-                backgroundColor: AppColors.grey200,
-                backgroundImage: const AssetImage(
-                  'assets/images/User_DP/jahangir.jpg',
-                ),
-              ),
+              _buildAvatar(),
               SizedBox(width: 12.w),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -778,6 +793,43 @@ class PostedBySection extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    final imageUrl = avatarUrl?.trim() ?? '';
+    if (imageUrl.isEmpty) {
+      return CircleAvatar(
+        radius: 22.r,
+        backgroundColor: AppColors.grey200,
+        child: Icon(Icons.person, color: AppColors.grey600, size: 20.sp),
+      );
+    }
+
+    final isNetwork =
+        imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
+
+    if (!isNetwork) {
+      return CircleAvatar(
+        radius: 22.r,
+        backgroundColor: AppColors.grey200,
+        child: Icon(Icons.person, color: AppColors.grey600, size: 20.sp),
+      );
+    }
+
+    return ClipOval(
+      child: SizedBox(
+        width: 44.w,
+        height: 44.h,
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            color: AppColors.grey200,
+            child: Icon(Icons.person, color: AppColors.grey600, size: 20.sp),
+          ),
+        ),
       ),
     );
   }

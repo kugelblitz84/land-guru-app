@@ -2,7 +2,7 @@
 library;
 
 // Export PropertyDetails from core (shared model)
-export '../../../../../core/models/property_details.dart';
+export '../../../../../../core/models/property_details.dart';
 
 // Feature-specific models
 export 'locked_feature.dart';

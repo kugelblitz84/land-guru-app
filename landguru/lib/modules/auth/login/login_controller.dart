@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/services/api_error_handler.dart';
+import '../../../core/services/agent_profile_store.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/user_profile_store.dart';
 import '../../../core/services/user_type_service.dart';
 import '../../../routes/app_routes.dart';
 
@@ -42,8 +44,14 @@ class LoginController extends GetxController {
     }
 
     if (userTypeService.isAgent) {
+      final store = Get.find<AgentProfileStore>();
+      store.hydrateFromSession();
+      await store.refreshProfile(showError: false);
       Get.offAllNamed(AppRoutes.AGENT_MAIN);
     } else {
+      final store = Get.find<UserProfileStore>();
+      store.hydrateFromSession();
+      await store.refreshProfile(showError: false);
       Get.offAllNamed(AppRoutes.MAIN);
     }
   }

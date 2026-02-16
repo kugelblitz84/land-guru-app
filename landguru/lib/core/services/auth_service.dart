@@ -55,6 +55,43 @@ class AuthService extends GetxService {
     );
   }
 
+  Future<void> resetPasswordWithOtp({
+    required String phone,
+    required String otp,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final apiClient = Get.find<ApiClient>();
+    final payload = {
+      'phone': phone,
+      'otp': otp,
+      'newPassword': newPassword,
+      'confirmPassword': confirmPassword,
+    };
+
+    final candidatePaths = <String>[
+      '/auth/reset-password',
+      '/auth/forgot-password/reset',
+      '/auth/forgot-password',
+    ];
+
+    Object? lastError;
+    for (final path in candidatePaths) {
+      try {
+        await apiClient.post(path, data: payload);
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (lastError != null) {
+      throw lastError;
+    }
+
+    throw Exception('Failed to reset password');
+  }
+
   Future<Map<String, dynamic>?> completeSignup({
     required String phone,
     required String password,
@@ -148,6 +185,12 @@ class AuthService extends GetxService {
     _tokenService.clear();
     _prefs.remove(AppConstants.userDataKey);
     Get.find<UserTypeService>().clear();
+  }
+
+  void updateUserFields(Map<String, dynamic> updates) {
+    final current = Map<String, dynamic>.from(_user.value ?? {});
+    current.addAll(updates);
+    _setUser(current);
   }
 
   void _setToken(String token) {

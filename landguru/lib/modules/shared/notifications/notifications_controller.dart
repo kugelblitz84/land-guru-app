@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/services/agent_profile_store.dart';
+import '../../../core/services/user_profile_store.dart';
+import '../../../core/services/user_type_service.dart';
 import '../../../routes/app_routes.dart';
-import '../shell/main_shell_controller.dart';
 
 /// Notification types
 enum NotificationType {
@@ -100,6 +102,10 @@ class NotificationItem {
 /// Shared controller for Notifications screen
 /// Used by both User and Agent
 class NotificationsController extends GetxController {
+  static List<NotificationItem> _cachedNotifications = <NotificationItem>[];
+  static NotificationFilter _cachedSelectedFilter = NotificationFilter.all;
+  static bool _hasCachedData = false;
+
   // State
   final RxBool isLoading = false.obs;
   final RxList<NotificationItem> notifications = <NotificationItem>[].obs;
@@ -132,7 +138,14 @@ class NotificationsController extends GetxController {
   }
 
   /// Load notifications
-  Future<void> loadNotifications() async {
+  Future<void> loadNotifications({bool forceRefresh = false}) async {
+    if (!forceRefresh && _hasCachedData) {
+      selectedFilter.value = _cachedSelectedFilter;
+      notifications.assignAll(_cachedNotifications);
+      _syncNotificationCount();
+      return;
+    }
+
     isLoading.value = true;
     try {
       // TODO: Load notifications from API
@@ -223,6 +236,7 @@ class NotificationsController extends GetxController {
 
       // Sync notification count with shell controller
       _syncNotificationCount();
+      _syncCache();
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -236,15 +250,37 @@ class NotificationsController extends GetxController {
 
   /// Sync notification count with MainShellController
   void _syncNotificationCount() {
-    if (Get.isRegistered<MainShellController>()) {
-      final shellController = Get.find<MainShellController>();
-      shellController.updateNotificationCount(unreadCount);
+    if (!Get.isRegistered<UserTypeService>()) {
+      return;
+    }
+
+    final userTypeService = Get.find<UserTypeService>();
+    if (userTypeService.isAgent) {
+      if (Get.isRegistered<AgentProfileStore>()) {
+        Get.find<AgentProfileStore>().updateUnreadCount(unreadCount);
+      }
+      return;
+    }
+
+    if (userTypeService.isUser) {
+      if (Get.isRegistered<UserProfileStore>()) {
+        Get.find<UserProfileStore>().updateUnreadCount(unreadCount);
+      }
+      return;
+    }
+
+    if (Get.isRegistered<UserProfileStore>()) {
+      Get.find<UserProfileStore>().updateUnreadCount(unreadCount);
+    }
+    if (Get.isRegistered<AgentProfileStore>()) {
+      Get.find<AgentProfileStore>().updateUnreadCount(unreadCount);
     }
   }
 
   /// Change filter tab
   void changeFilter(NotificationFilter filter) {
     selectedFilter.value = filter;
+    _syncCache();
   }
 
   /// Mark notification as read
@@ -263,6 +299,7 @@ class NotificationsController extends GetxController {
         relatedId: notification.relatedId,
       );
       _syncNotificationCount();
+      _syncCache();
     }
   }
 
@@ -281,6 +318,7 @@ class NotificationsController extends GetxController {
       );
     }).toList();
     _syncNotificationCount();
+    _syncCache();
   }
 
   /// Handle notification tap
@@ -301,12 +339,19 @@ class NotificationsController extends GetxController {
 
   /// Refresh notifications
   Future<void> refresh() async {
-    await loadNotifications();
+    await loadNotifications(forceRefresh: true);
   }
 
   /// Clear all notifications (for testing empty state)
   void clearNotifications() {
     notifications.clear();
     _syncNotificationCount();
+    _syncCache();
+  }
+
+  void _syncCache() {
+    _cachedNotifications = List<NotificationItem>.from(notifications);
+    _cachedSelectedFilter = selectedFilter.value;
+    _hasCachedData = true;
   }
 }

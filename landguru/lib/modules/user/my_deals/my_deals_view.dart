@@ -32,26 +32,35 @@ class MyDealsContentView extends StatelessWidget {
     }
     final controller = Get.find<MyDealsController>();
 
+    return DefaultTabController(
+      length: 2,
+      initialIndex: controller.selectedTab.value == DealTab.sold ? 0 : 1,
+      child: Column(
+        children: [
+          SizedBox(height: 8.h),
+          _buildStatsCards(controller),
+          SizedBox(height: 16.h),
+          _buildPrimaryTabs(controller),
+          SizedBox(height: 12.h),
+          Expanded(
+            child: TabBarView(
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _buildTabContent(controller),
+                _buildTabContent(controller),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabContent(MyDealsController controller) {
     return Column(
       children: [
-        SizedBox(height: 8.h),
-
-        // Stats cards
-        _buildStatsCards(controller),
-
-        SizedBox(height: 16.h),
-
-        // Primary tabs (Sold / Bought)
-        _buildPrimaryTabs(controller),
-
-        SizedBox(height: 12.h),
-
-        // Filter dropdowns
         _buildFilterRow(controller),
-
         SizedBox(height: 12.h),
-
-        // Deals list
         Expanded(
           child: Obx(() {
             if (controller.isLoading.value) {
@@ -181,65 +190,27 @@ class MyDealsContentView extends StatelessWidget {
           color: AppColors.grey300,
           borderRadius: BorderRadius.circular(12.r),
         ),
-        child: Obx(
-          () => Row(
-            children: [
-              // Sold tab
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => controller.changeTab(DealTab.sold),
-                  child: Container(
-                    margin: EdgeInsets.all(6.w),
-                    decoration: BoxDecoration(
-                      color: controller.selectedTab.value == DealTab.sold
-                          ? AppColors.primary
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Sold',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: controller.selectedTab.value == DealTab.sold
-                              ? AppColors.white
-                              : AppColors.grey600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Bought tab
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => controller.changeTab(DealTab.bought),
-                  child: Container(
-                    margin: EdgeInsets.all(6.w),
-                    decoration: BoxDecoration(
-                      color: controller.selectedTab.value == DealTab.bought
-                          ? AppColors.primary
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Bought',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: controller.selectedTab.value == DealTab.bought
-                              ? AppColors.white
-                              : AppColors.grey600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        child: TabBar(
+          onTap: (index) =>
+              controller.changeTab(index == 0 ? DealTab.sold : DealTab.bought),
+          dividerColor: Colors.transparent,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicatorPadding: EdgeInsets.all(6.w),
+          indicator: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(10.r),
           ),
+          labelColor: AppColors.white,
+          unselectedLabelColor: AppColors.grey600,
+          labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+          ),
+          tabs: const [
+            Tab(text: 'Sold'),
+            Tab(text: 'Bought'),
+          ],
         ),
       ),
     );

@@ -61,10 +61,9 @@ class AgentProfileView extends GetView<AgentProfileController> {
                   border: Border.all(color: AppColors.grey200, width: 3),
                 ),
                 child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/User_DP/sahil.jpg',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
+                  child: Obx(() {
+                    final imageUrl = controller.profileImage.value.trim();
+                    if (imageUrl.isEmpty) {
                       return Container(
                         color: AppColors.grey200,
                         child: Icon(
@@ -73,8 +72,23 @@ class AgentProfileView extends GetView<AgentProfileController> {
                           size: 40.sp,
                         ),
                       );
-                    },
-                  ),
+                    }
+
+                    return Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppColors.grey200,
+                          child: Icon(
+                            Icons.person,
+                            color: AppColors.grey400,
+                            size: 40.sp,
+                          ),
+                        );
+                      },
+                    );
+                  }),
                 ),
               ),
               Positioned(
@@ -90,7 +104,11 @@ class AgentProfileView extends GetView<AgentProfileController> {
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.white, width: 2),
                     ),
-                    child: Icon(Icons.edit, color: AppColors.white, size: 16.sp),
+                    child: Icon(
+                      Icons.edit,
+                      color: AppColors.white,
+                      size: 16.sp,
+                    ),
                   ),
                 ),
               ),
@@ -132,7 +150,10 @@ class AgentProfileView extends GetView<AgentProfileController> {
           Obx(
             () => controller.isVerified.value
                 ? Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.success,
                       borderRadius: BorderRadius.circular(20.r),
@@ -284,11 +305,7 @@ class AgentProfileView extends GetView<AgentProfileController> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.location_on,
-              color: AppColors.primary,
-              size: 20.sp,
-            ),
+            Icon(Icons.location_on, color: AppColors.primary, size: 20.sp),
             SizedBox(width: 8.w),
             Expanded(
               child: Obx(
@@ -333,11 +350,7 @@ class AgentProfileView extends GetView<AgentProfileController> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.work_outline,
-                  color: AppColors.primary,
-                  size: 20.sp,
-                ),
+                Icon(Icons.work_outline, color: AppColors.primary, size: 20.sp),
                 SizedBox(width: 8.w),
                 Text(
                   'Services you Provide:',
@@ -356,17 +369,19 @@ class AgentProfileView extends GetView<AgentProfileController> {
                 children: controller.servicesProvided
                     .asMap()
                     .entries
-                    .map((entry) => Padding(
-                          padding: EdgeInsets.only(bottom: 6.h),
-                          child: Text(
-                            '${entry.key + 1}. ${entry.value}',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: AppColors.grey700,
-                              height: 1.4,
-                            ),
+                    .map(
+                      (entry) => Padding(
+                        padding: EdgeInsets.only(bottom: 6.h),
+                        child: Text(
+                          '${entry.key + 1}. ${entry.value}',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: AppColors.grey700,
+                            height: 1.4,
                           ),
-                        ))
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -424,11 +439,7 @@ class AgentProfileView extends GetView<AgentProfileController> {
                   ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: AppColors.grey400,
-                size: 24.sp,
-              ),
+              Icon(Icons.chevron_right, color: AppColors.grey400, size: 24.sp),
             ],
           ),
         ),
@@ -457,11 +468,7 @@ class AgentProfileView extends GetView<AgentProfileController> {
                   color: AppColors.error.withAlpha(30),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
-                child: Icon(
-                  Icons.logout,
-                  color: AppColors.error,
-                  size: 22.sp,
-                ),
+                child: Icon(Icons.logout, color: AppColors.error, size: 22.sp),
               ),
               SizedBox(width: 12.w),
               Text(

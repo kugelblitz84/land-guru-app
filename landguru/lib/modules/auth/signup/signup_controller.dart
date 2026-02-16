@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/services/api_error_handler.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/upload_service.dart';
+import '../../../core/utils/constants.dart';
 import '../../../routes/app_routes.dart';
 
 /// Service for the Signup flow (5 steps)
@@ -167,7 +168,7 @@ class SignupController extends GetxController {
 
   /// Step 2: Verify OTP
   Future<void> verifyOtp() async {
-    if (otpString.length != 4) {
+    if (otpString.length != AppConstants.otpLength) {
       Get.snackbar(
         'Error',
         'Please enter the complete OTP',
@@ -337,8 +338,8 @@ class SignupController extends GetxController {
       snackPosition: SnackPosition.BOTTOM,
     );
 
-    // Navigate to main screen
-    Get.offAllNamed(AppRoutes.MAIN);
+    // Navigate to login screen
+    Get.offAllNamed(AppRoutes.LOGIN);
   }
 
   /// Pick profile image

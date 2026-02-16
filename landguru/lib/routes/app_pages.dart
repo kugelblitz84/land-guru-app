@@ -71,8 +71,8 @@ import '../modules/user/properties/wanted_and_needs/offer_from_existing/offer_fr
 import '../modules/user/properties/wanted_and_needs/offer_from_existing/offer_from_existing_controller.dart';
 
 // Property Details
-import '../modules/user/properties/property_details/property_details_controller.dart';
-import '../modules/user/properties/property_details/property_details_view.dart';
+import '../modules/user/properties/for_sale/property_details/property_details_controller.dart';
+import '../modules/user/properties/for_sale/property_details/property_details_view.dart';
 
 // Sell Post Details (My Posts)
 import '../modules/user/properties/my_posts/sell_posts/sell_post_details_view.dart';
@@ -117,7 +117,10 @@ class AppPages {
       name: AppRoutes.LOGIN,
       page: () => const LoginView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<LoginController>(() => LoginController());
+        if (Get.isRegistered<LoginController>()) {
+          Get.delete<LoginController>(force: true);
+        }
+        Get.put<LoginController>(LoginController());
       }),
     ),
 
@@ -126,7 +129,10 @@ class AppPages {
       name: AppRoutes.SIGNUP_PHONE,
       page: () => const SignupPhoneView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<SignupController>(() => SignupController());
+        if (Get.isRegistered<SignupController>()) {
+          Get.delete<SignupController>(force: true);
+        }
+        Get.put<SignupController>(SignupController());
       }),
     ),
     GetPage(
@@ -159,7 +165,10 @@ class AppPages {
       name: AppRoutes.FORGOT_PASSWORD_PHONE,
       page: () => const ForgotPasswordPhoneView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<ForgotPasswordController>(() => ForgotPasswordController());
+        if (Get.isRegistered<ForgotPasswordController>()) {
+          Get.delete<ForgotPasswordController>(force: true);
+        }
+        Get.put<ForgotPasswordController>(ForgotPasswordController());
       }),
     ),
     GetPage(
@@ -193,7 +202,10 @@ class AppPages {
         Get.put<MainShellController>(MainShellController(), permanent: true);
 
         // Ensure tab-specific controllers are available
-        Get.lazyPut<UserBottomNavController>(() => UserBottomNavController());
+        if (Get.isRegistered<UserBottomNavController>()) {
+          Get.delete<UserBottomNavController>(force: true);
+        }
+        Get.put<UserBottomNavController>(UserBottomNavController());
         Get.lazyPut<HomeController>(() => HomeController());
         Get.lazyPut<ProfileController>(() => ProfileController());
         Get.lazyPut<PropertiesController>(() => PropertiesController());
@@ -203,7 +215,7 @@ class AppPages {
     // HOME / DASHBOARD
     GetPage(
       name: AppRoutes.HOME,
-      page: () => const HomeView(),
+      page: () => HomeView(),
       binding: BindingsBuilder(() {
         Get.lazyPut<HomeController>(() => HomeController());
       }),
@@ -287,7 +299,10 @@ class AppPages {
       name: AppRoutes.CREATE_SELL_POST_INFO,
       page: () => const CreateSellPostView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<CreateSellPostController>(() => CreateSellPostController());
+        if (Get.isRegistered<CreateSellPostController>()) {
+          Get.delete<CreateSellPostController>(force: true);
+        }
+        Get.put<CreateSellPostController>(CreateSellPostController());
       }),
     ),
     // These routes redirect to the main view (controller persists)
@@ -312,7 +327,10 @@ class AppPages {
       name: AppRoutes.CREATE_BUY_POST_INFO,
       page: () => const CreateBuyPostView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<CreateBuyPostController>(() => CreateBuyPostController());
+        if (Get.isRegistered<CreateBuyPostController>()) {
+          Get.delete<CreateBuyPostController>(force: true);
+        }
+        Get.put<CreateBuyPostController>(CreateBuyPostController());
       }),
     ),
     GetPage(
@@ -326,6 +344,9 @@ class AppPages {
       name: AppRoutes.CREATE_OFFER_INFO,
       page: () => const CreateOfferView(),
       binding: BindingsBuilder(() {
+        if (Get.isRegistered<CreateOfferController>()) {
+          Get.delete<CreateOfferController>(force: true);
+        }
         final args = Get.arguments as Map<String, dynamic>?;
         final controller = CreateOfferController();
         if (args != null) {
@@ -413,14 +434,20 @@ class AppPages {
       name: AppRoutes.PROFILE_EDIT,
       page: () => const EditProfileView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<EditProfileController>(() => EditProfileController());
+        if (Get.isRegistered<EditProfileController>()) {
+          Get.delete<EditProfileController>(force: true);
+        }
+        Get.put<EditProfileController>(EditProfileController());
       }),
     ),
     GetPage(
       name: AppRoutes.PROFILE_CHANGE_PASSWORD,
       page: () => const ChangePasswordView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<ChangePasswordController>(() => ChangePasswordController());
+        if (Get.isRegistered<ChangePasswordController>()) {
+          Get.delete<ChangePasswordController>(force: true);
+        }
+        Get.put<ChangePasswordController>(ChangePasswordController());
       }),
     ),
 
@@ -435,7 +462,10 @@ class AppPages {
       binding: BindingsBuilder(() {
         // Initialize agent shell controller (shared across tabs)
         Get.put<AgentShellController>(AgentShellController(), permanent: true);
-        Get.lazyPut<AgentBottomNavController>(() => AgentBottomNavController());
+        if (Get.isRegistered<AgentBottomNavController>()) {
+          Get.delete<AgentBottomNavController>(force: true);
+        }
+        Get.put<AgentBottomNavController>(AgentBottomNavController());
         // Initialize dashboard controller for Home tab
         Get.lazyPut<AgentDashboardController>(() => AgentDashboardController());
         // Initialize my tasks controller for My Tasks tab

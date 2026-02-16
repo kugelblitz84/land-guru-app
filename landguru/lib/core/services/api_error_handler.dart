@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 class ApiErrorHandler {
@@ -115,19 +114,16 @@ class ApiErrorHandler {
   }
 
   static void _showErrorSnackbar(String title, String message) {
-    void showSnackbar() {
-      if (Get.isSnackbarOpen) {
-        Get.closeCurrentSnackbar();
-      }
-      Get.snackbar(
-        title,
-        message,
-        snackPosition: SnackPosition.TOP,
-        duration: const Duration(seconds: 3),
-      );
+    if (Get.isSnackbarOpen) {
+      Get.closeCurrentSnackbar();
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => showSnackbar());
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.TOP,
+      duration: const Duration(seconds: 3),
+    );
   }
 }
 

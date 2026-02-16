@@ -1,19 +1,31 @@
 import 'package:get/get.dart';
-import '../../../../../core/enums/property_type.dart';
+
 import '../../../../../core/services/nested_navigation_service.dart';
-import 'models/buy_post_models.dart';
+import '../../../../../routes/app_routes.dart';
 import 'buy_post_offer_details_view.dart';
+import 'models/buy_post_models.dart';
+import 'services/my_buy_posts_service.dart';
 
-/// Controller for Buy Posts section
 class BuyPostsController extends GetxController {
-  // Loading state
-  final RxBool isLoading = false.obs;
+  static const int _pageLimit = 10;
+  static List<BuyPost> _cachedAllBuyPosts = <BuyPost>[];
+  static int _cachedCurrentPage = 1;
+  static int _cachedTotal = 0;
+  static bool _cachedHasMore = true;
+  static String _cachedCurrentFilter = 'All';
+  static String _cachedSortBy = 'Newest First';
+  static int _cachedOffersCount = 0;
+  static bool _hasCachedData = false;
 
-  // Filter state
+  final MyBuyPostsService _service = Get.find<MyBuyPostsService>();
+
+  final RxBool isLoading = false.obs;
+  final RxBool isLoadingMore = false.obs;
+  final RxBool hasMore = true.obs;
+
   final RxString currentFilter = 'All'.obs;
   final List<String> filterOptions = ['All', 'Offers', 'Active', 'In Review'];
 
-  // Sort state
   final RxString sortBy = 'Newest First'.obs;
   final List<String> sortOptions = [
     'Newest First',
@@ -22,12 +34,12 @@ class BuyPostsController extends GetxController {
     'Least Offers',
   ];
 
-  // Posts data
   final RxList<BuyPost> allBuyPosts = <BuyPost>[].obs;
   final RxList<BuyPost> filteredBuyPosts = <BuyPost>[].obs;
 
-  // Counts
   final RxInt offersCount = 0.obs;
+  int _currentPage = 1;
+  int _apiTotal = 0;
 
   @override
   void onInit() {
@@ -35,215 +47,30 @@ class BuyPostsController extends GetxController {
     loadBuyPosts();
   }
 
-  /// Load all buy posts
-  Future<void> loadBuyPosts() async {
+  Future<void> loadBuyPosts({bool forceRefresh = false}) async {
+    if (!forceRefresh && _hasCachedData) {
+      _restoreFromCache();
+      return;
+    }
+
     isLoading.value = true;
+    _currentPage = 1;
+    hasMore.value = true;
     try {
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      // Mock data for Buy Posts with detailed offers
-      allBuyPosts.value = [
-        BuyPost(
-          id: '1',
-          postId: '#BUY-1042',
-          title: 'Villa in Banasree',
-          preferredLocation:
-              'Banasree, Ward No. 25, Dhaka South City Corporation, Khilgaon Thana, Dhaka - 1219, Dhaka Division.',
-          propertyType: PropertyType.flat,
-          requiredLandSize: 'Min 5 Katha',
-          requiredPlotSize: 'Min 5 Katha',
-          distanceFromRoad: '200m-750m',
-          budgetRange: '৳ 30,00,000 - ৳ 40,00,000',
-          description:
-              'Client is looking for a ready flat in Dhanmondi area. Must have parking and be above 2nd floor.',
-          status: BuyPostStatus.active,
-          timestamp: '2h ago',
-          timestampPrefix: 'Posted:',
-          offersReceived: [
-            OfferReceived(
-              id: 'o1',
-              propertyTitle: 'Modern Duplex Villa',
-              propertyPrice: '40,00,000',
-              propertyType: PropertyType.flat,
-              propertyImageUrl:
-                  'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-              offeredTime: '2h ago',
-              status: OfferReceivedStatus.pending,
-              sellerId: 's1',
-              sellerName: 'Khaled',
-              sellerVerified: true,
-              postId: '#POST-1042',
-              description:
-                  'A stunning newly renovated villa featuring an open-concept living area, chef\'s kitchen with top-tier appliances, and a private backyards oasis...',
-              sellableLandAmount: '15 Katha',
-              plotSize: '15 Katha',
-              distanceFromRoad: '200m-750m',
-              location:
-                  'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-              propertyPhotos: [
-                'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-                'assets/images/Properties Listing - For Sale Images/5 katha plot in purbachal.jpg',
-                'assets/images/Properties Listing - For Sale Images/gazipur water zone.jpg',
-              ],
-            ),
-            OfferReceived(
-              id: 'o2',
-              propertyTitle: '5 Katha Plot in Purbachal',
-              propertyPrice: '40,00,000',
-              propertyType: PropertyType.flat,
-              propertyImageUrl:
-                  'assets/images/Properties Listing - For Sale Images/5 katha plot in purbachal.jpg',
-              offeredTime: '2h ago',
-              status: OfferReceivedStatus.pending,
-              sellerId: 's2',
-              sellerName: 'Rafiq',
-              sellerVerified: true,
-              postId: '#POST-1043',
-              description:
-                  'Prime plot in Purbachal with excellent road access and all utilities available.',
-              sellableLandAmount: '5 Katha',
-              plotSize: '5 Katha',
-              distanceFromRoad: '50m-100m',
-              location: 'Purbachal, Dhaka, Bangladesh.',
-              propertyPhotos: [
-                'assets/images/Properties Listing - For Sale Images/5 katha plot in purbachal.jpg',
-              ],
-            ),
-            OfferReceived(
-              id: 'o3',
-              propertyTitle: 'Gazipur Water Zone',
-              propertyPrice: '40,00,000',
-              propertyType: PropertyType.flat,
-              propertyImageUrl:
-                  'assets/images/Properties Listing - For Sale Images/gazipur water zone.jpg',
-              offeredTime: '2h ago',
-              status: OfferReceivedStatus.pending,
-              sellerId: 's3',
-              sellerName: 'Ahmed',
-              sellerVerified: false,
-              postId: '#POST-1044',
-              description: 'Beautiful water zone property in Gazipur.',
-              sellableLandAmount: '10 Katha',
-              plotSize: '10 Katha',
-              distanceFromRoad: '100m-200m',
-              location: 'Gazipur, Dhaka Division, Bangladesh.',
-              propertyPhotos: [
-                'assets/images/Properties Listing - For Sale Images/gazipur water zone.jpg',
-              ],
-            ),
-          ],
-        ),
-        BuyPost(
-          id: '2',
-          postId: '#BUY-1043',
-          title: 'Want a Plain Land near Banasree Block C',
-          preferredLocation:
-              'Banasree, Ward No. 25, Dhaka South City Corporation, Khilgaon Thana, Dhaka - 1219, Dhaka Division.',
-          propertyType: PropertyType.plainLand,
-          requiredLandSize: 'Min 5 Katha',
-          requiredPlotSize: 'Min 5 Katha',
-          distanceFromRoad: '200m-750m',
-          budgetRange: '৳ 30,00,000 - ৳ 40,00,000',
-          status: BuyPostStatus.active,
-          timestamp: '2h ago',
-          timestampPrefix: 'Posted:',
-          offersReceived: [],
-        ),
-        BuyPost(
-          id: '3',
-          postId: '#BUY-1044',
-          title: 'Want a Plain Land near Banasree Block C',
-          preferredLocation:
-              'Banasree, Ward No. 25, Dhaka South City Corporation, Khilgaon Thana, Dhaka - 1219, Dhaka Division.',
-          propertyType: PropertyType.plainLand,
-          requiredLandSize: 'Min 5 Katha',
-          requiredPlotSize: 'Min 5 Katha',
-          distanceFromRoad: '200m-750m',
-          budgetRange: '৳ 30,00,000 - ৳ 40,00,000',
-          status: BuyPostStatus.pending,
-          timestamp: '2h ago',
-          timestampPrefix: 'Submitted:',
-          offersReceived: [],
-        ),
-        BuyPost(
-          id: '4',
-          postId: '#BUY-1045',
-          title: '3 Bed Ready Flat Needed',
-          preferredLocation:
-              'Banasree, Ward No. 25, Dhaka South City Corporation, Khilgaon Thana, Dhaka - 1219, Dhaka Division.',
-          propertyType: PropertyType.flat,
-          requiredLandSize: 'Min 5 Katha',
-          requiredPlotSize: 'Min 5 Katha',
-          distanceFromRoad: '200m-750m',
-          budgetRange: '৳ 30,00,000 - ৳ 40,00,000',
-          status: BuyPostStatus.active,
-          timestamp: '3h ago',
-          timestampPrefix: 'Posted:',
-          offersReceived: [],
-          acceptedOffer: OfferReceived(
-            id: 'o4',
-            propertyTitle: 'Modern Duplex Villa',
-            propertyPrice: '40,00,000',
-            propertyType: PropertyType.flat,
-            propertyImageUrl:
-                'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-            offeredTime: '2h ago',
-            status: OfferReceivedStatus.pendingAdminReview,
-            sellerId: 's4',
-            sellerName: 'Farhan',
-            sellerVerified: true,
-            postId: '#POST-1045',
-            description:
-                'A stunning newly renovated villa featuring an open-concept living area.',
-            sellableLandAmount: '15 Katha',
-            plotSize: '15 Katha',
-            distanceFromRoad: '200m-750m',
-            location: 'Block-C, Banani, Dhaka, Bangladesh.',
-            propertyPhotos: [
-              'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-            ],
-          ),
-        ),
-        BuyPost(
-          id: '5',
-          postId: '#BUY-1046',
-          title: 'Looking for Agro Land',
-          preferredLocation: 'Gazipur, Dhaka Division.',
-          propertyType: PropertyType.plainLand,
-          requiredLandSize: 'Min 5 Katha',
-          requiredPlotSize: 'Min 5 Katha',
-          distanceFromRoad: '200m-750m',
-          budgetRange: '৳ 30,00,000 - ৳ 40,00,000',
-          status: BuyPostStatus.pending,
-          timestamp: '5h ago',
-          timestampPrefix: 'Submitted:',
-          offersReceived: [],
-        ),
-        BuyPost(
-          id: '6',
-          postId: '#BUY-1047',
-          title: 'Resort in Gulshan',
-          preferredLocation: 'Gulshan, Dhaka Division.',
-          propertyType: PropertyType.flat,
-          requiredLandSize: 'Min 5 Katha',
-          requiredPlotSize: 'Min 5 Katha',
-          distanceFromRoad: '50m',
-          budgetRange: '৳ 30,00,000 - ৳ 40,00,000',
-          status: BuyPostStatus.draft,
-          timestamp: '1d ago',
-          timestampPrefix: 'Edited:',
-          offersReceived: [],
-        ),
-      ];
-
-      // Calculate offers count
+      final response = await _service.getMyBuyPosts(
+        page: _currentPage,
+        limit: _pageLimit,
+      );
+      allBuyPosts.assignAll(response.posts);
+      _apiTotal = response.total;
+      hasMore.value = allBuyPosts.length < _apiTotal;
       offersCount.value = allBuyPosts.fold(
         0,
         (sum, post) => sum + post.offersCount,
       );
-
       _applyFilter();
-    } catch (e) {
+      _syncCache();
+    } catch (_) {
       Get.snackbar(
         'Error',
         'Failed to load buy posts',
@@ -254,24 +81,54 @@ class BuyPostsController extends GetxController {
     }
   }
 
-  /// Change filter
+  Future<void> loadMoreIfNeeded() async {
+    if (isLoading.value || isLoadingMore.value || !hasMore.value) {
+      return;
+    }
+
+    isLoadingMore.value = true;
+    try {
+      final nextPage = _currentPage + 1;
+      final response = await _service.getMyBuyPosts(
+        page: nextPage,
+        limit: _pageLimit,
+      );
+
+      final existingIds = allBuyPosts.map((post) => post.id).toSet();
+      final newPosts = response.posts
+          .where((post) => !existingIds.contains(post.id))
+          .toList();
+
+      allBuyPosts.addAll(newPosts);
+      _currentPage = nextPage;
+      _apiTotal = response.total;
+      hasMore.value = allBuyPosts.length < _apiTotal;
+
+      offersCount.value = allBuyPosts.fold(
+        0,
+        (sum, post) => sum + post.offersCount,
+      );
+      _applyFilter();
+      _syncCache();
+    } catch (_) {
+      hasMore.value = false;
+    } finally {
+      isLoadingMore.value = false;
+    }
+  }
+
   void changeFilter(String filter) {
     currentFilter.value = filter;
     _applyFilter();
   }
 
-  /// Change sort
   void changeSortBy(String sort) {
     sortBy.value = sort;
     _sortPosts();
   }
 
-  /// Apply current filter
   void _applyFilter() {
     switch (currentFilter.value) {
-      case 'All':
-        filteredBuyPosts.assignAll(allBuyPosts);
-        break;
       case 'Offers':
         filteredBuyPosts.assignAll(
           allBuyPosts.where((p) => p.hasOffers).toList(),
@@ -293,13 +150,14 @@ class BuyPostsController extends GetxController {
               .toList(),
         );
         break;
+      case 'All':
       default:
         filteredBuyPosts.assignAll(allBuyPosts);
+        break;
     }
     _sortPosts();
   }
 
-  /// Sort posts
   void _sortPosts() {
     switch (sortBy.value) {
       case 'Most Offers':
@@ -308,36 +166,48 @@ class BuyPostsController extends GetxController {
       case 'Least Offers':
         filteredBuyPosts.sort((a, b) => a.offersCount.compareTo(b.offersCount));
         break;
-      case 'Newest First':
-        // TODO: Sort by actual date
-        break;
       case 'Oldest First':
-        // TODO: Sort by actual date
+      case 'Newest First':
+      default:
         break;
     }
   }
 
-  /// Get badge count for a filter
   int getBadgeCount(String filter) {
-    switch (filter) {
-      case 'Offers':
-        return allBuyPosts.where((p) => p.hasOffers).length;
-      default:
-        return 0;
+    if (filter == 'Offers') {
+      return allBuyPosts.where((p) => p.hasOffers).length;
     }
+    return 0;
   }
 
-  /// Refresh posts
   Future<void> refresh() async {
-    await loadBuyPosts();
+    await loadBuyPosts(forceRefresh: true);
   }
 
-  /// Navigate to buy post offers popup
-  void showOffersPopup(BuyPost post) {
-    // This will be handled by the view using the popup widget
+  void _restoreFromCache() {
+    currentFilter.value = _cachedCurrentFilter;
+    sortBy.value = _cachedSortBy;
+    offersCount.value = _cachedOffersCount;
+    allBuyPosts.assignAll(_cachedAllBuyPosts);
+    _currentPage = _cachedCurrentPage;
+    _apiTotal = _cachedTotal;
+    hasMore.value = _cachedHasMore;
+    _applyFilter();
   }
 
-  /// Navigate to offer details (uses nested navigation to keep bottom nav visible)
+  void _syncCache() {
+    _cachedAllBuyPosts = List<BuyPost>.from(allBuyPosts);
+    _cachedCurrentPage = _currentPage;
+    _cachedTotal = _apiTotal;
+    _cachedHasMore = hasMore.value;
+    _cachedCurrentFilter = currentFilter.value;
+    _cachedSortBy = sortBy.value;
+    _cachedOffersCount = offersCount.value;
+    _hasCachedData = true;
+  }
+
+  void showOffersPopup(BuyPost post) {}
+
   void goToOfferDetails(BuyPost buyPost, OfferReceived offer) {
     NestedNavigationService.to(
       const BuyPostOfferDetailsView(),
@@ -345,19 +215,48 @@ class BuyPostsController extends GetxController {
     );
   }
 
-  /// Accept an offer
-  Future<void> acceptOffer(BuyPost buyPost, OfferReceived offer) async {
-    // TODO: Implement offer acceptance logic
-    Get.snackbar(
-      'Offer Accepted',
-      'You have accepted the offer for ${offer.propertyTitle}',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+  void onPostTap(BuyPost post) {
+    if (post.status == BuyPostStatus.draft) {
+      final lastCompletedStep = post.lastCompletedStep ?? 1;
+      final resumeStep = (lastCompletedStep + 1).clamp(1, 2);
+
+      Get.toNamed(
+        AppRoutes.CREATE_BUY_POST_INFO,
+        arguments: {
+          'draftPostId': post.id,
+          'lastCompletedStep': lastCompletedStep,
+          'resumeStep': resumeStep,
+        },
+      );
+    }
   }
 
-  /// View appointment
+  Future<bool> acceptOffer(BuyPost buyPost, OfferReceived offer) async {
+    final offerId = offer.id.trim();
+    if (offerId.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Invalid offer ID',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    try {
+      await _service.acceptOffer(offerId: offerId);
+      await loadBuyPosts(forceRefresh: true);
+      return true;
+    } catch (_) {
+      Get.snackbar(
+        'Error',
+        'Failed to accept offer. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+  }
+
   void viewAppointment(BuyPost post) {
-    // TODO: Navigate to appointments page
     Get.snackbar(
       'Appointment',
       'View appointment for ${post.title}',

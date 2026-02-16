@@ -5,6 +5,9 @@ import 'models/appointment_models.dart';
 /// Controller for User Appointments screen
 /// Handles: Upcoming/Past tabs with secondary filters
 class AppointmentsController extends GetxController {
+  static List<Appointment> _cachedAppointments = <Appointment>[];
+  static bool _hasCachedData = false;
+
   // Primary tab state (Upcoming / Past)
   final Rx<AppointmentTab> selectedTab = AppointmentTab.upcoming.obs;
 
@@ -25,7 +28,18 @@ class AppointmentsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    loadAppointments();
+  }
+
+  Future<void> loadAppointments({bool forceRefresh = false}) async {
+    if (!forceRefresh && _hasCachedData) {
+      allAppointments.assignAll(_cachedAppointments);
+      return;
+    }
+
     _loadDemoData();
+    _cachedAppointments = List<Appointment>.from(allAppointments);
+    _hasCachedData = true;
   }
 
   /// Load demo data
@@ -288,7 +302,7 @@ class AppointmentsController extends GetxController {
   Future<void> refresh() async {
     isLoading.value = true;
     await Future.delayed(const Duration(milliseconds: 500));
-    _loadDemoData();
+    await loadAppointments(forceRefresh: true);
     isLoading.value = false;
   }
 

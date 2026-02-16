@@ -96,17 +96,7 @@ class OfferAcceptedPopup extends StatelessWidget {
                   // Property image
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8.r),
-                    child: offer.propertyImageUrl != null
-                        ? Image.asset(
-                            offer.propertyImageUrl!,
-                            width: 64.w,
-                            height: 64.h,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildImagePlaceholder();
-                            },
-                          )
-                        : _buildImagePlaceholder(),
+                    child: _buildOfferImage(),
                   ),
                   SizedBox(width: 12.w),
 
@@ -233,6 +223,33 @@ class OfferAcceptedPopup extends StatelessWidget {
           size: 32.sp,
         ),
       ),
+    );
+  }
+
+  Widget _buildOfferImage() {
+    final image = offer.propertyImageUrl?.trim();
+    if (image == null || image.isEmpty) {
+      return _buildImagePlaceholder();
+    }
+
+    final isNetwork =
+        image.startsWith('http://') || image.startsWith('https://');
+    if (isNetwork) {
+      return Image.network(
+        image,
+        width: 64.w,
+        height: 64.h,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+      );
+    }
+
+    return Image.asset(
+      image,
+      width: 64.w,
+      height: 64.h,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
     );
   }
 }

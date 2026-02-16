@@ -1,10 +1,11 @@
 import 'package:get/get.dart';
+import '../../../core/models/property_listing.dart';
 import '../../../core/services/nested_navigation_service.dart';
+import '../../../core/services/services.dart';
 import '../../../routes/app_routes.dart';
 import '../../shared/bottom_nav/user_bottom_nav_controller.dart';
-import '../../shared/shell/main_shell_controller.dart';
-import '../properties/property_details/property_details_controller.dart';
-import '../properties/property_details/property_details_view.dart';
+import '../properties/for_sale/property_details/property_details_controller.dart';
+import '../properties/for_sale/property_details/property_details_view.dart';
 
 /// Model for featured property
 class FeaturedProperty {
@@ -23,6 +24,8 @@ class FeaturedProperty {
   final String? plotSize;
   final String? distanceFromRoad;
   final String? postedBy;
+  final String? postedByAvatarUrl;
+  final bool postedByVerified;
   final String? postedTime;
 
   FeaturedProperty({
@@ -41,6 +44,8 @@ class FeaturedProperty {
     this.plotSize,
     this.distanceFromRoad,
     this.postedBy,
+    this.postedByAvatarUrl,
+    this.postedByVerified = false,
     this.postedTime,
   });
 
@@ -62,6 +67,8 @@ class FeaturedProperty {
       'plotSize': plotSize,
       'distanceFromRoad': distanceFromRoad,
       'postedBy': postedBy,
+      'postedByAvatarUrl': postedByAvatarUrl,
+      'postedByVerified': postedByVerified,
       'postedTime': postedTime,
       'propertyPhotos': imageUrl != null ? [imageUrl] : <String>[],
     };
@@ -70,6 +77,16 @@ class FeaturedProperty {
 
 /// Controller for the User Home/Dashboard screen
 class HomeController extends GetxController {
+  final SellPostListingService _sellPostListingService =
+      Get.find<SellPostListingService>();
+  final MySellPostsService _mySellPostsService = Get.find<MySellPostsService>();
+
+  static int _cachedActivePostsCount = 0;
+  static int _cachedUpcomingMeetingsCount = 0;
+  static List<FeaturedProperty> _cachedFeaturedProperties =
+      <FeaturedProperty>[];
+  static bool _hasCachedData = false;
+
   // State
   final RxBool isLoading = false.obs;
 
@@ -87,87 +104,46 @@ class HomeController extends GetxController {
   }
 
   /// Load dashboard data
-  Future<void> loadDashboardData() async {
+  Future<void> loadDashboardData({bool forceRefresh = false}) async {
+    if (!forceRefresh && _hasCachedData) {
+      _restoreFromCache();
+      return;
+    }
+
     isLoading.value = true;
     try {
-      // TODO: Load user data from API
-      await Future.delayed(const Duration(milliseconds: 500));
+      final activePostsResult = await ApiErrorHandler.call(
+        () => _mySellPostsService.getMySellPosts(
+          page: 1,
+          limit: 10,
+          tab: MySellPostsTab.active.apiValue,
+        ),
+      );
+      final featuredResult = await ApiErrorHandler.call(
+        () => _sellPostListingService.getSellPosts(page: 1, limit: 3),
+      );
 
-      // Update shell controller with user data
-      if (Get.isRegistered<MainShellController>()) {
-        final shellController = Get.find<MainShellController>();
-        shellController.updateUserName('User');
+      if (activePostsResult.isSuccess && activePostsResult.data != null) {
+        activePostsCount.value = activePostsResult.data!.total;
+      } else {
+        activePostsCount.value = 0;
       }
 
-      // Mock data for now
-      activePostsCount.value = 12;
-      upcomingMeetingsCount.value = 5;
+      upcomingMeetingsCount.value = 0;
 
-      // Mock featured properties
-      featuredProperties.value = [
-        FeaturedProperty(
-          id: '1',
-          postId: '#POST-1040',
-          title: '5 Katha Plot in Purbachal',
-          location:
-              'Sector 4, Purbachal New Town, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          price: '2,00,00,000',
-          propertyType: 'Plain Land',
-          postType: 'Sell Post',
-          isVerified: true,
-          isLocked: true,
-          imageUrl:
-              'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
-          description:
-              'Prime residential plot in the rapidly developing Purbachal New Town. Ideal location with excellent connectivity and future growth potential.',
-          sellableLandAmount: '5 Katha',
-          plotSize: '5 Katha',
-          distanceFromRoad: '50m-100m',
-          postedBy: 'Mr. Rahman',
-          postedTime: '1d ago',
-        ),
-        FeaturedProperty(
-          id: '2',
-          postId: '#POST-1041',
-          title: 'Luxury 3 Bed Apartment',
-          location:
-              'Gulshan 2, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          price: '80,75,000',
-          propertyType: 'Flat',
-          postType: 'Sell Post',
-          isVerified: true,
-          isLocked: true,
-          imageUrl: 'assets/images/Properties demo/Luxury 3 Bed Apartment.jpg',
-          description:
-              'Luxurious 3 bedroom apartment in prime Gulshan location with modern amenities and premium finishes.',
-          sellableLandAmount: '1800 sqft',
-          plotSize: '1800 sqft',
-          distanceFromRoad: '20m-50m',
-          postedBy: 'Mr. Ahmed',
-          postedTime: '3h ago',
-        ),
-        FeaturedProperty(
-          id: '3',
-          postId: '#POST-1042',
-          title: 'Gazipur Water Zone',
-          location:
-              'Gazipur Sadar, Gazipur City Corporation, Dhaka Division, Bangladesh.',
-          price: '95,12,000',
-          propertyType: 'Water Land',
-          postType: 'Sell Post',
-          isVerified: true,
-          isLocked: true,
-          imageUrl: 'assets/images/Properties demo/Gazipur Water Zone.jpg',
-          description:
-              'Beautiful water-adjacent land perfect for agricultural or aquaculture projects. Natural water source with excellent drainage system.',
-          sellableLandAmount: '10 Katha',
-          plotSize: '12 Katha',
-          distanceFromRoad: '200m-500m',
-          postedBy: 'Mr. Karim',
-          postedTime: '3d ago',
-        ),
-      ];
+      if (featuredResult.isSuccess && featuredResult.data != null) {
+        featuredProperties.assignAll(
+          featuredResult.data!.posts.map(_toFeaturedProperty),
+        );
+      } else {
+        featuredProperties.clear();
+      }
+
+      _syncCache();
     } catch (e) {
+      activePostsCount.value = 0;
+      upcomingMeetingsCount.value = 0;
+      featuredProperties.clear();
       Get.snackbar(
         'Error',
         'Failed to load dashboard data',
@@ -232,6 +208,42 @@ class HomeController extends GetxController {
 
   /// Refresh dashboard
   Future<void> refresh() async {
-    await loadDashboardData();
+    await loadDashboardData(forceRefresh: true);
+  }
+
+  void _restoreFromCache() {
+    activePostsCount.value = _cachedActivePostsCount;
+    upcomingMeetingsCount.value = _cachedUpcomingMeetingsCount;
+    featuredProperties.assignAll(_cachedFeaturedProperties);
+  }
+
+  void _syncCache() {
+    _cachedActivePostsCount = activePostsCount.value;
+    _cachedUpcomingMeetingsCount = upcomingMeetingsCount.value;
+    _cachedFeaturedProperties = List<FeaturedProperty>.from(featuredProperties);
+    _hasCachedData = true;
+  }
+
+  FeaturedProperty _toFeaturedProperty(PropertyListing property) {
+    return FeaturedProperty(
+      id: property.id,
+      postId: property.postId,
+      title: property.title,
+      location: property.location,
+      price: property.price,
+      propertyType: property.propertyTypeLabel,
+      postType: property.postTypeLabel,
+      isVerified: property.isVerified,
+      isLocked: true,
+      imageUrl: property.imageUrl,
+      description: property.description,
+      sellableLandAmount: property.sellableLandAmount,
+      plotSize: property.plotSize,
+      distanceFromRoad: property.distanceFromRoad,
+      postedBy: property.postedBy,
+      postedByAvatarUrl: property.postedByAvatarUrl,
+      postedByVerified: property.postedByVerified,
+      postedTime: property.postedTime,
+    );
   }
 }

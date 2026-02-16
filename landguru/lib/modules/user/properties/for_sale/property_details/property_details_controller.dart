@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../core/services/nested_navigation_service.dart';
-import '../widgets/metrics_input_field.dart';
-import '../widgets/metrics_conversion_row.dart';
+import '../../../../../core/services/nested_navigation_service.dart';
+import '../../../../../core/services/services.dart';
+import '../../widgets/metrics_input_field.dart';
+import '../../widgets/metrics_conversion_row.dart';
 import 'models/property_details_models.dart';
 
 /// Controller for Property Details screen (Locked and Unlocked views)
 class PropertyDetailsController extends GetxController {
+  final SellPostDetailsService _sellPostDetailsService =
+      Get.find<SellPostDetailsService>();
+  final BuyPostOfferService _buyPostOfferService =
+      Get.find<BuyPostOfferService>();
+
   // State
   final RxBool isLoading = false.obs;
   final RxBool isLocked = true.obs;
@@ -153,9 +159,9 @@ class PropertyDetailsController extends GetxController {
     // Get property data from arguments
     if (Get.arguments != null) {
       _loadFromArguments(Get.arguments);
-    } else {
-      loadPropertyDetails();
     }
+
+    loadPropertyDetails();
   }
 
   /// Load property from route arguments
@@ -227,6 +233,8 @@ class PropertyDetailsController extends GetxController {
         landShapeImageUrl: null,
         propertyPhotos: photos,
         postedBy: args['postedBy'] ?? 'Unknown',
+        postedByAvatarUrl: args['postedByAvatarUrl']?.toString(),
+        postedByVerified: args['postedByVerified'] == true,
         postedTime: args['postedTime'] ?? 'Unknown',
         hasRequestedAppointment: false,
       );
@@ -243,34 +251,45 @@ class PropertyDetailsController extends GetxController {
 
   /// Load property details (fallback when no arguments)
   Future<void> loadPropertyDetails() async {
+    if (propertyId.value.isEmpty) {
+      return;
+    }
+
     isLoading.value = true;
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      final result = await ApiErrorHandler.call(
+        () => _sellPostDetailsService.getSellPostById(propertyId.value),
+      );
 
-      // Fallback mock property data
+      if (!result.isSuccess || result.data == null) {
+        return;
+      }
+
+      final payload = result.data!;
+      final photos = payload.photos;
+
       property.value = PropertyDetails(
-        id: propertyId.value.isEmpty ? '1' : propertyId.value,
-        postId: '#POST-1042',
-        title: 'Modern Duplex Villa',
-        price: '40,00,000',
-        propertyType: 'Flat',
+        id: payload.id,
+        postId: payload.postId,
+        title: payload.title,
+        price: payload.priceFormatted,
+        propertyType: _toDisplayPropertyType(payload.propertyTypeRaw),
         postType: 'Sell Post',
-        isVerified: true,
+        isVerified: payload.isVerified,
         isLocked: isLocked.value,
-        description:
-            'A stunning newly renovated villa featuring an open-concept living area, chef\'s kitchen with top-tier appliances, and a private backyards oasis...',
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        sellableLandAmount: '15 Katha',
-        plotSize: '15 Katha',
-        distanceFromRoad: '200m-750m',
+        description: payload.description,
+        location: payload.location,
+        sellableLandAmount: payload.sellableLandAmount,
+        plotSize: payload.plotSize,
+        shareUnit: payload.shareUnit,
+        distanceFromRoad: payload.distanceFromRoad,
         landShapeImageUrl: null,
-        propertyPhotos: [
-          'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-        ],
-        postedBy: 'Farhan',
-        postedTime: '2h ago',
-        hasRequestedAppointment: false,
+        propertyPhotos: photos,
+        postedBy: payload.sellerName,
+        postedByAvatarUrl: payload.sellerAvatarUrl,
+        postedByVerified: payload.sellerVerified,
+        postedTime: payload.postedTime,
+        hasRequestedAppointment: hasRequestedAppointment.value,
       );
     } catch (e) {
       Get.snackbar(
@@ -280,6 +299,21 @@ class PropertyDetailsController extends GetxController {
       );
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  String _toDisplayPropertyType(String rawType) {
+    final normalized = rawType.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
+    switch (normalized) {
+      case 'plainland':
+      case 'land':
+        return 'Plain Land';
+      case 'waterland':
+      case 'water':
+        return 'Water Land';
+      case 'flat':
+      default:
+        return 'Flat';
     }
   }
 
@@ -327,6 +361,8 @@ class PropertyDetailsController extends GetxController {
       landShapeImageUrl: property.value!.landShapeImageUrl,
       propertyPhotos: property.value!.propertyPhotos,
       postedBy: property.value!.postedBy,
+      postedByAvatarUrl: property.value!.postedByAvatarUrl,
+      postedByVerified: property.value!.postedByVerified,
       postedTime: property.value!.postedTime,
       hasRequestedAppointment: property.value!.hasRequestedAppointment,
     );
@@ -338,45 +374,76 @@ class PropertyDetailsController extends GetxController {
     required String phone,
     required String address,
   }) async {
-    try {
-      // TODO: Call API to submit appointment request
-      await Future.delayed(const Duration(seconds: 1));
+    final normalizedPhone = phone.trim();
+    final normalizedAddress = address.trim();
 
-      // Update state
-      hasRequestedAppointment.value = true;
-      userPhone.value = phone;
-      userAddress.value = address;
-
-      return true;
-    } catch (e) {
+    if (propertyId.value.trim().isEmpty) {
       Get.snackbar(
-        'Error',
-        'Failed to submit appointment request',
+        'Missing Data',
+        'Property information is missing.',
         snackPosition: SnackPosition.BOTTOM,
       );
       return false;
     }
+
+    if (normalizedPhone.isEmpty || normalizedAddress.isEmpty) {
+      Get.snackbar(
+        'Invalid Input',
+        'Phone number and address are required.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final buyerName = userName.value.trim().isNotEmpty
+        ? userName.value.trim()
+        : 'Buyer';
+
+    final result = await ApiErrorHandler.call(
+      () => _sellPostDetailsService.requestAppointment(
+        sellPostId: propertyId.value.trim(),
+        buyerName: buyerName,
+        buyerPhone: normalizedPhone,
+        buyerAddress: normalizedAddress,
+      ),
+    );
+
+    if (!result.isSuccess) {
+      return false;
+    }
+
+    hasRequestedAppointment.value = true;
+    userPhone.value = normalizedPhone;
+    userAddress.value = normalizedAddress;
+
+    return true;
   }
 
   /// Submit offer (for Offer from Existing flow)
   /// This skips the appointment dialog and directly submits the offer
   Future<bool> submitOffer() async {
-    try {
-      // TODO: Call API to submit offer to the buy post
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Update state
-      hasRequestedAppointment.value = true;
-
-      return true;
-    } catch (e) {
+    if (buyPostId.value.isEmpty || propertyId.value.isEmpty) {
       Get.snackbar(
-        'Error',
-        'Failed to submit offer',
+        'Missing Data',
+        'Buy post or sell post information is missing.',
         snackPosition: SnackPosition.BOTTOM,
       );
       return false;
     }
+
+    final result = await ApiErrorHandler.call(
+      () => _buyPostOfferService.makeOfferFromExisting(
+        buyPostId: buyPostId.value,
+        sellPostId: propertyId.value,
+      ),
+    );
+
+    if (!result.isSuccess) {
+      return false;
+    }
+
+    hasRequestedAppointment.value = true;
+    return true;
   }
 
   /// Navigate back (uses nested navigation if available)

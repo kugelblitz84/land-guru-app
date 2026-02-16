@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../widgets/info_banner.dart';
-import '../widgets/metrics_conversion_row.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../widgets/info_banner.dart';
+import '../../widgets/metrics_conversion_row.dart';
 import 'models/property_details_models.dart';
 import 'property_details_controller.dart';
 import 'widgets/property_details_widgets.dart';
@@ -224,7 +224,8 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
               // Posted By section
               PostedBySection(
                 name: property.postedBy,
-                isVerified: property.isVerified,
+                isVerified: property.postedByVerified,
+                avatarUrl: property.postedByAvatarUrl,
                 postedTime: property.postedTime,
               ),
 
@@ -255,6 +256,13 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
   }
 
   Widget _buildPropertyImage(PropertyDetails property) {
+    final imagePath = property.propertyPhotos.isNotEmpty
+        ? property.propertyPhotos.first
+        : null;
+    final isNetwork =
+        imagePath != null &&
+        (imagePath.startsWith('http://') || imagePath.startsWith('https://'));
+
     return ClipRRect(
       borderRadius: BorderRadius.only(
         topLeft: Radius.circular(24.r),
@@ -263,13 +271,20 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
       child: SizedBox(
         height: 220.h,
         width: double.infinity,
-        child: property.propertyPhotos.isNotEmpty
-            ? Image.asset(
-                property.propertyPhotos.first,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildImagePlaceholder(),
-              )
+        child: imagePath != null
+            ? (isNetwork
+                  ? Image.network(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildImagePlaceholder(),
+                    )
+                  : Image.asset(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildImagePlaceholder(),
+                    ))
             : _buildImagePlaceholder(),
       ),
     );

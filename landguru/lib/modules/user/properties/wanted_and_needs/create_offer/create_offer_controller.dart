@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../core/services/services.dart';
 import '../../../../../core/utils/currency_formatter.dart';
 import '../../../../../routes/app_routes.dart';
 import '../../widgets/properties_widgets.dart';
@@ -9,9 +13,12 @@ import '../../widgets/properties_widgets.dart';
 /// Step 2: Property photos
 /// Step 3: Review offer & submit
 class CreateOfferController extends GetxController {
+  final BuyPostOfferService _offerService = Get.find<BuyPostOfferService>();
+
   // The buy post ID this offer is responding to
   String? buyPostId;
   String? buyPostTitle;
+  final RxnString draftOfferId = RxnString();
 
   // Current step (1-3)
   final RxInt currentStep = 1.obs;
@@ -56,6 +63,7 @@ class CreateOfferController extends GetxController {
   // Loading states
   final RxBool isLoading = false.obs;
   final RxBool isSavingDraft = false.obs;
+  final RxBool isUploadingMedia = false.obs;
 
   @override
   void onInit() {
@@ -133,7 +141,7 @@ class CreateOfferController extends GetxController {
   }
 
   /// Validate step 1 and proceed
-  void validateAndNextFromInfo() {
+  Future<void> validateAndNextFromInfo() async {
     propertyTypeError.value = '';
 
     if (propertyType.value == null) {
@@ -152,13 +160,14 @@ class CreateOfferController extends GetxController {
         );
         return;
       }
-
-      nextStep();
+      await ApiErrorHandler.call(
+        () => _submitStep1(advanceStep: true, showSuccessSnack: false),
+      );
     }
   }
 
   /// Validate step 2 (photos) and proceed
-  void validateAndNextFromMedia() {
+  Future<void> validateAndNextFromMedia() async {
     if (photos.isEmpty) {
       Get.snackbar(
         'Photos Required',
@@ -169,8 +178,9 @@ class CreateOfferController extends GetxController {
       );
       return;
     }
-
-    nextStep();
+    await ApiErrorHandler.call(
+      () => _submitStep2(advanceStep: true, showSuccessSnack: false),
+    );
   }
 
   /// Change land amount unit
@@ -201,12 +211,43 @@ class CreateOfferController extends GetxController {
 
   // Photo management
   Future<void> addPhoto() async {
-    // TODO: Implement actual image picker
-    final newPhoto = PhotoItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      path: 'photo_${photos.length + 1}.jpg',
+    if (isUploadingMedia.value) {
+      return;
+    }
+
+    final pickResult = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
     );
-    photos.add(newPhoto);
+    if (pickResult == null || pickResult.files.isEmpty) {
+      return;
+    }
+
+    final path = pickResult.files.single.path;
+    if (path == null) {
+      return;
+    }
+
+    isUploadingMedia.value = true;
+    final uploadService = Get.find<UploadService>();
+    final uploadResult = await ApiErrorHandler.call(
+      () => uploadService.uploadFile(
+        file: File(path),
+        contentType: _guessContentType(path),
+        type: 'AVATAR',
+      ),
+    );
+
+    if (uploadResult.isSuccess && uploadResult.data != null) {
+      final newPhoto = PhotoItem(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        path: uploadResult.data!,
+        isLocal: false,
+      );
+      photos.add(newPhoto);
+    }
+
+    isUploadingMedia.value = false;
   }
 
   void removePhoto(int index) {
@@ -218,33 +259,66 @@ class CreateOfferController extends GetxController {
   /// Save as draft
   Future<void> saveAsDraft() async {
     isSavingDraft.value = true;
-    try {
-      await Future.delayed(const Duration(seconds: 1));
+    if ((buyPostId ?? '').isEmpty) {
       Get.snackbar(
-        'Draft Saved',
-        'Your offer has been saved as draft',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to save draft. Please try again.',
+        'Missing Buy Post',
+        'Unable to save draft without a buy post reference.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
-    } finally {
       isSavingDraft.value = false;
+      return;
     }
+
+    if (currentStep.value == 1) {
+      await ApiErrorHandler.call(
+        () => _submitStep1(advanceStep: false, showSuccessSnack: true),
+      );
+      isSavingDraft.value = false;
+      return;
+    }
+
+    if (draftOfferId.value == null || draftOfferId.value!.isEmpty) {
+      Get.snackbar(
+        'Missing Draft',
+        'Please complete step 1 before saving media draft.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      isSavingDraft.value = false;
+      return;
+    }
+
+    await ApiErrorHandler.call(
+      () => _submitStep2(advanceStep: false, showSuccessSnack: true),
+    );
+    isSavingDraft.value = false;
   }
 
   /// Submit offer
   Future<void> submitOffer() async {
+    final id = draftOfferId.value;
+    if (id == null || id.isEmpty) {
+      Get.snackbar(
+        'Missing Draft',
+        'Please complete previous steps before submitting your offer.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
     isLoading.value = true;
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      final result = await ApiErrorHandler.call(
+        () => _offerService.submitFinalOffer(offerId: id),
+      );
+      if (!result.isSuccess) {
+        return;
+      }
 
       // Show success dialog
       PostSubmittedDialog.showSellPost(
@@ -261,17 +335,160 @@ class CreateOfferController extends GetxController {
           Get.offNamed(AppRoutes.MAIN); // Navigate to home
         },
       );
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to submit offer. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> _submitStep1({
+    required bool advanceStep,
+    required bool showSuccessSnack,
+  }) async {
+    if (isLoading.value) {
+      return;
+    }
+
+    final targetBuyPostId = buyPostId;
+    if (targetBuyPostId == null || targetBuyPostId.isEmpty) {
+      throw Exception('Missing buy post ID for offer creation.');
+    }
+
+    isLoading.value = true;
+    try {
+      final payload = _buildStep1Payload();
+      final existingDraftId = draftOfferId.value;
+
+      if (existingDraftId == null || existingDraftId.isEmpty) {
+        final response = await _offerService.createDraftOfferStep1(
+          buyPostId: targetBuyPostId,
+          payload: payload,
+        );
+
+        final createdId =
+            response['offerId']?.toString() ??
+            response['id']?.toString() ??
+            response['draftOfferId']?.toString();
+
+        if (createdId == null || createdId.isEmpty) {
+          throw Exception('Could not get offer draft ID from server response.');
+        }
+        draftOfferId.value = createdId;
+      } else {
+        // API supports creating step-1 draft once and then patching step-2 media.
+        // Keep existing draft ID and continue flow.
+      }
+
+      if (showSuccessSnack) {
+        Get.snackbar(
+          'Draft Saved',
+          'Your offer draft has been saved',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      }
+
+      if (advanceStep) {
+        nextStep();
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _submitStep2({
+    required bool advanceStep,
+    required bool showSuccessSnack,
+  }) async {
+    final id = draftOfferId.value;
+    if (id == null || id.isEmpty) {
+      throw Exception('Please complete step 1 before uploading media.');
+    }
+
+    if (isLoading.value) {
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      final payload = _buildStep2Payload();
+      await _offerService.updateDraftOfferStep2(offerId: id, payload: payload);
+
+      if (showSuccessSnack) {
+        Get.snackbar(
+          'Draft Saved',
+          'Your offer media has been saved',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      }
+
+      if (advanceStep) {
+        nextStep();
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Map<String, dynamic> _buildStep1Payload() {
+    final selectedPropertyType = propertyType.value;
+    if (selectedPropertyType == null) {
+      throw Exception('Property type is required.');
+    }
+
+    final currentLocation = location.value;
+    final range = distanceRange.value;
+
+    final payload = <String, dynamic>{
+      'title': titleController.text.trim(),
+      'description': descriptionController.text.trim(),
+      'propertyType': selectedPropertyType.label,
+      'sellableAmount': landAmountValue.value,
+      'sellableUnit': landAmountUnit.value.label,
+      'isShareable': false,
+      'isPropertyShareable': false,
+      'askingPrice': askingPrice,
+      'pricePerUnit': pricePerKathaValue.value,
+      'askingPricePerUnit': pricePerKathaValue.value,
+      if (range != null) 'distanceFromRoad': range.label,
+      if (range != null) 'roadDistanceMin': range.minMeters,
+      if (range != null) 'roadDistanceMax': range.maxMeters,
+      if (range != null) 'roadWidthMin': range.minMeters,
+      if (range != null) 'roadWidthMax': range.maxMeters,
+      if (plotSizeValue.value > 0) 'plotSize': plotSizeValue.value,
+      if (plotSizeValue.value > 0) 'plotUnit': plotSizeUnit.value.label,
+      if (currentLocation.division != null)
+        'division': currentLocation.division,
+      if (currentLocation.district != null)
+        'district': currentLocation.district,
+      if (currentLocation.upazila != null) 'upazila': currentLocation.upazila,
+      if (currentLocation.pouroshova != null)
+        'unionOrCityCorp': currentLocation.pouroshova,
+      if (currentLocation.wardNo != null) 'wardNo': currentLocation.wardNo,
+      if (currentLocation.postalCode != null)
+        'postalCode': currentLocation.postalCode,
+      if (currentLocation.fullAddress != null)
+        'fullAddress': currentLocation.fullAddress,
+    };
+
+    return payload;
+  }
+
+  Map<String, dynamic> _buildStep2Payload() {
+    return {'photos': photos.map((photo) => photo.path).toList()};
+  }
+
+  String _guessContentType(String path) {
+    final lowerPath = path.toLowerCase();
+    if (lowerPath.endsWith('.png')) {
+      return 'image/png';
+    }
+    if (lowerPath.endsWith('.webp')) {
+      return 'image/webp';
+    }
+    return 'image/jpeg';
   }
 
   /// Reset controller state
@@ -294,6 +511,7 @@ class CreateOfferController extends GetxController {
     photos.clear();
     buyPostId = null;
     buyPostTitle = null;
+    draftOfferId.value = null;
   }
 
   @override

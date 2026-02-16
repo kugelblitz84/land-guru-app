@@ -456,17 +456,7 @@ class _BuyPostOffersPopupState extends State<BuyPostOffersPopup> {
             // Property image
             ClipRRect(
               borderRadius: BorderRadius.circular(8.r),
-              child: offer.propertyImageUrl != null
-                  ? Image.asset(
-                      offer.propertyImageUrl!,
-                      width: 70.w,
-                      height: 70.h,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildImagePlaceholder();
-                      },
-                    )
-                  : _buildImagePlaceholder(),
+              child: _buildOfferImage(offer),
             ),
             SizedBox(width: 12.w),
             Expanded(
@@ -565,6 +555,33 @@ class _BuyPostOffersPopupState extends State<BuyPostOffersPopup> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildOfferImage(OfferReceived offer) {
+    final image = offer.propertyImageUrl?.trim();
+    if (image == null || image.isEmpty) {
+      return _buildImagePlaceholder();
+    }
+
+    final isNetwork =
+        image.startsWith('http://') || image.startsWith('https://');
+    if (isNetwork) {
+      return Image.network(
+        image,
+        width: 70.w,
+        height: 70.h,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+      );
+    }
+
+    return Image.asset(
+      image,
+      width: 70.w,
+      height: 70.h,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
     );
   }
 

@@ -1,3 +1,5 @@
+import 'constants.dart';
+
 /// Input validators for form fields
 class Validators {
   Validators._();
@@ -42,8 +44,8 @@ class Validators {
     if (value == null || value.isEmpty) {
       return 'OTP is required';
     }
-    if (value.length != 6) {
-      return 'OTP must be 6 digits';
+    if (value.length != AppConstants.otpLength) {
+      return 'OTP must be ${AppConstants.otpLength} digits';
     }
     if (!RegExp(r'^\d+$').hasMatch(value)) {
       return 'OTP must contain only numbers';

@@ -104,6 +104,7 @@ extension OfferReceivedStatusExtension on OfferReceivedStatus {
 class BuyPost {
   final String id;
   final String postId;
+  final int? lastCompletedStep;
   final String title;
   final String preferredLocation;
   final PropertyType propertyType;
@@ -116,11 +117,13 @@ class BuyPost {
   final String timestamp;
   final String timestampPrefix;
   final List<OfferReceived> offersReceived;
+  final int offersReceivedCount;
   final OfferReceived? acceptedOffer;
 
   const BuyPost({
     required this.id,
     required this.postId,
+    this.lastCompletedStep,
     required this.title,
     required this.preferredLocation,
     required this.propertyType,
@@ -133,12 +136,14 @@ class BuyPost {
     required this.timestamp,
     required this.timestampPrefix,
     this.offersReceived = const [],
+    this.offersReceivedCount = 0,
     this.acceptedOffer,
   });
 
-  int get offersCount => offersReceived.length;
+  int get offersCount =>
+      offersReceivedCount > 0 ? offersReceivedCount : offersReceived.length;
 
-  bool get hasOffers => offersReceived.isNotEmpty;
+  bool get hasOffers => offersCount > 0;
 
   /// Determines the card border color based on status and offers
   Color? get cardBorderColor {

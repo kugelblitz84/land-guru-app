@@ -16,7 +16,7 @@ class ProfileView extends GetView<ProfileController> {
         () => controller.isLoading.value
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
-                onRefresh: controller.refresh,
+                onRefresh: controller.refreshProfile,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
@@ -90,6 +90,14 @@ class ProfileView extends GetView<ProfileController> {
                         ),
                       ),
 
+                      SizedBox(height: 16.h),
+
+                      // Account summary
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: _buildSummaryCard(),
+                      ),
+
                       SizedBox(height: 32.h),
 
                       // Menu Items Card
@@ -157,20 +165,26 @@ class ProfileView extends GetView<ProfileController> {
             border: Border.all(color: AppColors.grey200, width: 3),
           ),
           child: ClipOval(
-            child: Image.asset(
-              'assets/images/User_DP/MainUser.jpg',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: AppColors.grey200,
-                  child: Icon(
-                    Icons.person,
-                    color: AppColors.grey400,
-                    size: 60.sp,
-                  ),
+            child: Obx(() {
+              final imageUrl = controller.profileImage.value.trim();
+              if (imageUrl.isNotEmpty) {
+                return Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return _buildAvatarFallback();
+                  },
                 );
-              },
-            ),
+              }
+
+              return Image.asset(
+                'assets/images/User_DP/MainUser.jpg',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildAvatarFallback();
+                },
+              );
+            }),
           ),
         ),
 
@@ -193,6 +207,13 @@ class ProfileView extends GetView<ProfileController> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAvatarFallback() {
+    return Container(
+      color: AppColors.grey200,
+      child: Icon(Icons.person, color: AppColors.grey400, size: 60.sp),
     );
   }
 
@@ -232,6 +253,61 @@ class ProfileView extends GetView<ProfileController> {
             Icon(Icons.chevron_right, color: AppColors.grey400, size: 24.sp),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.grey300),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.grey200.withAlpha(50),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Obx(
+        () => Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSummaryItem('Member Since', controller.memberSince.value),
+            _buildSummaryItem(
+              'Active Deals',
+              '${controller.activeDeals.value}',
+            ),
+            _buildSummaryItem('Listed', '${controller.propertiesListed.value}'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem(String label, String value) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w700,
+              color: AppColors.grey900,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11.sp, color: AppColors.grey600),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

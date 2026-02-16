@@ -9,14 +9,11 @@ export 'home/home_view.dart';
 // Properties
 export 'properties/properties_controller.dart';
 export 'properties/properties_view.dart';
-export 'properties/property_details/property_details_controller.dart';
-export 'properties/property_details/property_details_view.dart';
+export 'properties/for_sale/property_details/property_details_controller.dart';
+export 'properties/for_sale/property_details/property_details_view.dart';
 
 // My Posts
 export 'properties/my_posts/my_posts_controller.dart';
-export 'properties/my_posts/my_posts_view.dart';
-export 'properties/my_posts/buy_post_details_controller.dart';
-export 'properties/my_posts/buy_post_details_view.dart';
 
 // Sell Post Details (My Posts)
 export 'properties/my_posts/sell_posts/sell_post_details_controller.dart';

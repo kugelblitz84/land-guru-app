@@ -34,10 +34,11 @@ class WantedContentView extends GetView<PropertiesController> {
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
-              await controller.loadWantedPosts();
+              await controller.loadWantedPosts(forceRefresh: true);
             },
             child: Obx(() {
-              final posts = controller.wantedSubTabIndex.value == 0
+              final isAllTab = controller.wantedSubTabIndex.value == 0;
+              final posts = isAllTab
                   ? controller.allWantedPosts
                   : controller.filteredOfferedPosts;
 
@@ -47,8 +48,21 @@ class WantedContentView extends GetView<PropertiesController> {
 
               return ListView.builder(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: posts.length,
+                itemCount:
+                    posts.length +
+                    (isAllTab && controller.isLoadingMoreWanted.value ? 1 : 0),
                 itemBuilder: (context, index) {
+                  if (index >= posts.length) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (isAllTab && index == posts.length - 1) {
+                    controller.loadMoreWantedIfNeeded();
+                  }
+
                   return _buildWantedPostCard(posts[index]);
                 },
               );

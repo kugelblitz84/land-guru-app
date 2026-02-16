@@ -7,6 +7,10 @@ import 'deal_details_view.dart';
 /// Controller for User My Deals screen
 /// Handles: Sold, Bought tabs with filtering
 class MyDealsController extends GetxController {
+  static DealStats _cachedStats = DealStats();
+  static List<Deal> _cachedDeals = <Deal>[];
+  static bool _hasCachedData = false;
+
   // Tab state
   final Rx<DealTab> selectedTab = DealTab.sold.obs;
 
@@ -26,7 +30,20 @@ class MyDealsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    loadDeals();
+  }
+
+  Future<void> loadDeals({bool forceRefresh = false}) async {
+    if (!forceRefresh && _hasCachedData) {
+      stats.value = _cachedStats;
+      allDeals.assignAll(_cachedDeals);
+      return;
+    }
+
     _loadDemoData();
+    _cachedStats = stats.value;
+    _cachedDeals = List<Deal>.from(allDeals);
+    _hasCachedData = true;
   }
 
   /// Load demo data
@@ -338,7 +355,7 @@ class MyDealsController extends GetxController {
   Future<void> refresh() async {
     isLoading.value = true;
     await Future.delayed(const Duration(milliseconds: 500));
-    _loadDemoData();
+    await loadDeals(forceRefresh: true);
     isLoading.value = false;
   }
 

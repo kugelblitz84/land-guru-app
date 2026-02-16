@@ -1,74 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:landguru/core/core.dart';
 import '../../../routes/app_routes.dart';
+import '../../shared/bottom_nav/agent_bottom_nav_controller.dart';
+import '../../shared/bottom_nav/user_bottom_nav_controller.dart';
+import '../../shared/shell/agent_shell_controller.dart';
+import '../../shared/shell/main_shell_controller.dart';
 
 /// Controller for Agent Profile screen
 class AgentProfileController extends GetxController {
-  // State
-  final RxBool isLoading = false.obs;
+  final _profileStore = Get.find<AgentProfileStore>();
+
+  RxBool get isLoading => _profileStore.isLoading;
 
   // Agent data
-  final RxString agentName = 'Sahil'.obs;
-  final RxString agentTitle = 'Adv.'.obs;
-  final RxString agentId = 'LAW-2026-0001'.obs;
-  final RxString agentType = 'Lawyer'.obs;
-  final RxBool isVerified = true.obs;
-  final RxString profileImage = ''.obs;
-  final RxString email = 'sahil.advocate@email.com'.obs;
-  final RxString phone = '+880 1712-345678'.obs;
+  RxString get agentName => _profileStore.agentName;
+  RxString get agentTitle => _profileStore.agentTitle;
+  RxString get agentId => _profileStore.agentId;
+  RxString get agentType => _profileStore.agentType;
+  RxBool get isVerified => _profileStore.isVerified;
+  RxString get profileImage => _profileStore.profileImage;
+  RxString get email => _profileStore.email;
+  RxString get phone => _profileStore.phone;
 
   // Stats
-  final RxInt totalTasksCompleted = 12.obs;
-  final RxDouble totalEarned = 4000.0.obs;
+  RxInt get totalTasksCompleted => _profileStore.totalTasksCompleted;
+  RxDouble get totalEarned => _profileStore.totalEarned;
 
   // Assigned location
-  final RxString assignedLocation =
-      'Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.'
-          .obs;
+  RxString get assignedLocation => _profileStore.assignedLocation;
 
   // Services provided - full list from design
-  final RxList<String> servicesProvided = <String>[
-    'Ownership History Validation',
-    'Pentagraph Map Validation',
-    'Physical estimate and border demarcation',
-    'Document Organization',
-    'Deed Writing Service',
-    'Namjari/DCR Update/ Pouro City Corp Record Update',
-    'Inheritance Dispute Analysis',
-    'Government Aquisition Risk',
-    'Court Case Verification',
-  ].obs;
+  RxList<String> get servicesProvided => _profileStore.servicesProvided;
+
+  final _token = Get.find<TokenService>();
+  final _authService = Get.find<AuthService>();
 
   /// Get display name with title
-  String get displayName {
-    if (agentTitle.value.isNotEmpty) {
-      return '${agentTitle.value} ${agentName.value}';
-    }
-    return agentName.value;
-  }
+  String get displayName => _profileStore.displayName;
 
   @override
   void onInit() {
     super.onInit();
+    _profileStore.hydrateFromSession();
     loadProfile();
   }
 
   /// Load agent profile
-  Future<void> loadProfile() async {
-    isLoading.value = true;
-    try {
-      // TODO: Load profile from API
-      await Future.delayed(const Duration(milliseconds: 300));
-      // Mock data is already set above
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load profile',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
+  Future<void> loadProfile({bool forceRefresh = false}) async {
+    await _profileStore.refreshProfile(forceRefresh: forceRefresh);
   }
 
   /// Navigate to edit profile
@@ -115,8 +95,17 @@ class AgentProfileController extends GetxController {
   Future<void> _performLogout() async {
     isLoading.value = true;
     try {
-      // TODO: Clear local storage/tokens
-      await Future.delayed(const Duration(milliseconds: 300));
+      _authService.clearSession();
+      _token.clear();
+
+      if (Get.isRegistered<UserProfileStore>()) {
+        Get.find<UserProfileStore>().clear();
+      }
+      if (Get.isRegistered<AgentProfileStore>()) {
+        Get.find<AgentProfileStore>().clear();
+      }
+
+      _clearScopedControllers();
 
       // Navigate to login and clear navigation stack
       Get.offAllNamed(AppRoutes.LOGIN);
@@ -133,6 +122,21 @@ class AgentProfileController extends GetxController {
 
   /// Refresh profile
   Future<void> refresh() async {
-    await loadProfile();
+    await loadProfile(forceRefresh: true);
+  }
+
+  void _clearScopedControllers() {
+    if (Get.isRegistered<MainShellController>()) {
+      Get.delete<MainShellController>(force: true);
+    }
+    if (Get.isRegistered<AgentShellController>()) {
+      Get.delete<AgentShellController>(force: true);
+    }
+    if (Get.isRegistered<UserBottomNavController>()) {
+      Get.delete<UserBottomNavController>(force: true);
+    }
+    if (Get.isRegistered<AgentBottomNavController>()) {
+      Get.delete<AgentBottomNavController>(force: true);
+    }
   }
 }

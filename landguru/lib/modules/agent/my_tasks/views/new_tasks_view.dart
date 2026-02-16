@@ -12,7 +12,7 @@ class NewTasksView extends GetView<AgentMyTasksController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final tasks = controller.newTasks;
+      final tasks = controller.getFilteredTasksForTab(0);
 
       if (tasks.isEmpty) {
         return _buildEmptyState();
@@ -41,9 +41,7 @@ class NewTasksView extends GetView<AgentMyTasksController> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: GestureDetector(
-        onTap: () {
-          // TODO: Implement filter functionality
-        },
+        onTap: controller.showServiceTypeFilter,
         child: Obx(
           () => Row(
             children: [

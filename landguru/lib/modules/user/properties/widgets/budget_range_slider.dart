@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -27,42 +28,101 @@ class BudgetRange {
   /// Predefined budget values
   static const List<int> budgetValues = [
     0,
+
+    // 0 – 1 lakh (10k steps)
+    10000,
+    20000,
+    30000,
+    40000,
+    50000,
+    60000,
+    70000,
+    80000,
+    90000,
     100000,
+
+    // 1 – 5 lakh (50k steps)
+    150000,
+    200000,
+    250000,
+    300000,
+    350000,
+    400000,
+    450000,
     500000,
+
+    // 5 – 10 lakh (1 lakh steps)
+    600000,
+    700000,
+    800000,
+    900000,
     1000000,
+
+    // 10 – 25 lakh (2.5 lakh steps)
+    1250000,
+    1500000,
+    1750000,
+    2000000,
+    2250000,
     2500000,
+
+    // 25 – 50 lakh (5 lakh steps)
+    3000000,
+    3500000,
+    4000000,
+    4500000,
     5000000,
+
+    // 50 lakh – 1 crore (10 lakh steps)
+    6000000,
+    7000000,
+    8000000,
+    9000000,
     10000000,
-    25000000,
-    50000000,
-    100000000,
-    250000000,
-    500000000,
   ];
 }
 
 /// Budget range selector - continuous slider
 class BudgetRangeSlider extends StatelessWidget {
   final BudgetRange? selectedRange;
+  final TextEditingController minBudgetController;
+  final TextEditingController maxBudgetController;
   final ValueChanged<BudgetRange> onChanged;
   final String label;
 
-  // Min and max budget values (0 to 50,00,00,000)
+  // Min and max budget values (0 to 99,99,999)
   static const double minValue = 0;
-  static const double maxValue = 500000000;
+  static const double maxValue = 9999999;
 
   const BudgetRangeSlider({
     super.key,
     required this.selectedRange,
+    required this.minBudgetController,
+    required this.maxBudgetController,
     required this.onChanged,
     this.label = 'Budget Range',
   });
 
+  int _parseControllerValue(TextEditingController controller, int fallback) {
+    return int.tryParse(controller.text.replaceAll(',', '').trim()) ?? fallback;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Get current values or defaults
-    double startValue = selectedRange?.minBudget.toDouble() ?? minValue;
-    double endValue = selectedRange?.maxBudget.toDouble() ?? maxValue;
+    final minFromController = _parseControllerValue(
+      minBudgetController,
+      minValue.toInt(),
+    );
+    final maxFromController = _parseControllerValue(
+      maxBudgetController,
+      maxValue.toInt(),
+    );
+
+    double startValue =
+        selectedRange?.minBudget.toDouble() ?? minFromController.toDouble();
+    double endValue =
+        selectedRange?.maxBudget.toDouble() ?? maxFromController.toDouble();
 
     // Clamp values to valid range
     startValue = startValue.clamp(minValue, maxValue);
@@ -169,25 +229,44 @@ class BudgetRangeSlider extends StatelessWidget {
                 children: [
                   // Min budget box
                   Expanded(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 14.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.grey100,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Text(
-                        selectedRange != null
-                            ? BudgetRange.formatWithCommas(
-                                selectedRange!.minBudget,
-                              )
-                            : '0',
+                    child: Semantics(
+                      label: 'Minimum budget input',
+                      textField: true,
+                      child: TextFormField(
+                        controller: minBudgetController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w500,
                           color: AppColors.grey900,
+                        ),
+                        decoration: InputDecoration(
+                          prefixText: '৳ ',
+                          hintText: minValue.toInt().toString(),
+                          filled: true,
+                          fillColor: AppColors.grey100,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 14.h,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide(
+                              color: AppColors.primary,
+                              width: 1.5,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -205,25 +284,44 @@ class BudgetRangeSlider extends StatelessWidget {
                   ),
                   // Max budget box
                   Expanded(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 14.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.grey100,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Text(
-                        selectedRange != null
-                            ? BudgetRange.formatWithCommas(
-                                selectedRange!.maxBudget,
-                              )
-                            : '0',
+                    child: Semantics(
+                      label: 'Maximum budget input',
+                      textField: true,
+                      child: TextFormField(
+                        controller: maxBudgetController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w500,
                           color: AppColors.grey900,
+                        ),
+                        decoration: InputDecoration(
+                          prefixText: '৳ ',
+                          hintText: maxValue.toInt().toString(),
+                          filled: true,
+                          fillColor: AppColors.grey100,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 14.h,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide(
+                              color: AppColors.primary,
+                              width: 1.5,
+                            ),
+                          ),
                         ),
                       ),
                     ),

@@ -19,6 +19,8 @@ class PropertyDetails {
   final String? landShapeImageUrl;
   final List<String> propertyPhotos;
   final String postedBy;
+  final String? postedByAvatarUrl;
+  final bool postedByVerified;
   final String postedTime;
   final bool hasRequestedAppointment;
 
@@ -40,6 +42,8 @@ class PropertyDetails {
     this.landShapeImageUrl,
     this.propertyPhotos = const [],
     required this.postedBy,
+    this.postedByAvatarUrl,
+    this.postedByVerified = false,
     required this.postedTime,
     this.hasRequestedAppointment = false,
   });
@@ -75,6 +79,8 @@ class PropertyDetails {
       'shareUnit': shareUnit,
       'distanceFromRoad': distanceFromRoad,
       'postedBy': postedBy,
+      'postedByAvatarUrl': postedByAvatarUrl,
+      'postedByVerified': postedByVerified,
       'postedTime': postedTime,
       'propertyPhotos': propertyPhotos,
     };

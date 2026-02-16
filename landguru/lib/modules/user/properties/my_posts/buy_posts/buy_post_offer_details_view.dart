@@ -3,8 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../../core/services/nested_navigation_service.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../property_details/widgets/property_details_widgets.dart';
+import '../../for_sale/property_details/widgets/property_details_widgets.dart';
 import '../../widgets/metrics_conversion_row.dart';
+import 'buy_posts_controller.dart';
 import 'models/buy_post_models.dart';
 import 'widgets/offer_accepted_popup.dart';
 
@@ -242,15 +243,31 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
       child: SizedBox(
         height: 220.h,
         width: double.infinity,
-        child: offer.propertyImageUrl != null
-            ? Image.asset(
-                offer.propertyImageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildImagePlaceholder(),
-              )
-            : _buildImagePlaceholder(),
+        child: _buildPrimaryImage(),
       ),
+    );
+  }
+
+  Widget _buildPrimaryImage() {
+    final image = offer.propertyImageUrl?.trim();
+    if (image == null || image.isEmpty) {
+      return _buildImagePlaceholder();
+    }
+
+    final isNetwork =
+        image.startsWith('http://') || image.startsWith('https://');
+    if (isNetwork) {
+      return Image.network(
+        image,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+      );
+    }
+
+    return Image.asset(
+      image,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
     );
   }
 
@@ -447,9 +464,7 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
                 CircleAvatar(
                   radius: 30.r,
                   backgroundColor: AppColors.grey200,
-                  backgroundImage: AssetImage(
-                    offer.sellerImageUrl ?? 'assets/images/User_DP/forhad.jpg',
-                  ),
+                  backgroundImage: _buildSellerAvatarImageProvider(),
                 ),
                 SizedBox(width: 12.w),
                 Column(
@@ -574,8 +589,18 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
     );
   }
 
-  void _acceptOffer() {
-    OfferAcceptedPopup.show(
+  Future<void> _acceptOffer() async {
+    if (!Get.isRegistered<BuyPostsController>()) {
+      Get.put(BuyPostsController());
+    }
+
+    final controller = Get.find<BuyPostsController>();
+    final accepted = await controller.acceptOffer(buyPost, offer);
+    if (!accepted || !mounted) {
+      return;
+    }
+
+    await OfferAcceptedPopup.show(
       context,
       offer: offer,
       onClose: () {
@@ -583,6 +608,19 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
         NestedNavigationService.back();
       },
     );
+  }
+
+  ImageProvider _buildSellerAvatarImageProvider() {
+    final avatar = offer.sellerImageUrl?.trim();
+    if (avatar != null && avatar.isNotEmpty) {
+      final isNetwork =
+          avatar.startsWith('http://') || avatar.startsWith('https://');
+      if (isNetwork) {
+        return NetworkImage(avatar);
+      }
+      return AssetImage(avatar);
+    }
+    return const AssetImage('assets/images/User_DP/forhad.jpg');
   }
 
   void _completePost() {

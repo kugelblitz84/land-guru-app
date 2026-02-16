@@ -213,21 +213,25 @@ class EditProfileView extends GetView<EditProfileController> {
               SizedBox(height: 16.h),
 
               // NID Document
-              _buildVerificationDocument(
-                icon: Icons.credit_card_outlined,
-                title: 'National ID (NID)',
-                subtitle: 'ID: ${controller.nidNumber.value}',
-                isVerified: controller.isNidVerified,
+              Obx(
+                () => _buildVerificationDocument(
+                  icon: Icons.credit_card_outlined,
+                  title: 'National ID (NID)',
+                  subtitle: 'ID: ${controller.nidNumber.value}',
+                  isVerified: controller.isNidVerified,
+                ),
               ),
 
               SizedBox(height: 12.h),
 
               // TIN Certificate
-              _buildVerificationDocument(
-                icon: Icons.description_outlined,
-                title: 'TIN Certificate',
-                subtitle: 'Tax ID: ${controller.tinNumber.value}',
-                isVerified: controller.isTinVerified,
+              Obx(
+                () => _buildVerificationDocument(
+                  icon: Icons.description_outlined,
+                  title: 'TIN Certificate',
+                  subtitle: 'Tax ID: ${controller.tinNumber.value}',
+                  isVerified: controller.isTinVerified,
+                ),
               ),
 
               SizedBox(height: 32.h),
@@ -290,20 +294,26 @@ class EditProfileView extends GetView<EditProfileController> {
                 border: Border.all(color: AppColors.grey200, width: 2),
               ),
               child: ClipOval(
-                child: Image.asset(
-                  'assets/images/User_DP/MainUser.jpg',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: AppColors.grey200,
-                      child: Icon(
-                        Icons.person,
-                        color: AppColors.grey400,
-                        size: 50.sp,
-                      ),
+                child: Obx(() {
+                  final imageUrl = controller.profileImage.value.trim();
+                  if (imageUrl.isNotEmpty) {
+                    return Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildPhotoFallback();
+                      },
                     );
-                  },
-                ),
+                  }
+
+                  return Image.asset(
+                    'assets/images/User_DP/MainUser.jpg',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildPhotoFallback();
+                    },
+                  );
+                }),
               ),
             ),
             Positioned(
@@ -323,14 +333,22 @@ class EditProfileView extends GetView<EditProfileController> {
           ],
         ),
         SizedBox(height: 8.h),
-        GestureDetector(
-          onTap: controller.pickImage,
-          child: Text(
-            'Change Photo',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-              color: AppColors.primary,
+        Obx(
+          () => GestureDetector(
+            onTap: controller.isImageUploading.value
+                ? null
+                : controller.pickImage,
+            child: Text(
+              controller.isImageUploading.value
+                  ? 'Uploading...'
+                  : 'Change Photo',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+                color: controller.isImageUploading.value
+                    ? AppColors.grey500
+                    : AppColors.primary,
+              ),
             ),
           ),
         ),
@@ -412,8 +430,12 @@ class EditProfileView extends GetView<EditProfileController> {
     required List<String> items,
     required void Function(String?) onChanged,
   }) {
-    return Obx(
-      () => Container(
+    return Obx(() {
+      final selectedValue = items.contains(value.value)
+          ? value.value
+          : (items.isNotEmpty ? items.first : null);
+
+      return Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w),
         decoration: BoxDecoration(
           color: AppColors.white,
@@ -422,7 +444,7 @@ class EditProfileView extends GetView<EditProfileController> {
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
-            value: value.value,
+            value: selectedValue,
             isExpanded: true,
             icon: Icon(Icons.keyboard_arrow_down, color: AppColors.grey600),
             style: TextStyle(fontSize: 14.sp, color: AppColors.grey900),
@@ -432,7 +454,14 @@ class EditProfileView extends GetView<EditProfileController> {
             onChanged: onChanged,
           ),
         ),
-      ),
+      );
+    });
+  }
+
+  Widget _buildPhotoFallback() {
+    return Container(
+      color: AppColors.grey200,
+      child: Icon(Icons.person, color: AppColors.grey400, size: 50.sp),
     );
   }
 

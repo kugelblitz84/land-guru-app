@@ -29,255 +29,265 @@ class AgentEditProfileView extends GetView<AgentEditProfileController> {
           ),
         ),
       ),
-      body: Form(
-        key: controller.formKey,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 16.h),
+      body: Obx(
+        () => controller.isLoading.value
+            ? const Center(child: CircularProgressIndicator())
+            : Form(
+                key: controller.formKey,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 16.h),
 
-              // Profile Photo
-              Center(child: _buildProfilePhoto()),
+                      // Profile Photo
+                      Center(child: _buildProfilePhoto()),
 
-              SizedBox(height: 24.h),
+                      SizedBox(height: 24.h),
 
-              // Personal Details Section
-              Text(
-                'Personal Details',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.grey900,
-                ),
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Full Name
-              _buildLabel('Full Name', isRequired: true),
-              SizedBox(height: 8.h),
-              _buildTextField(
-                controller: controller.fullNameController,
-                hintText: 'Enter your full name',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your full name';
-                  }
-                  return null;
-                },
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Phone Number (Read-only)
-              _buildLabel('Phone Number', isRequired: true),
-              SizedBox(height: 8.h),
-              _buildTextField(
-                controller: controller.phoneController,
-                hintText: 'Phone number',
-                enabled: false,
-                fillColor: AppColors.grey100,
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Email Address
-              _buildLabel('Email Address', isRequired: true),
-              SizedBox(height: 8.h),
-              _buildTextField(
-                controller: controller.emailController,
-                hintText: 'Enter your email address',
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!GetUtils.isEmail(value)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Division Dropdown
-              _buildLabel('Division', isRequired: true),
-              SizedBox(height: 8.h),
-              _buildDropdown(
-                value: controller.selectedDivision,
-                items: controller.divisions,
-                onChanged: (value) {
-                  if (value != null) {
-                    controller.selectedDivision.value = value;
-                  }
-                },
-              ),
-
-              SizedBox(height: 16.h),
-
-              // District Dropdown
-              _buildLabel('District', isRequired: true),
-              SizedBox(height: 8.h),
-              _buildDropdown(
-                value: controller.selectedDistrict,
-                items: controller.districts,
-                onChanged: (value) {
-                  if (value != null) {
-                    controller.selectedDistrict.value = value;
-                  }
-                },
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Upazilla Dropdown
-              _buildLabel('Upazilla', isRequired: true),
-              SizedBox(height: 8.h),
-              _buildDropdown(
-                value: controller.selectedUpazilla,
-                items: controller.upazillas,
-                onChanged: (value) {
-                  if (value != null) {
-                    controller.selectedUpazilla.value = value;
-                  }
-                },
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Pouroshova/City Corp/Union Dropdown
-              _buildLabel('Pouroshova/City Corp/Union', isRequired: true),
-              SizedBox(height: 8.h),
-              _buildDropdown(
-                value: controller.selectedPouroshova,
-                items: controller.pouroshovas,
-                onChanged: (value) {
-                  if (value != null) {
-                    controller.selectedPouroshova.value = value;
-                  }
-                },
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Ward No Dropdown
-              _buildLabel('Ward No', isRequired: true),
-              SizedBox(height: 8.h),
-              _buildDropdown(
-                value: controller.selectedWardNo,
-                items: controller.wardNumbers,
-                onChanged: (value) {
-                  if (value != null) {
-                    controller.selectedWardNo.value = value;
-                  }
-                },
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Postal Code
-              _buildLabel('Postal Code'),
-              SizedBox(height: 8.h),
-              _buildTextField(
-                controller: controller.postalCodeController,
-                hintText: 'Enter postal code',
-                keyboardType: TextInputType.number,
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Full Address
-              _buildLabel('Full Address'),
-              SizedBox(height: 8.h),
-              _buildTextField(
-                controller: controller.fullAddressController,
-                hintText: 'Enter your full address',
-                maxLines: 3,
-              ),
-
-              SizedBox(height: 24.h),
-
-              // Verification Documents Section
-              Text(
-                'Verification Documents',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.grey900,
-                ),
-              ),
-
-              SizedBox(height: 16.h),
-
-              // NID Document
-              _buildVerificationDocument(
-                icon: Icons.credit_card_outlined,
-                title: 'National ID (NID)',
-                subtitle: 'ID: ${controller.nidNumber.value}',
-                isVerified: controller.isNidVerified,
-              ),
-
-              SizedBox(height: 12.h),
-
-              // TIN Certificate
-              _buildVerificationDocument(
-                icon: Icons.description_outlined,
-                title: 'TIN Certificate',
-                subtitle: 'Tax ID: ${controller.tinNumber.value}',
-                isVerified: controller.isTinVerified,
-              ),
-
-              SizedBox(height: 24.h),
-
-              // Bank Information Section
-              _buildBankInformationSection(),
-
-              SizedBox(height: 32.h),
-
-              // Save Changes Button
-              Obx(
-                () => SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: controller.isSaving.value
-                        ? null
-                        : controller.saveProfile,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.white,
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
+                      // Personal Details Section
+                      Text(
+                        'Personal Details',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.grey900,
+                        ),
                       ),
-                      disabledBackgroundColor: AppColors.primary.withAlpha(150),
-                    ),
-                    child: controller.isSaving.value
-                        ? SizedBox(
-                            height: 20.h,
-                            width: 20.w,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.white,
+
+                      SizedBox(height: 16.h),
+
+                      // Full Name
+                      _buildLabel('Full Name', isRequired: true),
+                      SizedBox(height: 8.h),
+                      _buildTextField(
+                        controller: controller.fullNameController,
+                        hintText: 'Enter your full name',
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your full name';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // Phone Number (Read-only)
+                      _buildLabel('Phone Number', isRequired: true),
+                      SizedBox(height: 8.h),
+                      _buildTextField(
+                        controller: controller.phoneController,
+                        hintText: 'Phone number',
+                        enabled: false,
+                        fillColor: AppColors.grey100,
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // Email Address
+                      _buildLabel('Email Address', isRequired: true),
+                      SizedBox(height: 8.h),
+                      _buildTextField(
+                        controller: controller.emailController,
+                        hintText: 'Enter your email address',
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          if (!GetUtils.isEmail(value)) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // Division Dropdown
+                      _buildLabel('Division', isRequired: true),
+                      SizedBox(height: 8.h),
+                      _buildDropdown(
+                        value: controller.selectedDivision,
+                        items: controller.divisions,
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.selectedDivision.value = value;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // District Dropdown
+                      _buildLabel('District', isRequired: true),
+                      SizedBox(height: 8.h),
+                      _buildDropdown(
+                        value: controller.selectedDistrict,
+                        items: controller.districts,
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.selectedDistrict.value = value;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // Upazilla Dropdown
+                      _buildLabel('Upazilla', isRequired: true),
+                      SizedBox(height: 8.h),
+                      _buildDropdown(
+                        value: controller.selectedUpazilla,
+                        items: controller.upazillas,
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.selectedUpazilla.value = value;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // Pouroshova/City Corp/Union Dropdown
+                      _buildLabel(
+                        'Pouroshova/City Corp/Union',
+                        isRequired: true,
+                      ),
+                      SizedBox(height: 8.h),
+                      _buildDropdown(
+                        value: controller.selectedPouroshova,
+                        items: controller.pouroshovas,
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.selectedPouroshova.value = value;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // Ward No Dropdown
+                      _buildLabel('Ward No', isRequired: true),
+                      SizedBox(height: 8.h),
+                      _buildDropdown(
+                        value: controller.selectedWardNo,
+                        items: controller.wardNumbers,
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.selectedWardNo.value = value;
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // Postal Code
+                      _buildLabel('Postal Code'),
+                      SizedBox(height: 8.h),
+                      _buildTextField(
+                        controller: controller.postalCodeController,
+                        hintText: 'Enter postal code',
+                        keyboardType: TextInputType.number,
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // Full Address
+                      _buildLabel('Full Address'),
+                      SizedBox(height: 8.h),
+                      _buildTextField(
+                        controller: controller.fullAddressController,
+                        hintText: 'Enter your full address',
+                        maxLines: 3,
+                      ),
+
+                      SizedBox(height: 24.h),
+
+                      // Verification Documents Section
+                      Text(
+                        'Verification Documents',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.grey900,
+                        ),
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // NID Document
+                      _buildVerificationDocument(
+                        icon: Icons.credit_card_outlined,
+                        title: 'National ID (NID)',
+                        subtitle: 'ID: ${controller.nidNumber.value}',
+                        isVerified: controller.isNidVerified,
+                      ),
+
+                      SizedBox(height: 12.h),
+
+                      // TIN Certificate
+                      _buildVerificationDocument(
+                        icon: Icons.description_outlined,
+                        title: 'TIN Certificate',
+                        subtitle: 'Tax ID: ${controller.tinNumber.value}',
+                        isVerified: controller.isTinVerified,
+                      ),
+
+                      SizedBox(height: 24.h),
+
+                      // Bank Information Section
+                      _buildBankInformationSection(),
+
+                      SizedBox(height: 32.h),
+
+                      // Save Changes Button
+                      Obx(
+                        () => SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed:
+                                controller.isSaving.value ||
+                                    controller.isImageUploading.value
+                                ? null
+                                : controller.saveProfile,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.white,
+                              padding: EdgeInsets.symmetric(vertical: 16.h),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              disabledBackgroundColor: AppColors.primary
+                                  .withAlpha(150),
                             ),
-                          )
-                        : Text(
-                            'Save Changes',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            child: controller.isSaving.value
+                                ? SizedBox(
+                                    height: 20.h,
+                                    width: 20.w,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    'Save Changes',
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                           ),
+                        ),
+                      ),
+
+                      SizedBox(height: 32.h),
+                    ],
                   ),
                 ),
               ),
-
-              SizedBox(height: 32.h),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -295,10 +305,9 @@ class AgentEditProfileView extends GetView<AgentEditProfileController> {
                 border: Border.all(color: AppColors.grey200, width: 2),
               ),
               child: ClipOval(
-                child: Image.asset(
-                  'assets/images/User_DP/sahil.jpg',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
+                child: Obx(() {
+                  final imageUrl = controller.profileImageUrl.value.trim();
+                  if (imageUrl.isEmpty) {
                     return Container(
                       color: AppColors.grey200,
                       child: Icon(
@@ -307,35 +316,68 @@ class AgentEditProfileView extends GetView<AgentEditProfileController> {
                         size: 50.sp,
                       ),
                     );
-                  },
-                ),
+                  }
+
+                  return Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: AppColors.grey200,
+                        child: Icon(
+                          Icons.person,
+                          color: AppColors.grey400,
+                          size: 50.sp,
+                        ),
+                      );
+                    },
+                  );
+                }),
               ),
             ),
             Positioned(
               bottom: 0,
               right: 0,
-              child: Container(
-                width: 32.w,
-                height: 32.h,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.white, width: 2),
+              child: Obx(
+                () => Container(
+                  width: 32.w,
+                  height: 32.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.white, width: 2),
+                  ),
+                  child: controller.isImageUploading.value
+                      ? Padding(
+                          padding: EdgeInsets.all(7.w),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.white,
+                          ),
+                        )
+                      : Icon(Icons.edit, color: AppColors.white, size: 16.sp),
                 ),
-                child: Icon(Icons.edit, color: AppColors.white, size: 16.sp),
               ),
             ),
           ],
         ),
         SizedBox(height: 8.h),
-        GestureDetector(
-          onTap: controller.pickImage,
-          child: Text(
-            'Change Photo',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-              color: AppColors.primary,
+        Obx(
+          () => GestureDetector(
+            onTap: controller.isImageUploading.value
+                ? null
+                : controller.pickImage,
+            child: Text(
+              controller.isImageUploading.value
+                  ? 'Uploading...'
+                  : 'Change Photo',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+                color: controller.isImageUploading.value
+                    ? AppColors.grey500
+                    : AppColors.primary,
+              ),
             ),
           ),
         ),
@@ -529,7 +571,11 @@ class AgentEditProfileView extends GetView<AgentEditProfileController> {
         children: [
           Row(
             children: [
-              Icon(Icons.account_balance, color: AppColors.grey700, size: 20.sp),
+              Icon(
+                Icons.account_balance,
+                color: AppColors.grey700,
+                size: 20.sp,
+              ),
               SizedBox(width: 8.w),
               Text(
                 'Bank Information',

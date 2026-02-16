@@ -1,18 +1,33 @@
 import 'package:get/get.dart';
-import '../../../../core/enums/property_type.dart';
+
 import '../../../../core/enums/post_type.dart';
 import '../../../../core/services/nested_navigation_service.dart';
+import '../../../../core/services/services.dart';
 import 'models/my_post.dart';
 import 'models/my_post_status.dart';
 import 'sell_posts/sell_post_details_controller.dart';
 import 'sell_posts/sell_post_details_view.dart';
-
+import 'services/my_sell_posts_service.dart';
+import 'package:landguru/routes/app_routes.dart';
 export 'models/my_post.dart';
 export 'models/my_post_status.dart';
 
 /// Controller for My Posts section
 /// Handles: Sell Posts, Buy Posts, Offered Posts tabs
 class MyPostsController extends GetxController {
+  static const int _sellPostsLimit = 10;
+  static List<MyPost> _cachedSellPosts = <MyPost>[];
+  static int _cachedSellPostsTotal = 0;
+  static int _cachedSellPostsCurrentPage = 1;
+  static bool _cachedSellPostsHasMore = true;
+  static int _cachedQuotedBadgeCount = 0;
+  static bool _hasCachedSellPosts = false;
+  static bool _hasCachedQuotedBadgeCount = false;
+
+  final MySellPostsService _mySellPostsService = Get.find<MySellPostsService>();
+  final SellPostDetailsService _sellPostDetailsService =
+      Get.find<SellPostDetailsService>();
+
   // Sub-tab state: 0 = Sell Posts, 1 = Buy Posts, 2 = Offered Posts
   final RxInt subTabIndex = 0.obs;
 
@@ -37,6 +52,8 @@ class MyPostsController extends GetxController {
 
   // Loading state
   final RxBool isLoading = false.obs;
+  final RxBool isLoadingMoreSellPosts = false.obs;
+  final RxBool hasMoreSellPosts = true.obs;
 
   // Posts data
   final RxList<MyPost> allSellPosts = <MyPost>[].obs;
@@ -48,8 +65,9 @@ class MyPostsController extends GetxController {
   // Counts
   final RxInt totalSellPosts = 0.obs;
   final RxInt totalBuyPosts = 0.obs;
-  final RxInt buyPostsBadgeCount = 0.obs; // Badge count for Buy Posts tab
-  final RxInt quotedBadgeCount = 0.obs; // Badge count for Quoted filter
+  final RxInt buyPostsBadgeCount = 0.obs;
+  final RxInt quotedBadgeCount = 0.obs;
+  int _sellPostsCurrentPage = 1;
 
   @override
   void onInit() {
@@ -61,12 +79,30 @@ class MyPostsController extends GetxController {
   void changeSubTab(int index) {
     subTabIndex.value = index;
     currentFilter.value = 'All';
+
+    if (index == 0) {
+      if (allSellPosts.isEmpty) {
+        _loadSellPosts();
+      } else {
+        _applyFilter();
+      }
+
+      if (!_hasCachedQuotedBadgeCount) {
+        _refreshQuotedBadgeCount();
+      }
+      return;
+    }
+
     _applyFilter();
   }
 
   /// Change filter
   void changeFilter(String filter) {
     currentFilter.value = filter;
+    if (subTabIndex.value == 0) {
+      _loadSellPosts();
+      return;
+    }
     _applyFilter();
   }
 
@@ -77,118 +113,16 @@ class MyPostsController extends GetxController {
   }
 
   /// Load all posts
-  Future<void> loadPosts() async {
+  Future<void> loadPosts({bool forceRefresh = false}) async {
     isLoading.value = true;
     try {
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      // Mock data for Sell Posts
-      allSellPosts.value = [
-        MyPost(
-          id: '1',
-          postId: '#POST-1042',
-          title: '5 Katha Plot in Purbachal',
-          price: '2,00,00,000',
-          propertyType: PropertyType.flat,
-          postType: PostType.sellPost,
-          status: MyPostStatus.pending,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/5 katha plot in purbachal.jpg',
-          timestamp: '2h ago',
-          timestampPrefix: 'Submitted:',
-        ),
-        MyPost(
-          id: '2',
-          postId: '#POST-1042',
-          title: 'Villa in Kurigram',
-          price: '4,00,00,000',
-          propertyType: PropertyType.flat,
-          postType: PostType.sellPost,
-          status: MyPostStatus.quoted,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/5 katha plot in purbachal.jpg',
-          timestamp: '2h ago',
-          timestampPrefix: 'Submitted:',
-          quotesCount: 3,
-        ),
-        MyPost(
-          id: '3',
-          postId: '#POST-1042',
-          title: 'Modern Duplex Villa',
-          price: '40,00,000',
-          propertyType: PropertyType.flat,
-          postType: PostType.sellPost,
-          status: MyPostStatus.active,
-          isVerified: true,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-          timestamp: '2h ago',
-          timestampPrefix: 'Posted:',
-        ),
-        MyPost(
-          id: '4',
-          postId: '#POST-1043',
-          title: 'Gazipur Water Zone',
-          price: '95,12,000',
-          propertyType: PropertyType.flat,
-          postType: PostType.sellPost,
-          status: MyPostStatus.draft,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/Gazipur Water Zone.jpg',
-          timestamp: '2h ago',
-          timestampPrefix: 'Edited:',
-        ),
-        MyPost(
-          id: '5',
-          postId: '#POST-1044',
-          title: 'Luxury Apartment in Gulshan',
-          price: '1,50,00,000',
-          propertyType: PropertyType.flat,
-          postType: PostType.sellPost,
-          status: MyPostStatus.pending,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-          timestamp: '1d ago',
-          timestampPrefix: 'Submitted:',
-        ),
-      ];
-
-      // Mock data for Buy Posts
-      allBuyPosts.value = [
-        MyPost(
-          id: '1',
-          postId: '#BUY-1042',
-          title: '3 Bed Ready Flat Needed',
-          price: '30,00,000 - 40,00,000',
-          propertyType: PropertyType.flat,
-          postType: PostType.buyPost,
-          status: MyPostStatus.active,
-          timestamp: '2h ago',
-          timestampPrefix: 'Posted:',
-        ),
-        MyPost(
-          id: '2',
-          postId: '#BUY-1043',
-          title: 'Looking for Agro Land',
-          price: '50,00,000 - 1,00,00,000',
-          propertyType: PropertyType.plainLand,
-          postType: PostType.buyPost,
-          status: MyPostStatus.pending,
-          timestamp: '1d ago',
-          timestampPrefix: 'Submitted:',
-        ),
-      ];
-
-      // Calculate counts
-      totalSellPosts.value = allSellPosts.length;
-      totalBuyPosts.value = allBuyPosts.length;
-      buyPostsBadgeCount.value = allBuyPosts
-          .where((p) => p.status == MyPostStatus.quoted)
-          .length;
-      quotedBadgeCount.value = allSellPosts
-          .where((p) => p.status == MyPostStatus.quoted)
-          .length;
-
+      if (!forceRefresh && _hasCachedSellPosts) {
+        _restoreSellPostsCache();
+      } else {
+        await _loadSellPosts(showError: true);
+        await _refreshQuotedBadgeCount();
+      }
+      buyPostsBadgeCount.value = 0;
       _applyFilter();
     } catch (e) {
       Get.snackbar(
@@ -204,18 +138,9 @@ class MyPostsController extends GetxController {
   /// Apply current filter
   void _applyFilter() {
     if (subTabIndex.value == 0) {
-      // Sell Posts
-      if (currentFilter.value == 'All') {
-        filteredSellPosts.assignAll(allSellPosts);
-      } else {
-        final status = _getStatusFromFilter(currentFilter.value);
-        filteredSellPosts.assignAll(
-          allSellPosts.where((p) => p.status == status).toList(),
-        );
-      }
+      filteredSellPosts.assignAll(allSellPosts);
       _sortPosts();
     } else if (subTabIndex.value == 1) {
-      // Buy Posts
       if (currentFilter.value == 'All') {
         filteredBuyPosts.assignAll(allBuyPosts);
       } else {
@@ -258,10 +183,10 @@ class MyPostsController extends GetxController {
             _parsePrice(b.price).compareTo(_parsePrice(a.price));
         break;
       case 'Newest First':
-        comparator = (a, b) => 0; // TODO: Sort by actual date
+        comparator = (a, b) => 0;
         break;
       case 'Oldest First':
-        comparator = (a, b) => 0; // TODO: Sort by actual date
+        comparator = (a, b) => 0;
         break;
       default:
         comparator = (a, b) => 0;
@@ -275,7 +200,6 @@ class MyPostsController extends GetxController {
   }
 
   double _parsePrice(String price) {
-    // Handle price range (for buy posts)
     final parts = price.split('-');
     final firstPart = parts.first.trim();
     return double.tryParse(
@@ -302,7 +226,7 @@ class MyPostsController extends GetxController {
   int get currentTotalCount {
     switch (subTabIndex.value) {
       case 0:
-        return filteredSellPosts.length;
+        return totalSellPosts.value;
       case 1:
         return filteredBuyPosts.length;
       case 2:
@@ -322,19 +246,150 @@ class MyPostsController extends GetxController {
 
   /// Refresh posts
   Future<void> refresh() async {
-    await loadPosts();
+    if (subTabIndex.value == 0) {
+      await _loadSellPosts(showError: false, forceRefresh: true);
+      await _refreshQuotedBadgeCount(forceRefresh: true);
+      return;
+    }
+    await loadPosts(forceRefresh: true);
+  }
+
+  Future<void> _loadSellPosts({
+    bool showError = false,
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh && _hasCachedSellPosts && currentFilter.value == 'All') {
+      _restoreSellPostsCache();
+      return;
+    }
+
+    final tab = MySellPostsTab.fromFilter(currentFilter.value);
+    _sellPostsCurrentPage = 1;
+    hasMoreSellPosts.value = true;
+    final result = await ApiErrorHandler.call(
+      () => _mySellPostsService.getMySellPosts(
+        page: _sellPostsCurrentPage,
+        limit: _sellPostsLimit,
+        tab: tab.apiValue,
+      ),
+      showError: showError,
+    );
+
+    if (!result.isSuccess || result.data == null) {
+      return;
+    }
+
+    allSellPosts.assignAll(result.data!.posts);
+    filteredSellPosts.assignAll(result.data!.posts);
+    totalSellPosts.value = result.data!.total;
+    hasMoreSellPosts.value = allSellPosts.length < totalSellPosts.value;
+    if (currentFilter.value == 'All') {
+      _syncSellPostsCache();
+    }
+    _sortPosts();
+  }
+
+  Future<void> loadMoreSellPostsIfNeeded() async {
+    if (subTabIndex.value != 0 ||
+        isLoading.value ||
+        isLoadingMoreSellPosts.value ||
+        !hasMoreSellPosts.value) {
+      return;
+    }
+
+    final tab = MySellPostsTab.fromFilter(currentFilter.value);
+    isLoadingMoreSellPosts.value = true;
+    try {
+      final nextPage = _sellPostsCurrentPage + 1;
+      final result = await ApiErrorHandler.call(
+        () => _mySellPostsService.getMySellPosts(
+          page: nextPage,
+          limit: _sellPostsLimit,
+          tab: tab.apiValue,
+        ),
+        showError: false,
+      );
+
+      if (!result.isSuccess || result.data == null) {
+        return;
+      }
+
+      final existingIds = allSellPosts.map((post) => post.id).toSet();
+      final newPosts = result.data!.posts
+          .where((post) => !existingIds.contains(post.id))
+          .toList();
+      allSellPosts.addAll(newPosts);
+      filteredSellPosts.assignAll(allSellPosts);
+      totalSellPosts.value = result.data!.total;
+      _sellPostsCurrentPage = nextPage;
+      hasMoreSellPosts.value = allSellPosts.length < totalSellPosts.value;
+
+      if (currentFilter.value == 'All') {
+        _syncSellPostsCache();
+      }
+      _sortPosts();
+    } finally {
+      isLoadingMoreSellPosts.value = false;
+    }
+  }
+
+  Future<void> _refreshQuotedBadgeCount({bool forceRefresh = false}) async {
+    if (!forceRefresh && _hasCachedQuotedBadgeCount) {
+      quotedBadgeCount.value = _cachedQuotedBadgeCount;
+      return;
+    }
+
+    final result = await ApiErrorHandler.call(
+      () => _mySellPostsService.getMySellPosts(
+        page: 1,
+        limit: 1,
+        tab: MySellPostsTab.quoted.apiValue,
+      ),
+      showError: false,
+    );
+
+    if (!result.isSuccess || result.data == null) {
+      return;
+    }
+
+    quotedBadgeCount.value = result.data!.total;
+    _cachedQuotedBadgeCount = result.data!.total;
+    _hasCachedQuotedBadgeCount = true;
+  }
+
+  void _restoreSellPostsCache() {
+    allSellPosts.assignAll(_cachedSellPosts);
+    filteredSellPosts.assignAll(_cachedSellPosts);
+    totalSellPosts.value = _cachedSellPostsTotal;
+    _sellPostsCurrentPage = _cachedSellPostsCurrentPage;
+    hasMoreSellPosts.value = _cachedSellPostsHasMore;
+    quotedBadgeCount.value = _cachedQuotedBadgeCount;
+    _sortPosts();
+  }
+
+  void _syncSellPostsCache() {
+    _cachedSellPosts = List<MyPost>.from(allSellPosts);
+    _cachedSellPostsTotal = totalSellPosts.value;
+    _cachedSellPostsCurrentPage = _sellPostsCurrentPage;
+    _cachedSellPostsHasMore = hasMoreSellPosts.value;
+    _hasCachedSellPosts = true;
   }
 
   /// Navigate to post details (uses nested navigation to keep bottom nav visible)
-  void goToPostDetails(MyPost post) {
+  Future<void> goToPostDetails(MyPost post) async {
     if (post.postType == PostType.sellPost) {
-      // Navigate to Sell Post Details with status
+      final detailsResult = await ApiErrorHandler.call(
+        () => _sellPostDetailsService.getSellPostById(post.id),
+        showError: true,
+      );
+
+      if (!detailsResult.isSuccess || detailsResult.data == null) {
+        return;
+      }
+
       NestedNavigationService.to(
         const SellPostDetailsView(),
-        arguments: {
-          'postId': post.id,
-          'status': post.status.name, // pending, quoted, active, draft
-        },
+        arguments: {'postId': post.id, 'status': post.status.name},
         binding: BindingsBuilder(() {
           Get.lazyPut<SellPostDetailsController>(
             () => SellPostDetailsController(),
@@ -342,7 +397,6 @@ class MyPostsController extends GetxController {
         }),
       );
     } else {
-      // TODO: Navigate to Buy Post Details
       Get.snackbar(
         'Post Details',
         'Opening ${post.title}',
@@ -354,14 +408,13 @@ class MyPostsController extends GetxController {
   /// Navigate to create new post
   void goToCreatePost() {
     if (subTabIndex.value == 0) {
-      // Create Sell Post
-      Get.snackbar(
-        'Create',
-        'Navigate to create sell post',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.toNamed(AppRoutes.CREATE_SELL_POST_INFO);
+      // Get.snackbar(
+      //   'Create',
+      //   'Navigate to create sell post',
+      //   snackPosition: SnackPosition.BOTTOM,
+      // );
     } else if (subTabIndex.value == 1) {
-      // Create Buy Post
       Get.snackbar(
         'Create',
         'Navigate to create buy post',

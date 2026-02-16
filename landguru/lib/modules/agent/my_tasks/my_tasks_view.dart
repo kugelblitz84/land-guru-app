@@ -55,19 +55,35 @@ class AgentMyTasksContentView extends GetView<AgentMyTasksController> {
             }
             return RefreshIndicator(
               onRefresh: controller.refresh,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Assigned location info (shown on all tabs)
-                    _buildAssignedLocationInfo(),
-                    SizedBox(height: 12.h),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.metrics.pixels >=
+                      notification.metrics.maxScrollExtent - 120) {
+                    controller.loadMoreCurrentTabIfNeeded();
+                  }
+                  return false;
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Assigned location info (shown on all tabs)
+                      _buildAssignedLocationInfo(),
+                      SizedBox(height: 12.h),
 
-                    // Tab content
-                    _buildTabContent(),
-                    SizedBox(height: 24.h),
-                  ],
+                      // Tab content
+                      _buildTabContent(),
+                      if (controller.isLoadingMore.value)
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      SizedBox(height: 24.h),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -95,9 +111,7 @@ class AgentMyTasksContentView extends GetView<AgentMyTasksController> {
 
   Widget _buildFilterButton() {
     return GestureDetector(
-      onTap: () {
-        // TODO: Implement filter functionality
-      },
+      onTap: controller.showServiceTypeFilter,
       child: Container(
         width: 48.w,
         height: 48.h,

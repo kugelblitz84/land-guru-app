@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../property_details/widgets/property_details_widgets.dart';
+import '../../for_sale/property_details/widgets/property_details_widgets.dart';
 import '../../widgets/metrics_conversion_row.dart';
 import '../models/my_post_status.dart';
 import 'models/sell_post_models.dart';
@@ -337,6 +337,11 @@ class SellPostDetailsView extends GetView<SellPostDetailsController> {
   }
 
   Widget _buildPropertyImage(SellPostDetails post) {
+    final imagePath = post.imageUrl;
+    final isNetwork =
+        imagePath != null &&
+        (imagePath.startsWith('http://') || imagePath.startsWith('https://'));
+
     return ClipRRect(
       borderRadius: BorderRadius.only(
         topLeft: Radius.circular(24.r),
@@ -345,13 +350,20 @@ class SellPostDetailsView extends GetView<SellPostDetailsController> {
       child: SizedBox(
         height: 220.h,
         width: double.infinity,
-        child: post.imageUrl != null
-            ? Image.asset(
-                post.imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildImagePlaceholder(),
-              )
+        child: imagePath != null
+            ? (isNetwork
+                  ? Image.network(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildImagePlaceholder(),
+                    )
+                  : Image.asset(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildImagePlaceholder(),
+                    ))
             : _buildImagePlaceholder(),
       ),
     );

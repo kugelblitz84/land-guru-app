@@ -1,7 +1,12 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:landguru/core/core.dart';
 import '../../../core/enums/land_unit.dart';
 import '../../../core/utils/land_unit_converter.dart';
+import 'agent_task_actions_service.dart';
 import 'models/task_models.dart';
 
 /// Controller for Agent Task Details screen
@@ -29,6 +34,9 @@ class AgentTaskDetailsController extends GetxController {
   final Rxn<DateTime> selectedAppointmentDate = Rxn<DateTime>();
   final Rxn<TimeOfDay> selectedAppointmentTime = Rxn<TimeOfDay>();
 
+  final _taskActionsService = Get.find<AgentTaskActionsService>();
+  final _uploadService = Get.find<UploadService>();
+
   @override
   void onInit() {
     super.onInit();
@@ -36,8 +44,15 @@ class AgentTaskDetailsController extends GetxController {
       if (Get.arguments is AgentTask) {
         task.value = Get.arguments as AgentTask;
         taskId.value = task.value!.id;
+        loadTaskDetails();
       } else if (Get.arguments is Map) {
-        taskId.value = Get.arguments['taskId'] ?? '';
+        final argumentMap = Map<String, dynamic>.from(Get.arguments as Map);
+        final argumentTask = argumentMap['task'];
+        if (argumentTask is AgentTask) {
+          task.value = argumentTask;
+          taskId.value = argumentTask.id;
+        }
+        taskId.value = (argumentMap['taskId'] ?? taskId.value).toString();
         loadTaskDetails();
       }
     }
@@ -118,10 +133,22 @@ class AgentTaskDetailsController extends GetxController {
 
   /// Load task details from API
   Future<void> loadTaskDetails() async {
+    if (taskId.value.trim().isEmpty) {
+      return;
+    }
+
     isLoading.value = true;
     try {
-      // TODO: Load task details from API using taskId
-      await Future.delayed(const Duration(milliseconds: 500));
+      final result = await ApiErrorHandler.call<AgentTask>(
+        () => _taskActionsService.fetchTaskDetails(assignmentId: taskId.value),
+      );
+
+      if (!result.isSuccess || result.data == null) {
+        return;
+      }
+
+      task.value = result.data;
+      await _refreshWorkLogOnly();
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -137,10 +164,19 @@ class AgentTaskDetailsController extends GetxController {
 
   /// Accept task (for New tasks)
   Future<void> acceptTask() async {
+    if (task.value == null) return;
+
     isAccepting.value = true;
     try {
-      // TODO: Implement accept task API call
-      await Future.delayed(const Duration(seconds: 1));
+      final result = await ApiErrorHandler.call(
+        () => _taskActionsService.acceptTask(assignmentId: task.value!.id),
+      );
+
+      if (!result.isSuccess) {
+        return;
+      }
+
+      await _refreshTaskAndWorkLog();
 
       // Show success message
       Get.snackbar(
@@ -255,60 +291,50 @@ class AgentTaskDetailsController extends GetxController {
   /// Set appointment date/time
   Future<bool> setAppointment() async {
     if (!isAppointmentFormValid) return false;
+    if (task.value == null) return false;
 
     isSettingAppointment.value = true;
     try {
+      final currentTask = task.value!;
       final date = selectedAppointmentDate.value!;
       final time = selectedAppointmentTime.value!;
-      final dateTime = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      );
 
-      // TODO: Implement set appointment API call
-      await Future.delayed(const Duration(seconds: 1));
+      final dateText =
+          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final timeText =
+          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
-      // Update local task with new appointment
-      if (task.value != null) {
-        final newAppointment = TaskAppointment(
-          id: 'apt_${DateTime.now().millisecondsSinceEpoch}',
-          type: appointmentTitleController.text,
-          dateTime: dateTime,
-          status: AppointmentStatus.upcoming,
+      final result = await ApiErrorHandler.call(() async {
+        if (currentTask.appointment == null) {
+          await _taskActionsService.createAppointment(
+            assignmentId: currentTask.id,
+            date: dateText,
+            time: timeText,
+            location: currentTask.location,
+          );
+          return;
+        }
+
+        final reason = appointmentTitleController.text.trim().isEmpty
+            ? 'Rescheduled by agent'
+            : appointmentTitleController.text.trim();
+
+        await _taskActionsService.rescheduleAppointment(
+          assignmentId: currentTask.id,
+          newDate: dateText,
+          newTime: timeText,
+          reason: reason,
         );
+      });
 
-        // Add work log entry for scheduling appointment
-        final newWorkLog = [
-          WorkLogEntry(
-            id: 'wl_${DateTime.now().millisecondsSinceEpoch}',
-            description:
-                'Site Visit Scheduled for ${_formatDateTimeFull(dateTime)}',
-            timestamp: DateTime.now(),
-            type: WorkLogEntryType.appointmentScheduled,
-          ),
-          ...task.value!.workLog,
-        ];
-
-        task.value = task.value!.copyWith(
-          appointment: newAppointment,
-          workLog: newWorkLog,
-        );
+      if (!result.isSuccess) {
+        return false;
       }
+
+      await _refreshTaskAndWorkLog();
 
       resetAppointmentForm();
       return true;
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to set appointment',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return false;
     } finally {
       isSettingAppointment.value = false;
     }
@@ -322,19 +348,6 @@ class AgentTaskDetailsController extends GetxController {
       selectedAppointmentDate.value = apt.dateTime;
       selectedAppointmentTime.value = TimeOfDay.fromDateTime(apt.dateTime);
     }
-  }
-
-  String _formatDateTimeFull(DateTime dateTime) {
-    final day = dateTime.day;
-    final month = _getMonthName(dateTime.month);
-    final year = dateTime.year;
-    final hour = dateTime.hour > 12
-        ? dateTime.hour - 12
-        : (dateTime.hour == 0 ? 12 : dateTime.hour);
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    final period = dateTime.hour >= 12 ? 'PM' : 'AM';
-
-    return '$day $month $year, $hour:$minute$period';
   }
 
   String _getMonthName(int month) {
@@ -358,30 +371,29 @@ class AgentTaskDetailsController extends GetxController {
   /// Add work log entry / post remark
   Future<void> postRemark({TaskDocument? attachment}) async {
     if (remarkController.text.trim().isEmpty && attachment == null) return;
+    if (task.value == null) return;
 
     isPostingRemark.value = true;
     try {
-      // TODO: Implement add work log API call
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Add to local work log
-      if (task.value != null) {
-        final newEntry = WorkLogEntry(
-          id: 'wl_${DateTime.now().millisecondsSinceEpoch}',
-          description: attachment != null
-              ? 'Uploaded new verified document'
-              : remarkController.text.trim(),
-          timestamp: DateTime.now(),
-          attachment: attachment,
-          type: attachment != null
-              ? WorkLogEntryType.documentUpload
-              : WorkLogEntryType.remark,
-        );
-
-        task.value = task.value!.copyWith(
-          workLog: [newEntry, ...task.value!.workLog],
-        );
+      final remarkText = remarkController.text.trim();
+      final fileUrls = <String>[];
+      if (attachment?.url != null && attachment!.url!.trim().isNotEmpty) {
+        fileUrls.add(attachment.url!.trim());
       }
+
+      final result = await ApiErrorHandler.call(
+        () => _taskActionsService.addWorkLog(
+          assignmentId: task.value!.id,
+          remark: remarkText.isEmpty ? null : remarkText,
+          fileUrls: fileUrls,
+        ),
+      );
+
+      if (!result.isSuccess) {
+        return;
+      }
+
+      await _refreshWorkLogOnly();
 
       remarkController.clear();
     } catch (e) {
@@ -399,17 +411,42 @@ class AgentTaskDetailsController extends GetxController {
 
   /// Upload verified document
   Future<void> uploadDocument() async {
-    // TODO: Implement document picker and upload
-    // For now, simulate document upload
+    if (task.value == null) return;
+
     isPostingRemark.value = true;
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      final pickResult = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'webp'],
+      );
+
+      if (pickResult == null || pickResult.files.isEmpty) {
+        return;
+      }
+
+      final pickedFile = pickResult.files.single;
+      final path = pickedFile.path;
+      if (path == null || path.trim().isEmpty) {
+        return;
+      }
+
+      final uploadedUrl = await ApiErrorHandler.call<String>(
+        () => _uploadService.uploadFile(
+          file: File(path),
+          contentType: _guessContentType(path),
+          type: 'DEED',
+        ),
+      );
+
+      if (!uploadedUrl.isSuccess || uploadedUrl.data == null) {
+        return;
+      }
 
       final newDoc = TaskDocument(
         id: 'doc_${DateTime.now().millisecondsSinceEpoch}',
-        name:
-            'Verified document ${task.value?.workLog.where((e) => e.type == WorkLogEntryType.documentUpload).length ?? 0 + 1}.pdf',
-        size: '1.5MB',
+        name: pickedFile.name,
+        size: _formatFileSize(pickedFile.size),
+        url: uploadedUrl.data,
         uploadedAt: DateTime.now(),
       );
 
@@ -421,26 +458,22 @@ class AgentTaskDetailsController extends GetxController {
 
   /// Submit for review (for Active tasks)
   Future<bool> submitForReview() async {
+    if (task.value == null) return false;
+
     isSubmitting.value = true;
     try {
-      // TODO: Implement submit for review API call
-      await Future.delayed(const Duration(seconds: 1));
+      final result = await ApiErrorHandler.call(
+        () => _taskActionsService.submitReview(
+          assignmentId: task.value!.id,
+          comment: remarkController.text.trim(),
+        ),
+      );
 
-      // Update local task status
-      if (task.value != null) {
-        final submitEntry = WorkLogEntry(
-          id: 'wl_${DateTime.now().millisecondsSinceEpoch}',
-          description: 'Submitted for review',
-          timestamp: DateTime.now(),
-          type: WorkLogEntryType.submitted,
-        );
-
-        task.value = task.value!.copyWith(
-          status: TaskStatus.inReview,
-          processingStatus: TaskProcessingStatus.inReview,
-          workLog: [submitEntry, ...task.value!.workLog],
-        );
+      if (!result.isSuccess) {
+        return false;
       }
+
+      await _refreshTaskAndWorkLog();
 
       return true;
     } catch (e) {
@@ -460,6 +493,59 @@ class AgentTaskDetailsController extends GetxController {
   /// Go back
   void goBack() {
     Get.back();
+  }
+
+  Future<void> _refreshTaskAndWorkLog() async {
+    if (task.value == null) return;
+
+    final detailsResult = await ApiErrorHandler.call<AgentTask>(
+      () => _taskActionsService.fetchTaskDetails(assignmentId: task.value!.id),
+      showError: false,
+    );
+
+    if (detailsResult.isSuccess && detailsResult.data != null) {
+      task.value = detailsResult.data;
+    }
+
+    await _refreshWorkLogOnly();
+  }
+
+  Future<void> _refreshWorkLogOnly() async {
+    if (task.value == null) return;
+
+    final workLogResult = await ApiErrorHandler.call<List<WorkLogEntry>>(
+      () => _taskActionsService.fetchWorkLog(assignmentId: task.value!.id),
+      showError: false,
+    );
+
+    if (!workLogResult.isSuccess || workLogResult.data == null) {
+      return;
+    }
+
+    task.value = task.value!.copyWith(workLog: workLogResult.data!);
+  }
+
+  String _guessContentType(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.pdf')) return 'application/pdf';
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    return 'image/jpeg';
+  }
+
+  String _formatFileSize(int bytes) {
+    if (bytes <= 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    double size = bytes.toDouble();
+    int index = 0;
+    while (size >= 1024 && index < units.length - 1) {
+      size /= 1024;
+      index++;
+    }
+    final fixed = size >= 10
+        ? size.toStringAsFixed(0)
+        : size.toStringAsFixed(1);
+    return '$fixed ${units[index]}';
   }
 
   @override

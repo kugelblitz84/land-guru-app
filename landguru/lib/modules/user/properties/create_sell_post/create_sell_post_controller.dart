@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/services/api_error_handler.dart';
 import '../../../../modules/user/properties/create_sell_post/services/sell_post_service.dart';
+import '../services/sell_post_details_service.dart';
 import '../../../../core/services/upload_service.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../routes/app_routes.dart';
@@ -51,10 +52,10 @@ class CreateSellPostController extends GetxController {
   final RxDouble shareUnitValue = 0.0.obs; // Reactive value for share unit
   final Rx<LandSizeRange?> shareUnitRange = Rx<LandSizeRange?>(null);
   final service = Get.find<SellPostService>();
+  final SellPostDetailsService _sellPostDetailsService =
+      Get.find<SellPostDetailsService>();
   // Price per katha reactive
   final RxDouble pricePerKathaValue = 0.0.obs;
-  // isNegotiable
-  final RxBool isNegotiable = false.obs;
 
   @override
   void onInit() {
@@ -64,6 +65,7 @@ class CreateSellPostController extends GetxController {
     plotSizeController.addListener(_updatePlotSizeValue);
     shareUnitController.addListener(_updateShareUnitValue);
     pricePerKathaController.addListener(_updatePricePerKathaValue);
+    _initializeFromArguments();
   }
 
   void _updateLandAmountValue() {
@@ -81,6 +83,276 @@ class CreateSellPostController extends GetxController {
   void _updatePricePerKathaValue() {
     pricePerKathaValue.value =
         double.tryParse(pricePerKathaController.text.replaceAll(',', '')) ?? 0;
+  }
+
+  void _initializeFromArguments() {
+    final args = Get.arguments;
+    if (args is! Map) {
+      return;
+    }
+
+    final map = Map<String, dynamic>.from(args);
+    final draftId = (map['draftPostId'] ?? map['postId'])?.toString();
+    final resumeStep = _toInt(map['resumeStep']);
+    final lastCompletedStep = _toInt(map['lastCompletedStep']);
+
+    if (draftId != null && draftId.trim().isNotEmpty) {
+      draftPostId.value = draftId;
+      _loadDraftPost(
+        draftId,
+        preferredStep: resumeStep ?? _getResumeStep(lastCompletedStep),
+      );
+      return;
+    }
+
+    if (resumeStep != null) {
+      goToStep(resumeStep.clamp(1, totalSteps));
+    }
+  }
+
+  Future<void> _loadDraftPost(
+    String postId, {
+    required int preferredStep,
+  }) async {
+    isLoading.value = true;
+    try {
+      final payload = await _sellPostDetailsService.getSellPostById(postId);
+      _applyDraftPayload(payload);
+      goToStep(preferredStep.clamp(1, totalSteps));
+    } catch (_) {
+      Get.snackbar(
+        'Error',
+        'Failed to load draft post for editing',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  int _getResumeStep(int? lastCompletedStep) {
+    final step = (lastCompletedStep ?? 1) + 1;
+    return step.clamp(1, totalSteps);
+  }
+
+  void _applyDraftPayload(SellPostDetailsPayload payload) {
+    final raw = payload.raw;
+
+    titleController.text = raw['title']?.toString() ?? '';
+    descriptionController.text = raw['description']?.toString() ?? '';
+
+    propertyType.value = _mapPropertyType(raw['propertyType']?.toString());
+    propertyTypeError.value = '';
+
+    final sellableAmount = _toDouble(raw['sellableAmount']);
+    final sellableUnit = _mapLandUnit(raw['sellableUnit']);
+    if (sellableUnit != null) {
+      landAmountUnit.value = sellableUnit;
+    }
+    landAmountValue.value = sellableAmount;
+    _setMetricControllerText(
+      landAmountController,
+      _updateLandAmountValue,
+      sellableAmount,
+    );
+
+    final plotAmount = _toDouble(raw['plotSize']);
+    final plotUnit = _mapLandUnit(raw['plotUnit']);
+    if (plotUnit != null) {
+      plotSizeUnit.value = plotUnit;
+    }
+    plotSizeValue.value = plotAmount;
+    _setMetricControllerText(
+      plotSizeController,
+      _updatePlotSizeValue,
+      plotAmount,
+    );
+
+    final shareAmount = _toDouble(raw['shareAmount']);
+    hasShareUnit.value = shareAmount > 0;
+    final shareUnit = _mapLandUnit(raw['shareUnit']);
+    if (shareUnit != null) {
+      shareUnitUnit.value = shareUnit;
+    }
+    shareUnitValue.value = shareAmount;
+    _setMetricControllerText(
+      shareUnitController,
+      _updateShareUnitValue,
+      shareAmount,
+    );
+
+    final pricePerUnit = _toDouble(
+      raw['askingPricePerUnit'] ?? raw['pricePerUnit'],
+    );
+    pricePerKathaValue.value = pricePerUnit;
+    _setMetricControllerText(
+      pricePerKathaController,
+      _updatePricePerKathaValue,
+      pricePerUnit,
+    );
+
+    final roadDistanceMin = _toInt(raw['roadDistanceMin']);
+    final roadDistanceMax = _toInt(raw['roadDistanceMax']);
+    if (roadDistanceMin != null && roadDistanceMax != null) {
+      distanceRange.value = DistanceRange(
+        label: DistanceRange.getLabel(roadDistanceMin, roadDistanceMax),
+        minMeters: roadDistanceMin,
+        maxMeters: roadDistanceMax,
+      );
+    }
+
+    location.value = LocationData(
+      division: raw['division']?.toString(),
+      district: raw['district']?.toString(),
+      upazila: raw['upazila']?.toString(),
+      pouroshova: raw['unionOrCityCorp']?.toString(),
+      wardNo: raw['wardNo']?.toString(),
+      postalCode: raw['postalCode']?.toString(),
+      fullAddress: raw['fullAddress']?.toString(),
+      isFullAddressCustomized:
+          raw['fullAddress']?.toString().trim().isNotEmpty == true,
+    );
+
+    photos.assignAll(
+      payload.photos
+          .asMap()
+          .entries
+          .map(
+            (entry) => PhotoItem(
+              id: 'photo-${entry.key}',
+              path: entry.value,
+              isLocal: false,
+            ),
+          )
+          .toList(),
+    );
+
+    final existingVideoUrl = payload.videoUrl;
+    if (existingVideoUrl != null && existingVideoUrl.isNotEmpty) {
+      video.value = VideoItem(
+        id: 'video-existing',
+        path: existingVideoUrl,
+        isLocal: false,
+      );
+    } else {
+      video.value = null;
+    }
+
+    deedDocuments.assignAll(
+      payload.deedFiles
+          .asMap()
+          .entries
+          .map(
+            (entry) => DocumentItem(
+              id: 'deed-${entry.key}',
+              name: _extractFileName(entry.value),
+              path: entry.value,
+              isLocal: false,
+            ),
+          )
+          .toList(),
+    );
+
+    khatianDocuments.assignAll(
+      payload.khatianFiles
+          .asMap()
+          .entries
+          .map(
+            (entry) => DocumentItem(
+              id: 'khatian-${entry.key}',
+              name: _extractFileName(entry.value),
+              path: entry.value,
+              isLocal: false,
+            ),
+          )
+          .toList(),
+    );
+
+    otherDocuments.assignAll(
+      payload.otherFiles
+          .asMap()
+          .entries
+          .map(
+            (entry) => DocumentItem(
+              id: 'other-${entry.key}',
+              name: _extractFileName(entry.value),
+              path: entry.value,
+              isLocal: false,
+            ),
+          )
+          .toList(),
+    );
+
+    final mandatoryServiceIds = mandatoryServices
+        .map((service) => service.id)
+        .toSet();
+    selectedServices.assignAll(
+      payload.selectedServices
+          .where((serviceId) => !mandatoryServiceIds.contains(serviceId))
+          .toList(),
+    );
+  }
+
+  PropertyType? _mapPropertyType(String? rawType) {
+    if (rawType == null || rawType.trim().isEmpty) {
+      return null;
+    }
+
+    final normalized = rawType.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
+    switch (normalized) {
+      case 'plainland':
+      case 'land':
+        return PropertyType.plainLand;
+      case 'waterland':
+      case 'water':
+        return PropertyType.waterLand;
+      case 'commercial':
+        return PropertyType.commercial;
+      case 'agroland':
+        return PropertyType.agroLand;
+      case 'blankroof':
+        return PropertyType.blankRoof;
+      case 'flat':
+      default:
+        return PropertyType.flat;
+    }
+  }
+
+  LandUnit? _mapLandUnit(dynamic rawUnit) {
+    final value = rawUnit?.toString().trim().toLowerCase();
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+
+    for (final unit in LandUnit.values) {
+      if (unit.label.toLowerCase() == value) {
+        return unit;
+      }
+    }
+    return null;
+  }
+
+  double _toDouble(dynamic value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  int? _toInt(dynamic value) {
+    if (value is num) {
+      return value.toInt();
+    }
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  String _extractFileName(String path) {
+    final normalized = path.replaceAll('\\', '/');
+    final fileName = normalized.split('/').last.trim();
+    if (fileName.isNotEmpty) {
+      return fileName;
+    }
+    return 'Document';
   }
 
   // Distance from Road
@@ -105,7 +377,7 @@ class CreateSellPostController extends GetxController {
   // Mandatory services (always selected)
   final List<VerificationService> mandatoryServices = const [
     VerificationService(
-      id: 'ownership_validation',
+      id: 'ownership_history_validation',
       title: 'Ownership History Validation',
       isMandatory: true,
     ),
@@ -129,7 +401,7 @@ class CreateSellPostController extends GetxController {
   // Optional services
   final List<VerificationService> optionalServices = const [
     VerificationService(
-      id: 'property_registration',
+      id: 'deed_writing',
       title: 'Property Registration/ Deed Writing Service',
     ),
     VerificationService(
@@ -240,10 +512,6 @@ class CreateSellPostController extends GetxController {
     await ApiErrorHandler.call(
       () => _submitStep1(advanceStep: true, showSuccessSnack: false),
     );
-  }
-
-  void toggleIsNegotiable() {
-    isNegotiable.value = !isNegotiable.value;
   }
 
   /// Validate step 2 (media) and proceed
@@ -652,10 +920,19 @@ class CreateSellPostController extends GetxController {
     try {
       final payload = _buildStep1Payload();
 
-      final response = await service.createDraftStep1(payload: payload);
-      final id = response['id']?.toString();
-      if (id != null && id.isNotEmpty) {
-        draftPostId.value = id;
+      final existingDraftId = draftPostId.value;
+      if (existingDraftId != null && existingDraftId.isNotEmpty) {
+        await service.updateDraftStep(
+          postId: existingDraftId,
+          step: 1,
+          payload: payload,
+        );
+      } else {
+        final response = await service.createDraftStep1(payload: payload);
+        final id = response['id']?.toString();
+        if (id != null && id.isNotEmpty) {
+          draftPostId.value = id;
+        }
       }
       if (showSuccessSnack) {
         Get.snackbar(
@@ -762,9 +1039,9 @@ class CreateSellPostController extends GetxController {
       'propertyType': selectedPropertyType.label,
       'sellableAmount': landAmountValue.value,
       'sellableUnit': landAmountUnit.value.label,
-      'pricePerUnit': pricePerKathaValue.value,
+      'askingPricePerUnit': pricePerKathaValue.value,
       'askingPrice': askingPrice,
-      'isNegotiable': isNegotiable.value,
+      'isPropertyShareable': hasShareUnit.value,
       if (range != null) 'roadDistanceMin': range.minMeters,
       if (range != null) 'roadDistanceMax': range.maxMeters,
       if (plotSizeValue.value > 0) 'plotSize': plotSizeValue.value,
@@ -805,19 +1082,12 @@ class CreateSellPostController extends GetxController {
   }
 
   Map<String, dynamic> _buildStep3Payload() {
-    final titles = <String>[];
-    titles.addAll(mandatoryServices.map((service) => service.title));
+    final serviceKeys = <String>{
+      ...mandatoryServices.map((service) => service.id),
+      ...selectedServices,
+    };
 
-    for (final serviceId in selectedServices) {
-      final matches = optionalServices
-          .where((service) => service.id == serviceId)
-          .toList();
-      if (matches.isNotEmpty) {
-        titles.add(matches.first.title);
-      }
-    }
-
-    return {'selectedServices': titles};
+    return {'selectedServices': serviceKeys.toList()};
   }
 
   /// Submit sell post for review
@@ -856,7 +1126,7 @@ class CreateSellPostController extends GetxController {
         ),
         onClose: () {
           Get.back(); // Close dialog
-          Get.offNamed(AppRoutes.HOME); // Navigate to home
+          Get.offNamed(AppRoutes.MAIN); // Navigate to home
           //Get.offNamed(AppRoutes.MY_POSTS); // Navigate to my posts
         },
       );

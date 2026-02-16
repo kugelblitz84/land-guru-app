@@ -8,14 +8,11 @@ import '../../user/my_deals/my_deals_view.dart';
 import '../../user/profile/profile_view.dart';
 import '../../user/properties/properties_view.dart';
 import '../shell/main_shell_wrapper.dart';
-import 'nested_navigator.dart';
 import 'user_bottom_nav_controller.dart';
 
 /// User Bottom Navigation shell containing all main tabs
 /// Uses a shared header shell for tabs 0-3 (Home, Properties, Appointments, My Deals)
 /// Profile tab (4) has its own layout without the shell header
-/// Each tab has its own nested Navigator to support internal navigation
-/// while keeping the bottom nav bar visible
 class UserBottomNavView extends GetView<UserBottomNavController> {
   const UserBottomNavView({super.key});
 
@@ -35,46 +32,16 @@ class UserBottomNavView extends GetView<UserBottomNavController> {
           () => IndexedStack(
             index: controller.currentIndex.value,
             children: [
-              // Tab 0: Home - uses nested navigator with shell wrapper
-              _buildNestedTab(
-                index: 0,
-                child: _buildShellContent(const HomeContentView()),
-              ),
-
-              // Tab 1: Properties - uses nested navigator with shell wrapper
-              _buildNestedTab(
-                index: 1,
-                child: _buildShellContent(const PropertiesContentView()),
-              ),
-
-              // Tab 2: Appointments - uses nested navigator with shell wrapper
-              _buildNestedTab(
-                index: 2,
-                child: _buildShellContent(const AppointmentsContentView()),
-              ),
-
-              // Tab 3: My Deals - uses nested navigator with shell wrapper
-              _buildNestedTab(
-                index: 3,
-                child: _buildShellContent(const MyDealsContentView()),
-              ),
-
-              // Tab 4: Profile - uses nested navigator without shell wrapper
-              _buildNestedTab(index: 4, child: const ProfileView()),
+              _buildShellContent(const HomeContentView()),
+              _buildShellContent(const PropertiesContentView()),
+              _buildShellContent(const AppointmentsContentView()),
+              _buildShellContent(const MyDealsContentView()),
+              const ProfileView(),
             ],
           ),
         ),
         bottomNavigationBar: _buildBottomNavBar(),
       ),
-    );
-  }
-
-  /// Build a tab with nested navigation support
-  Widget _buildNestedTab({required int index, required Widget child}) {
-    return NestedNavigator(
-      navigatorKey: controller.navigatorKeys[index],
-      initialPage: child,
-      tabIndex: index,
     );
   }
 

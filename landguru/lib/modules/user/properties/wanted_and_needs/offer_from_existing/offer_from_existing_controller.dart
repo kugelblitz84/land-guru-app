@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../core/services/services.dart';
 import '../../../../../routes/app_routes.dart';
 import '../../properties_controller.dart';
 
 /// Controller for Offer from Existing Property
 /// Allows selecting from user's active listings to offer
 class OfferFromExistingController extends GetxController {
+  final BuyPostOfferService _offerService = Get.find<BuyPostOfferService>();
+
+  static List<PropertyListing> _cachedActiveProperties = <PropertyListing>[];
+  static String _cachedSortBy = 'High to Low';
+  static int _cachedTotalProperties = 120;
+  static bool _hasCachedData = false;
+
   // State
   final RxBool isLoading = false.obs;
   final RxString buyPostId = ''.obs;
@@ -46,88 +54,40 @@ class OfferFromExistingController extends GetxController {
   }
 
   /// Load user's active properties
-  Future<void> loadActiveProperties() async {
-    isLoading.value = true;
-    try {
-      // Simulate API call
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      // Mock data - active sell posts from the user
-      activeProperties.value = [
-        PropertyListing(
-          id: '1',
-          postId: '#POST-1042',
-          title: 'Modern Duplex Villa',
-          location: 'Bashundhara R/A, Block C',
-          price: '40,00,000',
-          propertyType: PropertyType.flat,
-          postType: PostType.sellPost,
-          isVerified: true,
-          isLocked: false,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-          description: 'A stunning modern duplex villa with premium amenities.',
-          sellableLandAmount: '5 Katha',
-          plotSize: '5 Katha',
-          distanceFromRoad: '200m-750m',
-          postedBy: 'You',
-          postedTime: '2h ago',
-        ),
-        PropertyListing(
-          id: '2',
-          postId: '#POST-1043',
-          title: '5 Katha Plot in Purbachal',
-          location: 'Sector 4, Dhaka',
-          price: '2,00,00,000',
-          propertyType: PropertyType.plainLand,
-          postType: PostType.sellPost,
-          isVerified: true,
-          isLocked: false,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/5 katha plot in purbachal.jpg',
-          description: 'Prime plot in Purbachal New Town.',
-          sellableLandAmount: '5 Katha',
-          plotSize: '5 Katha',
-          distanceFromRoad: '0m-200m',
-          postedBy: 'You',
-          postedTime: '1d ago',
-        ),
-        PropertyListing(
-          id: '3',
-          postId: '#POST-1044',
-          title: 'Gazipur Water Zone',
-          location: 'Gazipur, Dhaka',
-          price: '95,12,000',
-          propertyType: PropertyType.waterLand,
-          postType: PostType.sellPost,
-          isVerified: true,
-          isLocked: false,
-          imageUrl:
-              'assets/images/Properties Listing - For Sale Images/Gazipur Water Zone.jpg',
-          description: 'Beautiful water land in Gazipur.',
-          sellableLandAmount: '10 Katha',
-          plotSize: '10 Katha',
-          distanceFromRoad: '750m-2km',
-          postedBy: 'You',
-          postedTime: '3d ago',
-        ),
-      ];
-
-      totalProperties.value = activeProperties.length;
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load properties',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
+  Future<void> loadActiveProperties({bool forceRefresh = false}) async {
+    if (!forceRefresh && _hasCachedData) {
+      _restoreFromCache();
+      return;
     }
+
+    isLoading.value = true;
+    final result = await ApiErrorHandler.call(
+      () => _offerService.getMyActiveSellPosts(),
+    );
+    if (result.isSuccess && result.data != null) {
+      activeProperties.assignAll(result.data!);
+      totalProperties.value = activeProperties.length;
+      _syncCache();
+    }
+    isLoading.value = false;
   }
 
   /// Refresh properties list
   Future<void> refresh() async {
-    await loadActiveProperties();
+    await loadActiveProperties(forceRefresh: true);
+  }
+
+  void _restoreFromCache() {
+    sortBy.value = _cachedSortBy;
+    totalProperties.value = _cachedTotalProperties;
+    activeProperties.assignAll(_cachedActiveProperties);
+  }
+
+  void _syncCache() {
+    _cachedActiveProperties = List<PropertyListing>.from(activeProperties);
+    _cachedSortBy = sortBy.value;
+    _cachedTotalProperties = totalProperties.value;
+    _hasCachedData = true;
   }
 
   /// Toggle property selection
@@ -225,29 +185,30 @@ class OfferFromExistingController extends GetxController {
     }
 
     isLoading.value = true;
-    try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
+    final selectedIds = selectedPropertyIds.toList(growable: false);
+    final result = await ApiErrorHandler.call(
+      () => Future.wait(
+        selectedIds.map(
+          (sellPostId) => _offerService.makeOfferFromExisting(
+            buyPostId: buyPostId.value,
+            sellPostId: sellPostId,
+          ),
+        ),
+      ),
+    );
 
-      // Show success and navigate back
+    if (result.isSuccess) {
       Get.back();
       Get.snackbar(
         'Offer Submitted',
-        'Your offer has been sent to the buyer for review',
+        selectedIds.length == 1
+            ? 'Your offer has been sent to the buyer for review'
+            : '${selectedIds.length} offers have been sent to the buyer for review',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to submit offer. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
     }
+    isLoading.value = false;
   }
 }

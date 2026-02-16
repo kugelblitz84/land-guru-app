@@ -7,13 +7,10 @@ import '../../agent/my_tasks/my_tasks_view.dart';
 import '../../agent/appointments/agent_appointments_view.dart';
 import '../../agent/profile/agent_profile_view.dart';
 import '../shell/agent_shell_wrapper.dart';
-import 'nested_navigator.dart';
 import 'agent_bottom_nav_controller.dart';
 
 /// Agent Bottom Navigation shell containing all main tabs
 /// Tabs: Home (Dashboard), My Tasks, Appointments, Profile
-/// Each tab has its own nested Navigator to support internal navigation
-/// while keeping the bottom nav bar visible
 class AgentBottomNavView extends GetView<AgentBottomNavController> {
   const AgentBottomNavView({super.key});
 
@@ -33,40 +30,15 @@ class AgentBottomNavView extends GetView<AgentBottomNavController> {
           () => IndexedStack(
             index: controller.currentIndex.value,
             children: [
-              // Tab 0: Home (Dashboard) - with shell header
-              _buildNestedTab(
-                index: 0,
-                child: _buildShellContent(const AgentDashboardContentView()),
-              ),
-
-              // Tab 1: My Tasks - with shell header
-              _buildNestedTab(
-                index: 1,
-                child: _buildShellContent(const AgentMyTasksContentView()),
-              ),
-
-              // Tab 2: Appointments - with shell header
-              _buildNestedTab(
-                index: 2,
-                child: _buildShellContent(const AgentAppointmentsContentView()),
-              ),
-
-              // Tab 3: Profile - without shell header (has its own layout)
-              _buildNestedTab(index: 3, child: const AgentProfileView()),
+              _buildShellContent(const AgentDashboardContentView()),
+              _buildShellContent(const AgentMyTasksContentView()),
+              _buildShellContent(const AgentAppointmentsContentView()),
+              const AgentProfileView(),
             ],
           ),
         ),
         bottomNavigationBar: _buildBottomNavBar(),
       ),
-    );
-  }
-
-  /// Build a tab with nested navigation support
-  Widget _buildNestedTab({required int index, required Widget child}) {
-    return NestedNavigator(
-      navigatorKey: controller.navigatorKeys[index],
-      initialPage: child,
-      tabIndex: index,
     );
   }
 

@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/services/api_error_handler.dart';
+import '../../../core/services/auth_service.dart';
+import '../../../core/utils/constants.dart';
 import '../../../routes/app_routes.dart';
 
 /// Controller for the Forgot Password flow
@@ -40,8 +43,7 @@ class ForgotPasswordController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Initialize OTP controllers (4 digits)
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < AppConstants.otpLength; i++) {
       otpControllers.add(TextEditingController());
     }
   }
@@ -87,25 +89,22 @@ class ForgotPasswordController extends GetxController {
 
     isLoading.value = true;
     try {
-      // TODO: Implement API call to check user type and send reset request
-      // API response should include: { isAgent: bool, ... }
-      await Future.delayed(const Duration(seconds: 1));
+      final authService = Get.find<AuthService>();
+      final result = await ApiErrorHandler.call(
+        () => authService.sendOtp(
+          phone: phoneController.text.trim(),
+          forgetPassword: true,
+        ),
+      );
+      if (!result.isSuccess) {
+        return;
+      }
 
-      // Simulating backend response - set to true for Agent flow
-      // In production, this will come from API response
-      final bool backendIsAgent = true; // TODO: Get from API response
-
-      isAgent.value = backendIsAgent;
+      isAgent.value = false;
       currentStep.value = 2;
 
-      if (isAgent.value) {
-        // Agent: Navigate to request sent confirmation (Step 2 of 2)
-        Get.toNamed(AppRoutes.FORGOT_PASSWORD_AGENT_REQUEST_SENT);
-      } else {
-        // User: Navigate to OTP verification (Step 2 of 4)
-        _startResendCountdown();
-        Get.toNamed(AppRoutes.FORGOT_PASSWORD_VERIFY_OTP);
-      }
+      _startResendCountdown();
+      Get.toNamed(AppRoutes.FORGOT_PASSWORD_VERIFY_OTP);
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -124,7 +123,7 @@ class ForgotPasswordController extends GetxController {
 
   /// Step 2: Verify OTP
   Future<void> verifyOtp() async {
-    if (otpString.length != 4) {
+    if (otpString.length != AppConstants.otpLength) {
       Get.snackbar(
         'Error',
         'Please enter the complete OTP',
@@ -135,8 +134,17 @@ class ForgotPasswordController extends GetxController {
 
     isLoading.value = true;
     try {
-      // TODO: Implement verify OTP API call
-      await Future.delayed(const Duration(seconds: 1));
+      final authService = Get.find<AuthService>();
+      final result = await ApiErrorHandler.call(
+        () => authService.verifyOtp(
+          phone: phoneController.text.trim(),
+          otp: otpString,
+        ),
+      );
+      if (!result.isSuccess) {
+        return;
+      }
+
       currentStep.value = 3;
       Get.toNamed(AppRoutes.FORGOT_PASSWORD_SET_PASSWORD);
     } catch (e) {
@@ -158,8 +166,18 @@ class ForgotPasswordController extends GetxController {
     resendCountdown.value = 60;
 
     try {
-      // TODO: Implement resend OTP API call
-      await Future.delayed(const Duration(milliseconds: 500));
+      final authService = Get.find<AuthService>();
+      final result = await ApiErrorHandler.call(
+        () => authService.sendOtp(
+          phone: phoneController.text.trim(),
+          forgetPassword: true,
+        ),
+      );
+      if (!result.isSuccess) {
+        canResend.value = true;
+        return;
+      }
+
       Get.snackbar(
         'Success',
         'OTP sent successfully',
@@ -199,8 +217,19 @@ class ForgotPasswordController extends GetxController {
 
     isLoading.value = true;
     try {
-      // TODO: Implement reset password API call
-      await Future.delayed(const Duration(seconds: 1));
+      final authService = Get.find<AuthService>();
+      final result = await ApiErrorHandler.call(
+        () => authService.resetPasswordWithOtp(
+          phone: phoneController.text.trim(),
+          otp: otpString,
+          newPassword: passwordController.text.trim(),
+          confirmPassword: confirmPasswordController.text.trim(),
+        ),
+      );
+      if (!result.isSuccess) {
+        return;
+      }
+
       currentStep.value = 4;
       Get.offAllNamed(AppRoutes.FORGOT_PASSWORD_SUCCESS);
     } catch (e) {
