@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/services/api_error_handler.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import 'services/models/buy_post_details_payload.dart';
 import 'services/buy_post_service.dart';
 import '../../../../routes/app_routes.dart';
 import '../widgets/properties_widgets.dart';

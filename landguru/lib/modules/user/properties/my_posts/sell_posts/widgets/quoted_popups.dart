@@ -4,8 +4,11 @@ import 'package:get/get.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../models/sell_post_models.dart';
 
-/// Payment Method enum
-enum PaymentMethod { sslCommerz, mobileBanking }
+/// Payment method constants.
+class PaymentMethods {
+  static const String sslCommerz = 'ssl_commerz';
+  static const String mobileBanking = 'mobile_banking';
+}
 
 /// Requote Dialog - Shows service fees breakdown and allows user to enter requote offer
 class RequoteDialog extends StatefulWidget {
@@ -633,7 +636,7 @@ class RequoteSubmittedDialog extends StatelessWidget {
 class PayAndActivateDialog extends StatefulWidget {
   final double totalPayable;
   final int quotationRevisions;
-  final Future<void> Function(PaymentMethod method) onPay;
+  final Future<void> Function(String method) onPay;
 
   const PayAndActivateDialog({
     super.key,
@@ -647,7 +650,7 @@ class PayAndActivateDialog extends StatefulWidget {
     BuildContext context, {
     required double totalPayable,
     required int quotationRevisions,
-    required Future<void> Function(PaymentMethod method) onPay,
+    required Future<void> Function(String method) onPay,
   }) {
     return showDialog(
       context: context,
@@ -665,7 +668,7 @@ class PayAndActivateDialog extends StatefulWidget {
 }
 
 class _PayAndActivateDialogState extends State<PayAndActivateDialog> {
-  PaymentMethod _selectedMethod = PaymentMethod.sslCommerz;
+  String _selectedMethod = PaymentMethods.sslCommerz;
   bool _isProcessing = false;
 
   Future<void> _handlePay() async {
@@ -762,7 +765,7 @@ class _PayAndActivateDialogState extends State<PayAndActivateDialog> {
 
               // SSL Commerz Option
               _buildPaymentMethodOption(
-                PaymentMethod.sslCommerz,
+                PaymentMethods.sslCommerz,
                 'SSL Commerz',
                 'All payment methods in one place',
                 Icons.credit_card,
@@ -772,7 +775,7 @@ class _PayAndActivateDialogState extends State<PayAndActivateDialog> {
 
               // Mobile Banking Option
               _buildPaymentMethodOption(
-                PaymentMethod.mobileBanking,
+                PaymentMethods.mobileBanking,
                 'Mobile Banking',
                 'Bkash, Nagad, Rocket',
                 Icons.phone_android,
@@ -869,7 +872,7 @@ class _PayAndActivateDialogState extends State<PayAndActivateDialog> {
   }
 
   Widget _buildPaymentMethodOption(
-    PaymentMethod method,
+    String method,
     String title,
     String subtitle,
     IconData icon,

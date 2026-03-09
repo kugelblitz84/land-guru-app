@@ -1,3 +1,123 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/enums/property_type.dart';
+import '../../../../core/theme/app_colors.dart';
+
+/// String constants for agent appointments primary tabs.
+class AgentAppointmentTabs {
+  static const String upcoming = 'upcoming';
+  static const String past = 'past';
+}
+
+/// String constants and style helpers for agent appointment status.
+class AgentAppointmentStatuses {
+  static const String visitToday = 'visit_today';
+  static const String upcomingVisit = 'upcoming_visit';
+  static const String visited = 'visited';
+
+  static String label(String status) {
+    switch (status) {
+      case visitToday:
+        return 'Visit Today';
+      case upcomingVisit:
+        return 'Upcoming Visit';
+      case visited:
+        return 'Visited';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  static Color backgroundColor(String status) {
+    switch (status) {
+      case visitToday:
+        return AppColors.success;
+      case upcomingVisit:
+        return AppColors.primary;
+      case visited:
+        return AppColors.grey400;
+      default:
+        return AppColors.grey400;
+    }
+  }
+
+  static Color textColor(String status) {
+    return AppColors.white;
+  }
+}
+
+/// View model for agent appointment card rows.
+class AgentAppointment {
+  final String id;
+  final String postId;
+  final String propertyTitle;
+  final PropertyType propertyType;
+  final String location;
+  final String status;
+  final DateTime appointmentDate;
+  final String serviceType;
+
+  AgentAppointment({
+    required this.id,
+    required this.postId,
+    required this.propertyTitle,
+    required this.propertyType,
+    required this.location,
+    required this.status,
+    required this.appointmentDate,
+    required this.serviceType,
+  });
+
+  String get propertyTypeLabel {
+    switch (propertyType) {
+      case PropertyType.plainLand:
+        return 'Plain Land';
+      case PropertyType.waterLand:
+        return 'Water Land';
+      case PropertyType.flat:
+        return 'Flat';
+    }
+  }
+
+  Color get propertyTypeColor {
+    switch (propertyType) {
+      case PropertyType.plainLand:
+        return const Color(0xFF2E7D32);
+      case PropertyType.waterLand:
+        return const Color(0xFF0288D1);
+      case PropertyType.flat:
+        return AppColors.primary;
+    }
+  }
+
+  String get formattedMonth {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[appointmentDate.month - 1];
+  }
+
+  String get formattedDay => appointmentDate.day.toString();
+
+  bool get isToday {
+    final now = DateTime.now();
+    return appointmentDate.year == now.year &&
+        appointmentDate.month == now.month &&
+        appointmentDate.day == now.day;
+  }
+}
+
 class AgentAppointmentsMeta {
   final int total;
   final int page;

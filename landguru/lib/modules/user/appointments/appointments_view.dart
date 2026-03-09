@@ -34,7 +34,7 @@ class AppointmentsContentView extends StatelessWidget {
 
     return DefaultTabController(
       length: 2,
-      initialIndex: controller.selectedTab.value == AppointmentTab.upcoming
+      initialIndex: controller.selectedTab.value == AppointmentTabs.upcoming
           ? 0
           : 1,
       child: Column(
@@ -70,19 +70,36 @@ class AppointmentsContentView extends StatelessWidget {
 
             final appointments = controller.filteredAppointments;
 
-            if (appointments.isEmpty) {
-              return _buildEmptyState(controller);
-            }
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                if (appointments.isEmpty) {
+                  return RefreshIndicator(
+                    onRefresh: controller.refresh,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: SizedBox(
+                        height: constraints.maxHeight,
+                        child: _buildEmptyState(controller),
+                      ),
+                    ),
+                  );
+                }
 
-            return RefreshIndicator(
-              onRefresh: controller.refresh,
-              child: ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: appointments.length,
-                itemBuilder: (context, index) {
-                  return _buildAppointmentCard(controller, appointments[index]);
-                },
-              ),
+                return RefreshIndicator(
+                  onRefresh: controller.refresh,
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    itemCount: appointments.length,
+                    itemBuilder: (context, index) {
+                      return _buildAppointmentCard(
+                        controller,
+                        appointments[index],
+                      );
+                    },
+                  ),
+                );
+              },
             );
           }),
         ),
@@ -101,7 +118,7 @@ class AppointmentsContentView extends StatelessWidget {
         ),
         child: TabBar(
           onTap: (index) => controller.changeTab(
-            index == 0 ? AppointmentTab.upcoming : AppointmentTab.past,
+            index == 0 ? AppointmentTabs.upcoming : AppointmentTabs.past,
           ),
           dividerColor: Colors.transparent,
           indicatorSize: TabBarIndicatorSize.tab,
@@ -130,7 +147,7 @@ class AppointmentsContentView extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: Obx(() {
-        if (controller.selectedTab.value == AppointmentTab.upcoming) {
+        if (controller.selectedTab.value == AppointmentTabs.upcoming) {
           return SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -139,9 +156,9 @@ class AppointmentsContentView extends StatelessWidget {
                   label: 'My Requests',
                   isSelected:
                       controller.upcomingFilter.value ==
-                      UpcomingFilter.myRequests,
+                      UpcomingFilters.myRequests,
                   onTap: () => controller.changeUpcomingFilter(
-                    UpcomingFilter.myRequests,
+                    UpcomingFilters.myRequests,
                   ),
                 ),
                 SizedBox(width: 8.w),
@@ -149,9 +166,9 @@ class AppointmentsContentView extends StatelessWidget {
                   label: 'Upcoming Visit',
                   isSelected:
                       controller.upcomingFilter.value ==
-                      UpcomingFilter.upcomingVisit,
+                      UpcomingFilters.upcomingVisit,
                   onTap: () => controller.changeUpcomingFilter(
-                    UpcomingFilter.upcomingVisit,
+                    UpcomingFilters.upcomingVisit,
                   ),
                 ),
                 SizedBox(width: 8.w),
@@ -159,9 +176,9 @@ class AppointmentsContentView extends StatelessWidget {
                   label: 'Agent Visit',
                   isSelected:
                       controller.upcomingFilter.value ==
-                      UpcomingFilter.agentVisit,
+                      UpcomingFilters.agentVisit,
                   onTap: () => controller.changeUpcomingFilter(
-                    UpcomingFilter.agentVisit,
+                    UpcomingFilters.agentVisit,
                   ),
                   badgeCount: controller.agentVisitBadgeCount,
                 ),
@@ -175,15 +192,16 @@ class AppointmentsContentView extends StatelessWidget {
             children: [
               _buildFilterChip(
                 label: 'My Visit',
-                isSelected: controller.pastFilter.value == PastFilter.myVisit,
-                onTap: () => controller.changePastFilter(PastFilter.myVisit),
+                isSelected: controller.pastFilter.value == PastFilters.myVisit,
+                onTap: () => controller.changePastFilter(PastFilters.myVisit),
               ),
               SizedBox(width: 8.w),
               _buildFilterChip(
                 label: 'Agent Visit',
                 isSelected:
-                    controller.pastFilter.value == PastFilter.agentVisit,
-                onTap: () => controller.changePastFilter(PastFilter.agentVisit),
+                    controller.pastFilter.value == PastFilters.agentVisit,
+                onTap: () =>
+                    controller.changePastFilter(PastFilters.agentVisit),
               ),
             ],
           );
@@ -252,73 +270,84 @@ class AppointmentsContentView extends StatelessWidget {
   }
 
   Widget _buildSectionHeader(AppointmentsController controller) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Obx(() {
-        final title = controller.sectionTitle;
-        final subtitle = controller.sectionSubtitle;
-        final showResultsHeader =
-            controller.selectedTab.value == AppointmentTab.upcoming &&
-                controller.upcomingFilter.value ==
-                    UpcomingFilter.upcomingVisit ||
-            controller.selectedTab.value == AppointmentTab.past;
+    return Obx(() {
+      final isUpcomingVisitsHeader =
+          controller.selectedTab.value == AppointmentTabs.upcoming &&
+          controller.upcomingFilter.value == UpcomingFilters.upcomingVisit;
+      final horizontalPadding = isUpcomingVisitsHeader ? 16.w : 12.w;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (title.isNotEmpty) ...[
+      return SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          child: _buildSectionHeaderContent(controller),
+        ),
+      );
+    });
+  }
+
+  Widget _buildSectionHeaderContent(AppointmentsController controller) {
+    final title = controller.sectionTitle;
+    final subtitle = controller.sectionSubtitle;
+    final showResultsHeader =
+        controller.selectedTab.value == AppointmentTabs.upcoming &&
+            controller.upcomingFilter.value == UpcomingFilters.upcomingVisit ||
+        controller.selectedTab.value == AppointmentTabs.past;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (title.isNotEmpty) ...[
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color: AppColors.grey900,
+            ),
+          ),
+          if (subtitle.isNotEmpty)
+            Text(
+              subtitle,
+              style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
+            ),
+          SizedBox(height: 8.h),
+        ],
+        if (showResultsHeader) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Text(
-                title,
+                'Showing ${controller.filteredAppointments.length} Properties',
                 style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.grey900,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.grey700,
                 ),
               ),
-              if (subtitle.isNotEmpty)
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
-                ),
-              SizedBox(height: 8.h),
-            ],
-            if (showResultsHeader) ...[
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Showing ${controller.filteredAppointments.length} Properties',
+                    'Date',
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.grey700,
+                      color: AppColors.primary,
                     ),
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        'Date',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      SizedBox(width: 4.w),
-                      Icon(
-                        Icons.arrow_downward,
-                        size: 16.sp,
-                        color: AppColors.primary,
-                      ),
-                    ],
+                  SizedBox(width: 4.w),
+                  Icon(
+                    Icons.arrow_downward,
+                    size: 16.sp,
+                    color: AppColors.primary,
                   ),
                 ],
               ),
-              SizedBox(height: 12.h),
             ],
-          ],
-        );
-      }),
+          ),
+          SizedBox(height: 12.h),
+        ],
+      ],
     );
   }
 
@@ -328,8 +357,8 @@ class AppointmentsContentView extends StatelessWidget {
   ) {
     // Determine card type based on current filter
     final isMyRequests =
-        controller.selectedTab.value == AppointmentTab.upcoming &&
-        controller.upcomingFilter.value == UpcomingFilter.myRequests;
+        controller.selectedTab.value == AppointmentTabs.upcoming &&
+        controller.upcomingFilter.value == UpcomingFilters.myRequests;
 
     if (isMyRequests) {
       return _buildMyRequestCard(controller, appointment);
@@ -432,9 +461,13 @@ class AppointmentsContentView extends StatelessWidget {
                         textColor: AppColors.white,
                       ),
                       _buildTag(
-                        text: appointment.status.label,
-                        backgroundColor: appointment.status.backgroundColor,
-                        textColor: appointment.status.textColor,
+                        text: AppointmentStatuses.label(appointment.status),
+                        backgroundColor: AppointmentStatuses.backgroundColor(
+                          appointment.status,
+                        ),
+                        textColor: AppointmentStatuses.textColor(
+                          appointment.status,
+                        ),
                       ),
                     ],
                   ),
@@ -544,9 +577,13 @@ class AppointmentsContentView extends StatelessWidget {
                           textColor: AppColors.white,
                         ),
                         _buildTag(
-                          text: appointment.status.label,
-                          backgroundColor: appointment.status.backgroundColor,
-                          textColor: appointment.status.textColor,
+                          text: AppointmentStatuses.label(appointment.status),
+                          backgroundColor: AppointmentStatuses.backgroundColor(
+                            appointment.status,
+                          ),
+                          textColor: AppointmentStatuses.textColor(
+                            appointment.status,
+                          ),
                         ),
                       ],
                     ),
@@ -705,22 +742,26 @@ class AppointmentsContentView extends StatelessWidget {
   }
 
   Widget _buildEmptyState(AppointmentsController controller) {
-    String message;
-    IconData icon;
+    String message = 'No appointments found';
+    IconData icon = Icons.event_busy;
 
-    if (controller.selectedTab.value == AppointmentTab.upcoming) {
+    if (controller.selectedTab.value == AppointmentTabs.upcoming) {
       switch (controller.upcomingFilter.value) {
-        case UpcomingFilter.myRequests:
+        case UpcomingFilters.myRequests:
           message = 'No visit requests yet';
           icon = Icons.pending_actions;
           break;
-        case UpcomingFilter.upcomingVisit:
+        case UpcomingFilters.upcomingVisit:
           message = 'No upcoming visits scheduled';
           icon = Icons.calendar_today;
           break;
-        case UpcomingFilter.agentVisit:
+        case UpcomingFilters.agentVisit:
           message = 'No agent visits scheduled';
           icon = Icons.person_search;
+          break;
+        default:
+          message = 'No upcoming appointments';
+          icon = Icons.calendar_month;
           break;
       }
     } else {

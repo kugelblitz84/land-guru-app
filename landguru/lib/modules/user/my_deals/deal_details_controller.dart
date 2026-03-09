@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../core/services/api_error_handler.dart';
 
 /// Service for Deal Details screen
 class DealDetailsController extends GetxService {
@@ -20,14 +21,11 @@ class DealDetailsController extends GetxService {
   /// Load deal details
   Future<void> loadDealDetails() async {
     isLoading.value = true;
-    try {
-      // TODO: Load deal details from API
-      await Future.delayed(const Duration(seconds: 1));
-    } catch (e) {
-      // TODO: Handle error
-    } finally {
-      isLoading.value = false;
-    }
+    await ApiErrorHandler.call(
+      () => Future<void>.delayed(const Duration(seconds: 1)),
+      showError: false,
+    );
+    isLoading.value = false;
   }
 
   /// Download documents
@@ -35,3 +33,4 @@ class DealDetailsController extends GetxService {
     // TODO: Implement download documents
   }
 }
+

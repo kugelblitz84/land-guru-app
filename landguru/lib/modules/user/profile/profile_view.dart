@@ -31,7 +31,7 @@ class ProfileView extends GetView<ProfileController> {
                       // User Name
                       Obx(
                         () => Text(
-                          controller.userName.value,
+                          controller.profileModel.value.userName,
                           style: TextStyle(
                             fontSize: 22.sp,
                             fontWeight: FontWeight.bold,
@@ -44,7 +44,7 @@ class ProfileView extends GetView<ProfileController> {
 
                       // Verified Badge
                       Obx(
-                        () => controller.isVerified.value
+                        () => controller.profileModel.value.isVerified
                             ? Container(
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 12.w,
@@ -82,7 +82,7 @@ class ProfileView extends GetView<ProfileController> {
                       // User Email
                       Obx(
                         () => Text(
-                          controller.userEmail.value,
+                          controller.profileModel.value.userEmail,
                           style: TextStyle(
                             fontSize: 14.sp,
                             color: AppColors.black,
@@ -166,7 +166,8 @@ class ProfileView extends GetView<ProfileController> {
           ),
           child: ClipOval(
             child: Obx(() {
-              final imageUrl = controller.profileImage.value.trim();
+              final imageUrl = controller.profileModel.value.profileImage
+                  .trim();
               if (imageUrl.isNotEmpty) {
                 return Image.network(
                   imageUrl,
@@ -276,12 +277,18 @@ class ProfileView extends GetView<ProfileController> {
         () => Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildSummaryItem('Member Since', controller.memberSince.value),
+            _buildSummaryItem(
+              'Member Since',
+              controller.profileModel.value.memberSince,
+            ),
             _buildSummaryItem(
               'Active Deals',
-              '${controller.activeDeals.value}',
+              '${controller.profileModel.value.activeDeals}',
             ),
-            _buildSummaryItem('Listed', '${controller.propertiesListed.value}'),
+            _buildSummaryItem(
+              'Listed',
+              '${controller.profileModel.value.propertiesListed}',
+            ),
           ],
         ),
       ),

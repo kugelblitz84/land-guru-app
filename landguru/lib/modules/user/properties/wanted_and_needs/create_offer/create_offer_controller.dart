@@ -359,10 +359,18 @@ class CreateOfferController extends GetxController {
       final existingDraftId = draftOfferId.value;
 
       if (existingDraftId == null || existingDraftId.isEmpty) {
-        final response = await _offerService.createDraftOfferStep1(
-          buyPostId: targetBuyPostId,
-          payload: payload,
+        final result = await ApiErrorHandler.call(
+          () => _offerService.createDraftOfferStep1(
+            buyPostId: targetBuyPostId,
+            payload: payload,
+          ),
+          errorTitle: 'Error',
+          fallbackMessage: 'Failed to save offer draft',
         );
+        if (!result.isSuccess || result.data == null) {
+          return;
+        }
+        final response = result.data!;
 
         final createdId =
             response['offerId']?.toString() ??
@@ -412,7 +420,14 @@ class CreateOfferController extends GetxController {
     isLoading.value = true;
     try {
       final payload = _buildStep2Payload();
-      await _offerService.updateDraftOfferStep2(offerId: id, payload: payload);
+      final result = await ApiErrorHandler.call(
+        () => _offerService.updateDraftOfferStep2(offerId: id, payload: payload),
+        errorTitle: 'Error',
+        fallbackMessage: 'Failed to save offer media',
+      );
+      if (!result.isSuccess) {
+        return;
+      }
 
       if (showSuccessSnack) {
         Get.snackbar(

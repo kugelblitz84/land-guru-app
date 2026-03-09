@@ -1,29 +1,30 @@
 import 'package:get/get.dart';
-import '../../../core/enums/property_type.dart';
+import '../../../core/services/api_error_handler.dart';
 import 'models/appointment_models.dart';
+import 'services/appointment_services.dart';
 
-/// Controller for User Appointments screen
-/// Handles: Upcoming/Past tabs with secondary filters
+/// Controller for User Appointments screen.
+/// Uses string constants for tabs, filters, and statuses.
 class AppointmentsController extends GetxController {
-  static List<Appointment> _cachedAppointments = <Appointment>[];
-  static bool _hasCachedData = false;
+  static final Map<String, List<Appointment>> _cachedUpcomingByFilter =
+      <String, List<Appointment>>{};
+  static final Map<String, List<Appointment>> _cachedPastByFilter =
+      <String, List<Appointment>>{};
+  static bool _hasLoadedUpcoming = false;
+  static bool _hasLoadedPast = false;
 
-  // Primary tab state (Upcoming / Past)
-  final Rx<AppointmentTab> selectedTab = AppointmentTab.upcoming.obs;
+  final RxString selectedTab = AppointmentTabs.upcoming.obs;
+  final RxString upcomingFilter = UpcomingFilters.myRequests.obs;
+  final RxString pastFilter = PastFilters.myVisit.obs;
 
-  // Secondary filter states
-  final Rx<UpcomingFilter> upcomingFilter = UpcomingFilter.myRequests.obs;
-  final Rx<PastFilter> pastFilter = PastFilter.myVisit.obs;
-
-  // Sort options
   final sortOptions = ['Date'];
   final sortBy = 'Date'.obs;
 
-  // Loading states
   final RxBool isLoading = false.obs;
-
-  // All appointments data
   final RxList<Appointment> allAppointments = <Appointment>[].obs;
+
+  final AppointmentServices _appointmentServices =
+      Get.find<AppointmentServices>();
 
   @override
   void onInit() {
@@ -32,316 +33,252 @@ class AppointmentsController extends GetxController {
   }
 
   Future<void> loadAppointments({bool forceRefresh = false}) async {
-    if (!forceRefresh && _hasCachedData) {
-      allAppointments.assignAll(_cachedAppointments);
+    if (!forceRefresh && _hasLoadedUpcoming && _hasLoadedPast) {
+      _syncAllAppointments();
       return;
     }
 
-    _loadDemoData();
-    _cachedAppointments = List<Appointment>.from(allAppointments);
-    _hasCachedData = true;
+    isLoading.value = true;
+    try {
+      if (forceRefresh) {
+        _cachedUpcomingByFilter.clear();
+        _cachedPastByFilter.clear();
+      }
+
+      await Future.wait([
+        _fetchUpcomingByFilter(
+          filter: UpcomingFilters.myRequests,
+          forceRefresh: forceRefresh,
+        ),
+        _fetchUpcomingByFilter(
+          filter: UpcomingFilters.upcomingVisit,
+          forceRefresh: forceRefresh,
+        ),
+        _fetchUpcomingByFilter(
+          filter: UpcomingFilters.agentVisit,
+          forceRefresh: forceRefresh,
+        ),
+        _fetchPastByFilter(
+          filter: PastFilters.myVisit,
+          forceRefresh: forceRefresh,
+        ),
+        _fetchPastByFilter(
+          filter: PastFilters.agentVisit,
+          forceRefresh: forceRefresh,
+        ),
+      ]);
+
+      _syncAllAppointments();
+      _hasLoadedUpcoming = true;
+      _hasLoadedPast = true;
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  /// Load demo data
-  void _loadDemoData() {
-    final now = DateTime.now();
+  Future<void> _fetchUpcomingByFilter({
+    required String filter,
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh && _cachedUpcomingByFilter.containsKey(filter)) {
+      return;
+    }
 
-    allAppointments.value = [
-      // My Requests (Upcoming)
-      Appointment(
-        id: '1',
-        postId: '#POST-1042',
-        propertyTitle: 'Modern Duplex Villa',
-        propertyImageUrl:
-            'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-        propertyType: PropertyType.flat,
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        status: AppointmentStatus.pendingAdminReview,
-        appointmentDate: now.add(const Duration(days: 5)),
-        requestedAt: now.subtract(const Duration(hours: 2)),
-        price: '40,00,000',
-      ),
-      Appointment(
-        id: '2',
-        postId: '#POST-1042',
-        propertyTitle: 'Villa in Kurigram',
-        propertyImageUrl:
-            'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
-        propertyType: PropertyType.flat,
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        status: AppointmentStatus.pendingAdminReview,
-        appointmentDate: now.add(const Duration(days: 3)),
-        requestedAt: now.subtract(const Duration(hours: 2)),
-        price: '4,00,00,000',
-      ),
+    final result = await ApiErrorHandler.call(() {
+      if (filter == UpcomingFilters.myRequests) {
+        return _appointmentServices.fetchUpcomingMyRequests(page: 1, limit: 10);
+      }
+      if (filter == UpcomingFilters.upcomingVisit) {
+        return _appointmentServices.fetchUpcomingVisits(page: 1, limit: 10);
+      }
+      return _appointmentServices.fetchUpcomingAgentVisits(page: 1, limit: 10);
+    }, showError: false);
 
-      // Upcoming Visits
-      Appointment(
-        id: '3',
-        postId: '#POST-1042',
-        propertyTitle: 'Villa in Kurigram',
-        propertyImageUrl:
-            'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
-        propertyType: PropertyType.flat,
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        status: AppointmentStatus.visitToday,
-        appointmentDate: now,
-        clientName: 'Farhan',
-        clientId: 'client_1',
-      ),
-      Appointment(
-        id: '4',
-        postId: '#POST-1042',
-        propertyTitle: 'Modern Duplex Villa',
-        propertyImageUrl:
-            'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-        propertyType: PropertyType.flat,
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        status: AppointmentStatus.upcomingVisit,
-        appointmentDate: now.add(const Duration(days: 1)),
-        clientName: 'Farhan',
-        clientId: 'client_1',
-      ),
+    if (!result.isSuccess || result.data == null) {
+      return;
+    }
 
-      // Agent Visits (Upcoming)
-      Appointment(
-        id: '5',
-        postId: '#POST-1042',
-        propertyTitle: 'Villa in Kurigram',
-        propertyImageUrl:
-            'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
-        propertyType: PropertyType.flat,
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        status: AppointmentStatus.visitToday,
-        appointmentDate: now,
-        serviceType: 'Ownership History Validation',
-        agentName: 'Adv. Sahil',
-        agentId: 'agent_1',
-      ),
-      Appointment(
-        id: '6',
-        postId: '#POST-1042',
-        propertyTitle: 'Modern Duplex Villa',
-        propertyImageUrl:
-            'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-        propertyType: PropertyType.flat,
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        status: AppointmentStatus.upcomingVisit,
-        appointmentDate: now.add(const Duration(days: 1)),
-        serviceType: 'Ownership History Validation',
-        agentName: 'Adv. Sahil',
-        agentId: 'agent_1',
-      ),
+    _cachedUpcomingByFilter[filter] = result.data!.appointments;
+  }
 
-      // Past - My Visits
-      Appointment(
-        id: '7',
-        postId: '#POST-1042',
-        propertyTitle: 'Modern Duplex Villa',
-        propertyImageUrl:
-            'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-        propertyType: PropertyType.flat,
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        status: AppointmentStatus.visited,
-        appointmentDate: DateTime(now.year, 12, 25),
-        clientName: 'Farhan',
-        clientId: 'client_1',
-      ),
-      Appointment(
-        id: '8',
-        postId: '#POST-1042',
-        propertyTitle: 'Villa in Kurigram',
-        propertyImageUrl:
-            'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
-        propertyType: PropertyType.flat,
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        status: AppointmentStatus.visited,
-        appointmentDate: DateTime(now.year, 12, 21),
-        clientName: 'Farhan',
-        clientId: 'client_1',
-      ),
+  Future<void> _fetchPastByFilter({
+    required String filter,
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh && _cachedPastByFilter.containsKey(filter)) {
+      return;
+    }
 
-      // Past - Agent Visits
-      Appointment(
-        id: '9',
-        postId: '#POST-1042',
-        propertyTitle: 'Villa in Kurigram',
-        propertyImageUrl:
-            'assets/images/Properties demo/5 katha Plot in Purbacahl.jpg',
-        propertyType: PropertyType.flat,
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        status: AppointmentStatus.visited,
-        appointmentDate: DateTime(now.year, 1, 25),
-        serviceType: 'Ownership History Validation',
-        agentName: 'Adv. Sahil',
-        agentId: 'agent_1',
-      ),
-      Appointment(
-        id: '10',
-        postId: '#POST-1042',
-        propertyTitle: 'Modern Duplex Villa',
-        propertyImageUrl:
-            'assets/images/Properties Listing - For Sale Images/modern duplex villa.jpg',
-        propertyType: PropertyType.flat,
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        status: AppointmentStatus.visited,
-        appointmentDate: DateTime(now.year, 1, 26),
-        serviceType: 'Ownership History Validation',
-        agentName: 'Adv. Sahil',
-        agentId: 'agent_1',
-      ),
+    final result = await ApiErrorHandler.call(() {
+      if (filter == PastFilters.myVisit) {
+        return _appointmentServices.fetchPastMyVisits(page: 1, limit: 10);
+      }
+      return _appointmentServices.fetchPastAgentVisits(page: 1, limit: 10);
+    }, showError: false);
+
+    if (!result.isSuccess || result.data == null) {
+      return;
+    }
+
+    _cachedPastByFilter[filter] = result.data!.appointments;
+  }
+
+  void _syncAllAppointments() {
+    final merged = <Appointment>[
+      ...(_cachedUpcomingByFilter[UpcomingFilters.myRequests] ?? const []),
+      ...(_cachedUpcomingByFilter[UpcomingFilters.upcomingVisit] ?? const []),
+      ...(_cachedUpcomingByFilter[UpcomingFilters.agentVisit] ?? const []),
+      ...(_cachedPastByFilter[PastFilters.myVisit] ?? const []),
+      ...(_cachedPastByFilter[PastFilters.agentVisit] ?? const []),
     ];
+
+    final uniqueById = <String, Appointment>{};
+    for (final appointment in merged) {
+      uniqueById[appointment.id] = appointment;
+    }
+
+    allAppointments.assignAll(uniqueById.values);
   }
 
-  /// Get filtered appointments based on current tab and filter
   List<Appointment> get filteredAppointments {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    if (selectedTab.value == AppointmentTab.upcoming) {
+    if (selectedTab.value == AppointmentTabs.upcoming) {
       switch (upcomingFilter.value) {
-        case UpcomingFilter.myRequests:
+        case UpcomingFilters.myRequests:
           return allAppointments
               .where(
                 (a) =>
-                    a.status == AppointmentStatus.pendingAdminReview &&
+                    a.status == AppointmentStatuses.pendingAdminReview &&
                     a.price != null,
               )
               .toList();
-        case UpcomingFilter.upcomingVisit:
+        case UpcomingFilters.upcomingVisit:
           return allAppointments
               .where(
                 (a) =>
-                    (a.status == AppointmentStatus.visitToday ||
-                        a.status == AppointmentStatus.upcomingVisit) &&
+                    (a.status == AppointmentStatuses.visitToday ||
+                        a.status == AppointmentStatuses.upcomingVisit) &&
                     a.clientName != null &&
                     !a.appointmentDate.isBefore(today),
               )
               .toList();
-        case UpcomingFilter.agentVisit:
+        case UpcomingFilters.agentVisit:
           return allAppointments
               .where(
                 (a) =>
-                    (a.status == AppointmentStatus.visitToday ||
-                        a.status == AppointmentStatus.upcomingVisit) &&
+                    (a.status == AppointmentStatuses.visitToday ||
+                        a.status == AppointmentStatuses.upcomingVisit) &&
                     a.agentName != null &&
                     !a.appointmentDate.isBefore(today),
               )
               .toList();
+        default:
+          return const <Appointment>[];
       }
-    } else {
-      // Past tab
-      switch (pastFilter.value) {
-        case PastFilter.myVisit:
-          return allAppointments
-              .where(
-                (a) =>
-                    a.status == AppointmentStatus.visited &&
-                    a.clientName != null,
-              )
-              .toList();
-        case PastFilter.agentVisit:
-          return allAppointments
-              .where(
-                (a) =>
-                    a.status == AppointmentStatus.visited &&
-                    a.agentName != null,
-              )
-              .toList();
-      }
+    }
+
+    switch (pastFilter.value) {
+      case PastFilters.myVisit:
+        return allAppointments
+            .where(
+              (a) =>
+                  a.status == AppointmentStatuses.visited &&
+                  a.clientName != null,
+            )
+            .toList();
+      case PastFilters.agentVisit:
+        return allAppointments
+            .where(
+              (a) =>
+                  a.status == AppointmentStatuses.visited &&
+                  a.agentName != null,
+            )
+            .toList();
+      default:
+        return const <Appointment>[];
     }
   }
 
-  /// Get badge count for Agent Visit filter
   int get agentVisitBadgeCount {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return allAppointments
         .where(
           (a) =>
-              (a.status == AppointmentStatus.visitToday ||
-                  a.status == AppointmentStatus.upcomingVisit) &&
+              (a.status == AppointmentStatuses.visitToday ||
+                  a.status == AppointmentStatuses.upcomingVisit) &&
               a.agentName != null &&
               !a.appointmentDate.isBefore(today),
         )
         .length;
   }
 
-  /// Change primary tab
-  void changeTab(AppointmentTab tab) {
+  void changeTab(String tab) {
     selectedTab.value = tab;
-    // Reset filters when changing tabs
-    if (tab == AppointmentTab.upcoming) {
-      upcomingFilter.value = UpcomingFilter.myRequests;
+    if (tab == AppointmentTabs.upcoming) {
+      upcomingFilter.value = UpcomingFilters.myRequests;
     } else {
-      pastFilter.value = PastFilter.myVisit;
+      pastFilter.value = PastFilters.myVisit;
     }
   }
 
-  /// Change upcoming filter
-  void changeUpcomingFilter(UpcomingFilter filter) {
+  void changeUpcomingFilter(String filter) {
     upcomingFilter.value = filter;
+    _fetchUpcomingByFilter(filter: filter).then((_) => _syncAllAppointments());
   }
 
-  /// Change past filter
-  void changePastFilter(PastFilter filter) {
+  void changePastFilter(String filter) {
     pastFilter.value = filter;
+    _fetchPastByFilter(filter: filter).then((_) => _syncAllAppointments());
   }
 
-  /// Refresh data
+  @override
   Future<void> refresh() async {
     isLoading.value = true;
-    await Future.delayed(const Duration(milliseconds: 500));
-    await loadAppointments(forceRefresh: true);
-    isLoading.value = false;
+    try {
+      await loadAppointments(forceRefresh: true);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  /// Navigate to appointment details
   void goToAppointmentDetails(Appointment appointment) {
     Get.snackbar(
       'Appointment Details',
       'Opening ${appointment.propertyTitle}...',
       snackPosition: SnackPosition.BOTTOM,
     );
-    // TODO: Navigate to appointment details page
   }
 
-  /// Get section title based on current filter
   String get sectionTitle {
-    if (selectedTab.value == AppointmentTab.upcoming) {
+    if (selectedTab.value == AppointmentTabs.upcoming) {
       switch (upcomingFilter.value) {
-        case UpcomingFilter.myRequests:
+        case UpcomingFilters.myRequests:
           return 'My Requests';
-        case UpcomingFilter.upcomingVisit:
+        case UpcomingFilters.upcomingVisit:
           return 'Upcoming Visits';
-        case UpcomingFilter.agentVisit:
+        case UpcomingFilters.agentVisit:
           return 'Agent Visit';
+        default:
+          return '';
       }
-    } else {
-      return '';
     }
+    return '';
   }
 
-  /// Get section subtitle based on current filter
   String get sectionSubtitle {
-    if (selectedTab.value == AppointmentTab.upcoming) {
+    if (selectedTab.value == AppointmentTabs.upcoming) {
       switch (upcomingFilter.value) {
-        case UpcomingFilter.myRequests:
+        case UpcomingFilters.myRequests:
           return 'These are the post you requested to visit';
-        case UpcomingFilter.upcomingVisit:
+        case UpcomingFilters.upcomingVisit:
           return '';
-        case UpcomingFilter.agentVisit:
+        case UpcomingFilters.agentVisit:
           return 'Check which agents are going to visit your property(s)';
+        default:
+          return '';
       }
     }
     return '';

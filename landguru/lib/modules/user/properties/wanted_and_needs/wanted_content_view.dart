@@ -39,11 +39,17 @@ class WantedContentView extends GetView<PropertiesController> {
             child: Obx(() {
               final isAllTab = controller.wantedSubTabIndex.value == 0;
               final posts = isAllTab
-                  ? controller.allWantedPosts
+                  ? controller.filteredWantedPosts
                   : controller.filteredOfferedPosts;
 
               if (posts.isEmpty) {
-                return _buildEmptyState();
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  children: [
+                    SizedBox(height: 220.h, child: _buildEmptyState()),
+                  ],
+                );
               }
 
               return ListView.builder(
@@ -211,7 +217,7 @@ class WantedContentView extends GetView<PropertiesController> {
         children: [
           Obx(
             () => Text(
-              'Showing ${controller.wantedSubTabIndex.value == 0 ? controller.totalWantedPosts.value : controller.filteredOfferedPosts.length} Properties',
+              'Showing ${controller.wantedSubTabIndex.value == 0 ? controller.wantedVisibleCount : controller.filteredOfferedPosts.length} Properties',
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500,

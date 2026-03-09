@@ -74,7 +74,7 @@ class ScheduleItem {
   final String type; // "Client Meeting", "Site Visit"
   final String clientName;
   final String location;
-  final ScheduleItemType itemType;
+  final String itemType;
 
   ScheduleItem({
     required this.id,
@@ -83,26 +83,27 @@ class ScheduleItem {
     required this.type,
     required this.clientName,
     required this.location,
-    this.itemType = ScheduleItemType.clientMeeting,
+    this.itemType = ScheduleItemTypes.clientMeeting,
   });
 }
 
-/// Types of schedule items
-enum ScheduleItemType {
-  clientMeeting,
-  siteVisit,
-  verification,
-  other;
+/// String constants and helpers for schedule item types.
+class ScheduleItemTypes {
+  static const String clientMeeting = 'client_meeting';
+  static const String siteVisit = 'site_visit';
+  static const String verification = 'verification';
+  static const String other = 'other';
 
-  String get label {
-    switch (this) {
-      case ScheduleItemType.clientMeeting:
+  static String label(String type) {
+    switch (type) {
+      case clientMeeting:
         return 'Client Meeting';
-      case ScheduleItemType.siteVisit:
+      case siteVisit:
         return 'Site Visit';
-      case ScheduleItemType.verification:
+      case verification:
         return 'Verification';
-      case ScheduleItemType.other:
+      case other:
+      default:
         return 'Other';
     }
   }

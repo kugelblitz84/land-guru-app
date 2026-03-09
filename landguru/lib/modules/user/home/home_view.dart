@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import 'home_controller.dart';
+import 'models/featured_property.dart';
 
 /// User Home/Dashboard screen - Full version with Scaffold
 /// Use this for standalone navigation (not within shell)

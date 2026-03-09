@@ -1,135 +1,21 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:landguru/core/core.dart';
 import '../../../core/enums/property_type.dart';
-import '../../../core/theme/app_colors.dart';
 import 'agent_appointments_services.dart';
 import 'models/appointments_model.dart';
-
-/// Tab enum for Agent Appointments
-enum AgentAppointmentTab { upcoming, past }
-
-/// Status enum for agent appointments
-enum AgentAppointmentStatus { visitToday, upcomingVisit, visited }
-
-extension AgentAppointmentStatusExtension on AgentAppointmentStatus {
-  String get label {
-    switch (this) {
-      case AgentAppointmentStatus.visitToday:
-        return 'Visit Today';
-      case AgentAppointmentStatus.upcomingVisit:
-        return 'Upcoming Visit';
-      case AgentAppointmentStatus.visited:
-        return 'Visited';
-    }
-  }
-
-  Color get backgroundColor {
-    switch (this) {
-      case AgentAppointmentStatus.visitToday:
-        return AppColors.success;
-      case AgentAppointmentStatus.upcomingVisit:
-        return AppColors.primary;
-      case AgentAppointmentStatus.visited:
-        return AppColors.grey400;
-    }
-  }
-
-  Color get textColor => AppColors.white;
-}
-
-/// Agent Appointment model
-class AgentAppointment {
-  final String id;
-  final String postId;
-  final String propertyTitle;
-  final PropertyType propertyType;
-  final String location;
-  final AgentAppointmentStatus status;
-  final DateTime appointmentDate;
-  final String serviceType;
-
-  AgentAppointment({
-    required this.id,
-    required this.postId,
-    required this.propertyTitle,
-    required this.propertyType,
-    required this.location,
-    required this.status,
-    required this.appointmentDate,
-    required this.serviceType,
-  });
-
-  /// Get property type label
-  String get propertyTypeLabel {
-    switch (propertyType) {
-      case PropertyType.plainLand:
-        return 'Plain Land';
-      case PropertyType.waterLand:
-        return 'Water Land';
-      case PropertyType.flat:
-        return 'Flat';
-    }
-  }
-
-  /// Get property type color
-  Color get propertyTypeColor {
-    switch (propertyType) {
-      case PropertyType.plainLand:
-        return const Color(0xFF2E7D32);
-      case PropertyType.waterLand:
-        return const Color(0xFF0288D1);
-      case PropertyType.flat:
-        return AppColors.primary;
-    }
-  }
-
-  /// Format date as month abbreviation
-  String get formattedMonth {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return months[appointmentDate.month - 1];
-  }
-
-  /// Format date as day number
-  String get formattedDay => appointmentDate.day.toString();
-
-  /// Check if appointment is today
-  bool get isToday {
-    final now = DateTime.now();
-    return appointmentDate.year == now.year &&
-        appointmentDate.month == now.month &&
-        appointmentDate.day == now.day;
-  }
-}
 
 /// Controller for Agent Appointments screen
 class AgentAppointmentsController extends GetxController {
   static const int _pageLimit = 10;
-  static final Map<AgentAppointmentTab, List<AgentAppointment>>
-  _cachedAppointmentsByTab = <AgentAppointmentTab, List<AgentAppointment>>{};
-  static final Set<AgentAppointmentTab> _loadedTabs = <AgentAppointmentTab>{};
-  static final Map<AgentAppointmentTab, int> _cachedCurrentPageByTab =
-      <AgentAppointmentTab, int>{};
-  static final Map<AgentAppointmentTab, int> _cachedTotalByTab =
-      <AgentAppointmentTab, int>{};
-  static final Map<AgentAppointmentTab, bool> _cachedHasMoreByTab =
-      <AgentAppointmentTab, bool>{};
+  static final Map<String, List<AgentAppointment>> _cachedAppointmentsByTab =
+      <String, List<AgentAppointment>>{};
+  static final Set<String> _loadedTabs = <String>{};
+  static final Map<String, int> _cachedCurrentPageByTab = <String, int>{};
+  static final Map<String, int> _cachedTotalByTab = <String, int>{};
+  static final Map<String, bool> _cachedHasMoreByTab = <String, bool>{};
 
   // Tab state
-  final Rx<AgentAppointmentTab> selectedTab = AgentAppointmentTab.upcoming.obs;
+  final RxString selectedTab = AgentAppointmentTabs.upcoming.obs;
 
   // Sort
   final RxString sortBy = 'Date'.obs;
@@ -149,10 +35,8 @@ class AgentAppointmentsController extends GetxController {
   // All appointments
   final RxList<AgentAppointment> allAppointments = <AgentAppointment>[].obs;
 
-  final Map<AgentAppointmentTab, int> _currentPageByTab =
-      <AgentAppointmentTab, int>{};
-  final Map<AgentAppointmentTab, int> _totalByTab =
-      <AgentAppointmentTab, int>{};
+  final Map<String, int> _currentPageByTab = <String, int>{};
+  final Map<String, int> _totalByTab = <String, int>{};
 
   final _appointmentsServices = Get.find<AgentAppointmentsServices>();
 
@@ -176,7 +60,7 @@ class AgentAppointmentsController extends GetxController {
     _currentPageByTab[currentTab] = 1;
     hasMore.value = true;
     try {
-      final apiTab = currentTab == AgentAppointmentTab.upcoming
+      final apiTab = currentTab == AgentAppointmentTabs.upcoming
           ? 'UPCOMING'
           : 'PAST';
 
@@ -216,7 +100,7 @@ class AgentAppointmentsController extends GetxController {
 
     isLoadingMore.value = true;
     try {
-      final apiTab = currentTab == AgentAppointmentTab.upcoming
+      final apiTab = currentTab == AgentAppointmentTabs.upcoming
           ? 'UPCOMING'
           : 'PAST';
       final nextPage = (_currentPageByTab[currentTab] ?? 1) + 1;
@@ -264,7 +148,7 @@ class AgentAppointmentsController extends GetxController {
       case 'Visit Today':
         appointments.retainWhere(
           (appointment) =>
-              appointment.status == AgentAppointmentStatus.visitToday,
+              appointment.status == AgentAppointmentStatuses.visitToday,
         );
         appointments.sort(
           (a, b) => a.appointmentDate.compareTo(b.appointmentDate),
@@ -273,7 +157,7 @@ class AgentAppointmentsController extends GetxController {
       case 'Upcoming Visit':
         appointments.retainWhere(
           (appointment) =>
-              appointment.status == AgentAppointmentStatus.upcomingVisit,
+              appointment.status == AgentAppointmentStatuses.upcomingVisit,
         );
         appointments.sort(
           (a, b) => a.appointmentDate.compareTo(b.appointmentDate),
@@ -281,7 +165,8 @@ class AgentAppointmentsController extends GetxController {
         break;
       case 'Visited':
         appointments.retainWhere(
-          (appointment) => appointment.status == AgentAppointmentStatus.visited,
+          (appointment) =>
+              appointment.status == AgentAppointmentStatuses.visited,
         );
         appointments.sort(
           (a, b) => b.appointmentDate.compareTo(a.appointmentDate),
@@ -313,7 +198,7 @@ class AgentAppointmentsController extends GetxController {
   }
 
   /// Change tab
-  Future<void> changeTab(AgentAppointmentTab tab) async {
+  Future<void> changeTab(String tab) async {
     if (selectedTab.value == tab) {
       return;
     }
@@ -380,29 +265,25 @@ class AgentAppointmentsController extends GetxController {
     );
   }
 
-  AgentAppointmentStatus _mapStatus(
-    String rawStatus,
-    DateTime appointmentDate,
-    AgentAppointmentTab tab,
-  ) {
+  String _mapStatus(String rawStatus, DateTime appointmentDate, String tab) {
     final normalized = rawStatus.trim().toLowerCase();
 
     if (normalized.contains('visited') || normalized.contains('past')) {
-      return AgentAppointmentStatus.visited;
+      return AgentAppointmentStatuses.visited;
     }
     if (normalized.contains('today')) {
-      return AgentAppointmentStatus.visitToday;
+      return AgentAppointmentStatuses.visitToday;
     }
 
-    if (tab == AgentAppointmentTab.past) {
-      return AgentAppointmentStatus.visited;
+    if (tab == AgentAppointmentTabs.past) {
+      return AgentAppointmentStatuses.visited;
     }
 
     if (_isToday(appointmentDate)) {
-      return AgentAppointmentStatus.visitToday;
+      return AgentAppointmentStatuses.visitToday;
     }
 
-    return AgentAppointmentStatus.upcomingVisit;
+    return AgentAppointmentStatuses.upcomingVisit;
   }
 
   PropertyType _mapPropertyType(String rawType) {

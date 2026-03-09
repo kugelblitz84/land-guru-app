@@ -33,7 +33,12 @@ class AgentTaskActionsService extends GetxService {
         root['assignments'];
 
     if (listPayload is! List) {
-      return const AgentTasksListResponse(tasks: <AgentTask>[], total: 0);
+      return AgentTasksListResponse(
+        tasks: const <AgentTask>[],
+        total: 0,
+        page: page,
+        limit: limit,
+      );
     }
 
     final tasks = listPayload
@@ -595,18 +600,4 @@ class AgentTaskActionsService extends GetxService {
 
     return const <String>[];
   }
-}
-
-class AgentTasksListResponse {
-  const AgentTasksListResponse({
-    required this.tasks,
-    required this.total,
-    this.page = 1,
-    this.limit = 10,
-  });
-
-  final List<AgentTask> tasks;
-  final int total;
-  final int page;
-  final int limit;
 }

@@ -7,6 +7,9 @@ class UserBottomNavController extends GetxController {
   /// Current selected tab index
   final RxInt currentIndex = 0.obs;
 
+  /// Tracks tabs that have been opened at least once (for lazy tab build)
+  final RxSet<int> visitedTabs = <int>{0}.obs;
+
   /// Tab items for user
   static const List<String> tabNames = [
     'Home',
@@ -19,6 +22,7 @@ class UserBottomNavController extends GetxController {
   /// Change tab
   void changeTab(int index) {
     currentIndex.value = index;
+    visitedTabs.add(index);
   }
 
   /// Navigate to specific tab by name

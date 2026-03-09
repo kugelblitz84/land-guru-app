@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../../../../core/enums/property_type.dart';
 import '../../../../../../../core/services/api_client.dart';
 import '../models/buy_post_models.dart';
+import '../models/my_buy_posts_response.dart';
 
 class MyBuyPostsService extends GetxService {
   MyBuyPostsService(this._apiClient);
@@ -52,6 +53,14 @@ class MyBuyPostsService extends GetxService {
     return _mapBuyPost(payload);
   }
 
+  Future<OfferReceived> getOfferDetails({required String offerId}) async {
+    final response = await _apiClient.get('/buy-posts/offer/details/$offerId');
+    final payload = response.data;
+
+    final offerPayload = _extractOfferPayload(payload, offerId);
+    return _mapOffer(offerPayload);
+  }
+
   BuyPost _mapBuyPost(Map<String, dynamic> json) {
     final offers = _readOfferList(json['offers']);
     final offersCount = _toInt(json['offersReceived']) ?? offers.length;
@@ -94,28 +103,14 @@ class MyBuyPostsService extends GetxService {
   }
 
   Future<void> acceptOffer({required String offerId}) async {
-    final candidatePaths = <String>[
-      '/buy-posts/offers/$offerId/accept',
-      '/buy-posts/offers/my-offers/$offerId/accept',
-      '/buy-posts/offer/$offerId/accept',
-      '/buy-posts/offer/accept/$offerId',
-    ];
+    final path = '/buy-posts/offers/$offerId/accept';
 
-    dio.DioException? lastDioError;
-    for (final path in candidatePaths) {
-      try {
-        await _apiClient.post(path, data: {'offerId': offerId});
-        return;
-      } on dio.DioException catch (error) {
-        lastDioError = error;
-      }
+    try {
+      await _apiClient.patch(path, queryParameters: {'offerId': offerId});
+      return;
+    } on dio.DioException catch (error) {
+      throw error;
     }
-
-    if (lastDioError != null) {
-      throw lastDioError;
-    }
-
-    throw Exception('Failed to accept offer');
   }
 
   List<OfferReceived> _readOfferList(dynamic offersRaw) {
@@ -215,6 +210,33 @@ class MyBuyPostsService extends GetxService {
       propertyPhotos: photos.isNotEmpty ? photos : fallbackPhotos,
       postId: _buildPostId(_toText(property['id']) ?? ''),
     );
+  }
+
+  Map<String, dynamic> _extractOfferPayload(dynamic payload, String offerId) {
+    if (payload is! Map) {
+      throw Exception('Invalid response');
+    }
+
+    final payloadMap = Map<String, dynamic>.from(payload);
+    final data = payloadMap['data'];
+    final candidate = data is Map
+        ? Map<String, dynamic>.from(data)
+        : payloadMap;
+
+    candidate.putIfAbsent('offerId', () => offerId);
+
+    if (candidate['property'] is! Map &&
+        candidate['offerPost'] is! Map &&
+        candidate['yourOffer'] is! Map &&
+        candidate['title'] == null) {
+      final nestedOffer = _asMap(candidate['offer']);
+      if (nestedOffer != null) {
+        nestedOffer.putIfAbsent('offerId', () => offerId);
+        return nestedOffer;
+      }
+    }
+
+    return candidate;
   }
 
   String _formatDistanceRange(dynamic min, dynamic max) {
@@ -446,11 +468,4 @@ class MyBuyPostsService extends GetxService {
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
   }
-}
-
-class MyBuyPostsResponse {
-  const MyBuyPostsResponse({required this.posts, required this.total});
-
-  final List<BuyPost> posts;
-  final int total;
 }

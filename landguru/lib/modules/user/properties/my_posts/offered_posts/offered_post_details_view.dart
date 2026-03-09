@@ -7,6 +7,7 @@ import '../../../../../routes/app_routes.dart';
 import '../../for_sale/property_details/widgets/property_details_widgets.dart';
 import '../../widgets/metrics_conversion_row.dart';
 import 'models/offered_post_models.dart';
+import 'offered_posts_controller.dart';
 import 'services/my_offered_posts_service.dart';
 
 /// Details View for an Offered Post
@@ -659,6 +660,29 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
   }
 
   void _makeSellPost() {
+    _convertAndNavigateToSellPost();
+  }
+
+  Future<void> _convertAndNavigateToSellPost() async {
+    final controller = Get.isRegistered<OfferedPostsController>()
+        ? Get.find<OfferedPostsController>()
+        : Get.put(OfferedPostsController());
+
+    final converted = await controller.convertOfferToSellPost(offeredPost);
+    if (!converted) {
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    Get.snackbar(
+      'Success',
+      'Offer converted successfully',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+
     Get.toNamed(
       AppRoutes.CREATE_SELL_POST_INFO,
       arguments: {'fromOfferedPost': true, 'offeredPost': offeredPost},

@@ -8,6 +8,7 @@ import 'wanted_and_needs/models/offer_status.dart';
 import 'wanted_and_needs/models/land_wanted_post.dart';
 import 'widgets/distance_range_selector.dart';
 import 'widgets/properties_filter_sheet.dart';
+import 'property_filter_criteria.dart';
 import 'for_sale/property_details/property_details_controller.dart';
 import 'for_sale/property_details/property_details_view.dart';
 import 'package:landguru/core/services/services.dart';
@@ -43,17 +44,6 @@ class PropertiesController extends GetxController {
   static int _cachedWantedApiTotal = 0;
   static bool _cachedHasMoreWanted = true;
   static bool _hasCachedWantedData = false;
-  static const PriceFilterRange _defaultPriceFilterRange = PriceFilterRange(
-    minPrice: 5000000,
-    maxPrice: 80000000,
-  );
-  static const LandSizeFilterRange _defaultLandSizeFilterRange =
-      LandSizeFilterRange(minKatha: 7, maxKatha: 20);
-  static const DistanceRange _defaultDistanceRange = DistanceRange(
-    label: '200m-750m',
-    minMeters: 200,
-    maxMeters: 750,
-  );
   // Tab state
   final RxInt selectedTabIndex = 0.obs;
 
@@ -82,13 +72,15 @@ class PropertiesController extends GetxController {
   int _forSaleApiTotal = 0;
   int _wantedCurrentPage = 1;
   int _wantedApiTotal = 0;
-  bool _isForSaleFilterApplied = false;
+  final RxBool isFilterApplied = false.obs;
+  final RxInt filterApplyVersion = 0.obs;
   final RxList<PropertyListing> propertiesWanted = <PropertyListing>[].obs;
   final RxList<PropertyListing> myPosts = <PropertyListing>[].obs;
 
   // Wanted/Needs tab state
   final RxInt wantedSubTabIndex = 0.obs; // 0 = All, 1 = Offered by you
   final RxList<LandWantedPost> allWantedPosts = <LandWantedPost>[].obs;
+  final RxList<LandWantedPost> filteredWantedPosts = <LandWantedPost>[].obs;
   final RxList<LandWantedPost> offeredByYouPosts = <LandWantedPost>[].obs;
   final RxList<LandWantedPost> filteredOfferedPosts = <LandWantedPost>[].obs;
   final RxInt totalWantedPosts = 0.obs;
@@ -103,18 +95,12 @@ class PropertiesController extends GetxController {
   ];
 
   // ==================== Filter State ====================
-  final RxString filterPropertyType = 'plainLand'.obs;
-  final Rxn<PriceFilterRange> filterPriceRange = Rxn<PriceFilterRange>(
-    _defaultPriceFilterRange,
-  );
+  final RxString filterPropertyType = 'all'.obs;
+  final Rxn<PriceFilterRange> filterPriceRange = Rxn<PriceFilterRange>();
   final Rxn<LandSizeFilterRange> filterSellableLandAmount =
-      Rxn<LandSizeFilterRange>(_defaultLandSizeFilterRange);
-  final Rxn<LandSizeFilterRange> filterPlotSize = Rxn<LandSizeFilterRange>(
-    _defaultLandSizeFilterRange,
-  );
-  final Rxn<DistanceRange> filterDistanceRange = Rxn<DistanceRange>(
-    _defaultDistanceRange,
-  );
+      Rxn<LandSizeFilterRange>();
+  final Rxn<LandSizeFilterRange> filterPlotSize = Rxn<LandSizeFilterRange>();
+  final Rxn<DistanceRange> filterDistanceRange = Rxn<DistanceRange>();
 
   // Location filter dropdowns
   final RxString filterDivision = ''.obs;
@@ -321,18 +307,34 @@ class PropertiesController extends GetxController {
     _applyForSaleFiltersAndSort();
   }
 
-  void _applyForSaleFiltersAndSort() {
-    final query = searchQuery.value.trim().toLowerCase();
+  PropertyFilterCriteria get currentFilterCriteria {
     final selectedPriceRange = filterPriceRange.value;
     final selectedSellableRange = filterSellableLandAmount.value;
     final selectedPlotRange = filterPlotSize.value;
     final selectedDistanceRange = filterDistanceRange.value;
 
-    final selectedDivision = filterDivision.value.trim().toLowerCase();
-    final selectedDistrict = filterDistrict.value.trim().toLowerCase();
-    final selectedUpazilla = filterUpazilla.value.trim().toLowerCase();
-    final selectedPouroshova = filterPouroshova.value.trim().toLowerCase();
-    final selectedWard = filterWardNo.value.trim().toLowerCase();
+    return PropertyFilterCriteria(
+      isApplied: isFilterApplied.value,
+      propertyTypeKey: filterPropertyType.value,
+      minPrice: selectedPriceRange?.minPrice.toDouble(),
+      maxPrice: selectedPriceRange?.maxPrice.toDouble(),
+      minSellableKatha: selectedSellableRange?.minKatha,
+      maxSellableKatha: selectedSellableRange?.maxKatha,
+      minPlotKatha: selectedPlotRange?.minKatha,
+      maxPlotKatha: selectedPlotRange?.maxKatha,
+      minDistanceMeters: selectedDistanceRange?.minMeters.toDouble(),
+      maxDistanceMeters: selectedDistanceRange?.maxMeters.toDouble(),
+      division: filterDivision.value.trim().toLowerCase(),
+      district: filterDistrict.value.trim().toLowerCase(),
+      upazilla: filterUpazilla.value.trim().toLowerCase(),
+      pouroshova: filterPouroshova.value.trim().toLowerCase(),
+      wardNo: filterWardNo.value.trim().toLowerCase(),
+    );
+  }
+
+  void _applyForSaleFiltersAndSort() {
+    final query = searchQuery.value.trim().toLowerCase();
+    final criteria = currentFilterCriteria;
 
     final filtered = _allForSalePosts.where((property) {
       final matchesSearch =
@@ -344,75 +346,15 @@ class PropertiesController extends GetxController {
         return false;
       }
 
-      if (_isForSaleFilterApplied) {
-        final matchesPropertyType = _matchesPropertyTypeFilter(property);
-        if (!matchesPropertyType) {
-          return false;
-        }
-
-        if (selectedPriceRange != null) {
-          final price = _parsePriceForSort(property.price);
-          if (price < selectedPriceRange.minPrice ||
-              price > selectedPriceRange.maxPrice) {
-            return false;
-          }
-        }
-
-        if (selectedSellableRange != null) {
-          final sellableValue = _extractLeadingNumber(
-            property.sellableLandAmount,
-          );
-          if (sellableValue != null &&
-              (sellableValue < selectedSellableRange.minKatha ||
-                  sellableValue > selectedSellableRange.maxKatha)) {
-            return false;
-          }
-        }
-
-        if (selectedPlotRange != null) {
-          final plotValue = _extractLeadingNumber(property.plotSize);
-          if (plotValue != null &&
-              (plotValue < selectedPlotRange.minKatha ||
-                  plotValue > selectedPlotRange.maxKatha)) {
-            return false;
-          }
-        }
-
-        if (selectedDistanceRange != null) {
-          final parsedDistance = _parseDistanceRange(property.distanceFromRoad);
-          if (parsedDistance != null) {
-            final minDistance = parsedDistance[0];
-            final maxDistance = parsedDistance[1];
-
-            final isOverlappingRange =
-                maxDistance >= selectedDistanceRange.minMeters &&
-                minDistance <= selectedDistanceRange.maxMeters;
-            if (!isOverlappingRange) {
-              return false;
-            }
-          }
-        }
-
-        final location = property.location.toLowerCase();
-        if (selectedDivision.isNotEmpty &&
-            !location.contains(selectedDivision)) {
-          return false;
-        }
-        if (selectedDistrict.isNotEmpty &&
-            !location.contains(selectedDistrict)) {
-          return false;
-        }
-        if (selectedUpazilla.isNotEmpty &&
-            !location.contains(selectedUpazilla)) {
-          return false;
-        }
-        if (selectedPouroshova.isNotEmpty &&
-            !location.contains(selectedPouroshova)) {
-          return false;
-        }
-        if (selectedWard.isNotEmpty && !location.contains(selectedWard)) {
-          return false;
-        }
+      if (!criteria.matches(
+        propertyType: property.propertyType,
+        price: property.price,
+        sellableLandAmount: property.sellableLandAmount,
+        plotSize: property.plotSize,
+        distanceFromRoad: property.distanceFromRoad,
+        location: property.location,
+      )) {
+        return false;
       }
 
       return true;
@@ -429,7 +371,7 @@ class PropertiesController extends GetxController {
 
     propertiesForSale.assignAll(filtered);
 
-    if (searchQuery.value.trim().isNotEmpty || _isForSaleFilterApplied) {
+    if (searchQuery.value.trim().isNotEmpty || isFilterApplied.value) {
       totalProperties.value = filtered.length;
       return;
     }
@@ -444,57 +386,6 @@ class PropertiesController extends GetxController {
     return double.tryParse(normalized) ?? 0;
   }
 
-  bool _matchesPropertyTypeFilter(PropertyListing property) {
-    switch (filterPropertyType.value) {
-      case 'plainLand':
-        return property.propertyType == PropertyType.plainLand;
-      case 'waterLand':
-        return property.propertyType == PropertyType.waterLand;
-      case 'flat':
-        return property.propertyType == PropertyType.flat;
-      case 'commercial':
-      case 'agroLand':
-      case 'blankRoof':
-      default:
-        return false;
-    }
-  }
-
-  double? _extractLeadingNumber(String? rawValue) {
-    if (rawValue == null || rawValue.trim().isEmpty) {
-      return null;
-    }
-
-    final match = RegExp(r'(\d+(?:\.\d+)?)').firstMatch(rawValue);
-    if (match == null) {
-      return null;
-    }
-
-    return double.tryParse(match.group(1)!);
-  }
-
-  List<double>? _parseDistanceRange(String? rawDistance) {
-    if (rawDistance == null || rawDistance.trim().isEmpty) {
-      return null;
-    }
-
-    final matches = RegExp(r'(\d+(?:\.\d+)?)')
-        .allMatches(rawDistance)
-        .map((match) => double.tryParse(match.group(1)!))
-        .whereType<double>()
-        .toList();
-
-    if (matches.isEmpty) {
-      return null;
-    }
-
-    if (matches.length == 1) {
-      return [matches.first, matches.first];
-    }
-
-    return [matches.first, matches.last];
-  }
-
   /// Open filter sheet
   void openFilter() {
     Get.bottomSheet(
@@ -504,27 +395,31 @@ class PropertiesController extends GetxController {
     );
   }
 
-  /// Reset all filters to default values
+  /// Reset all filters (remove every filter restriction)
   void resetFilters() {
-    filterPropertyType.value = 'plainLand';
-    filterPriceRange.value = _defaultPriceFilterRange;
-    filterSellableLandAmount.value = _defaultLandSizeFilterRange;
-    filterPlotSize.value = _defaultLandSizeFilterRange;
-    filterDistanceRange.value = _defaultDistanceRange;
+    filterPropertyType.value = 'all';
+    filterPriceRange.value = null;
+    filterSellableLandAmount.value = null;
+    filterPlotSize.value = null;
+    filterDistanceRange.value = null;
     filterDivision.value = '';
     filterDistrict.value = '';
     filterUpazilla.value = '';
     filterPouroshova.value = '';
     filterWardNo.value = '';
 
-    _isForSaleFilterApplied = false;
+    isFilterApplied.value = false;
+    filterApplyVersion.value++;
     _applyForSaleFiltersAndSort();
+    _applyWantedFiltersAndSort();
   }
 
   /// Apply filters and reload properties
   void applyFilters() {
-    _isForSaleFilterApplied = true;
+    isFilterApplied.value = true;
+    filterApplyVersion.value++;
     _applyForSaleFiltersAndSort();
+    _applyWantedFiltersAndSort();
   }
 
   /// Open location picker
@@ -607,15 +502,49 @@ class PropertiesController extends GetxController {
         return;
       }
 
-      offeredByYouPosts.clear();
-      filteredOfferedPosts.clear();
-      offeredByYouCount.value = 0;
+      final offeredSuccess = await _fetchOfferedByYouPage(page: 1, reset: true);
+      if (!offeredSuccess) {
+        offeredByYouPosts.clear();
+        filteredOfferedPosts.clear();
+        offeredByYouCount.value = 0;
+      }
 
       _applyOfferedFilter();
       _syncWantedCache();
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<bool> _fetchOfferedByYouPage({
+    required int page,
+    bool reset = false,
+  }) async {
+    final result = await ApiErrorHandler.call(
+      () => _buyPostListingService.getMyOffers(
+        page: page,
+        limit: _wantedPageLimit,
+      ),
+    );
+
+    if (!result.isSuccess || result.data == null) {
+      return false;
+    }
+
+    final payload = result.data!;
+    if (reset) {
+      offeredByYouPosts.clear();
+    }
+
+    final existingIds = offeredByYouPosts.map((post) => post.id).toSet();
+    final newPosts = payload.posts
+        .where((post) => !existingIds.contains(post.id))
+        .toList(growable: false);
+
+    offeredByYouPosts.addAll(newPosts);
+    offeredByYouCount.value = offeredByYouPosts.length;
+
+    return true;
   }
 
   Future<void> loadMoreWantedIfNeeded() async {
@@ -660,6 +589,7 @@ class PropertiesController extends GetxController {
         .toList();
 
     allWantedPosts.addAll(newPosts);
+    _applyWantedFiltersAndSort();
 
     if (payload.total > 0) {
       _wantedApiTotal = payload.total;
@@ -686,6 +616,7 @@ class PropertiesController extends GetxController {
     _wantedCurrentPage = _cachedWantedCurrentPage;
     _wantedApiTotal = _cachedWantedApiTotal;
     hasMoreWanted.value = _cachedHasMoreWanted;
+    _applyWantedFiltersAndSort();
     _applyOfferedFilter();
   }
 
@@ -726,22 +657,72 @@ class PropertiesController extends GetxController {
 
   /// Apply filter to offered posts
   void _applyOfferedFilter() {
+    final criteria = currentFilterCriteria;
+    List<LandWantedPost> statusFiltered;
+
     if (offeredFilterBy.value == 'All') {
-      filteredOfferedPosts.assignAll(offeredByYouPosts);
+      statusFiltered = offeredByYouPosts.toList();
     } else if (offeredFilterBy.value == 'Buyer Accepted') {
-      final List<LandWantedPost> filtered = offeredByYouPosts
+      statusFiltered = offeredByYouPosts
           .where(
             (post) =>
                 post.offerStatus == OfferStatus.buyerAcceptedAppointment ||
                 post.offerStatus == OfferStatus.buyerAcceptedPendingAdmin,
           )
           .toList();
-      filteredOfferedPosts.assignAll(filtered);
-    } else if (offeredFilterBy.value == 'Pending Buyer Review') {
-      final List<LandWantedPost> filtered = offeredByYouPosts
+    } else {
+      statusFiltered = offeredByYouPosts
           .where((post) => post.offerStatus == OfferStatus.pendingBuyerReview)
           .toList();
-      filteredOfferedPosts.assignAll(filtered);
     }
+
+    final globallyFiltered = statusFiltered.where((post) {
+      return criteria.matches(
+        propertyType: _propertyTypeFromLabel(post.propertyType),
+        price: post.offeredPropertyPrice ?? post.budgetRange,
+        sellableLandAmount: post.requiredLandSize,
+        plotSize: post.requiredPlotSize,
+        distanceFromRoad: post.distanceFromRoad,
+        location: post.preferredLocation,
+      );
+    }).toList();
+
+    filteredOfferedPosts.assignAll(globallyFiltered);
+  }
+
+  void _applyWantedFiltersAndSort() {
+    final criteria = currentFilterCriteria;
+    final filtered = allWantedPosts.where((post) {
+      return criteria.matches(
+        propertyType: _propertyTypeFromLabel(post.propertyType),
+        price: post.budgetRange,
+        sellableLandAmount: post.requiredLandSize,
+        plotSize: post.requiredPlotSize,
+        distanceFromRoad: post.distanceFromRoad,
+        location: post.preferredLocation,
+      );
+    }).toList();
+
+    filteredWantedPosts.assignAll(filtered);
+    _applyOfferedFilter();
+  }
+
+  int get wantedVisibleCount {
+    if (isFilterApplied.value) {
+      return filteredWantedPosts.length;
+    }
+
+    return totalWantedPosts.value;
+  }
+
+  PropertyType _propertyTypeFromLabel(String rawLabel) {
+    final normalized = rawLabel.trim().toLowerCase();
+    if (normalized == PropertyType.plainLand.label.toLowerCase()) {
+      return PropertyType.plainLand;
+    }
+    if (normalized == PropertyType.waterLand.label.toLowerCase()) {
+      return PropertyType.waterLand;
+    }
+    return PropertyType.flat;
   }
 }

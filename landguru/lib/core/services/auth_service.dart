@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../enums/user_type.dart';
 import '../utils/constants.dart';
 import 'api_client.dart';
 import 'token_service.dart';
@@ -205,10 +204,10 @@ class AuthService extends GetxService {
 
   void _syncUserType() {
     final role = _user.value?['role']?.toString().toLowerCase();
-    if (role == 'agent') {
-      Get.find<UserTypeService>().setUserType(UserType.agent);
-    } else if (role == 'user') {
-      Get.find<UserTypeService>().setUserType(UserType.user);
+    if (role == UserTypeService.roleAgent) {
+      Get.find<UserTypeService>().setUserType(UserTypeService.roleAgent);
+    } else if (role == UserTypeService.roleUser) {
+      Get.find<UserTypeService>().setUserType(UserTypeService.roleUser);
     }
   }
 }

@@ -257,7 +257,7 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
                   InfoBanner(
                     message:
                         'You will be prompted for accepting and negotiating with quotation of the service fees later after we review your submission.',
-                    type: InfoBannerType.info,
+                    type: InfoBannerTypes.info,
                   ),
 
                   SizedBox(height: 32.h),
@@ -562,3 +562,4 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
     );
   }
 }
+

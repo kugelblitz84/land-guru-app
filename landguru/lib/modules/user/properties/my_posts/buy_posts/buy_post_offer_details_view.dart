@@ -38,6 +38,28 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
     buyPost = args['buyPost'] as BuyPost;
     offer = args['offer'] as OfferReceived;
     _parseValues();
+    _loadOfferDetails();
+  }
+
+  Future<void> _loadOfferDetails() async {
+    final offerId = offer.id.trim();
+    if (offerId.isEmpty) {
+      return;
+    }
+
+    final controller = Get.isRegistered<BuyPostsController>()
+        ? Get.find<BuyPostsController>()
+        : Get.put(BuyPostsController());
+
+    final latestOffer = await controller.getOfferDetails(offerId);
+    if (latestOffer == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      offer = latestOffer;
+      _parseValues();
+    });
   }
 
   /// Parse the numeric values from the offer strings

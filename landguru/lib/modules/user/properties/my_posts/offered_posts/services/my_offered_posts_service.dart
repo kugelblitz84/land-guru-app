@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../../../../../core/enums/property_type.dart';
 import '../../../../../../../core/services/api_client.dart';
+import '../models/my_offered_posts_response.dart';
 import '../models/offered_post_models.dart';
 
 class MyOfferedPostsService extends GetxService {
@@ -18,9 +19,32 @@ class MyOfferedPostsService extends GetxService {
     if (payload is Map) {
       final data = payload['data'];
       if (data is Map) {
-        return _mapOfferedPost(Map<String, dynamic>.from(data));
+        final normalized = Map<String, dynamic>.from(data);
+        normalized.putIfAbsent('offerId', () => offerId);
+        return _mapOfferedPost(normalized);
       }
-      return _mapOfferedPost(Map<String, dynamic>.from(payload));
+      final normalized = Map<String, dynamic>.from(payload);
+      normalized.putIfAbsent('offerId', () => offerId);
+      return _mapOfferedPost(normalized);
+    }
+
+    throw Exception('Invalid response');
+  }
+
+  Future<Map<String, dynamic>> convertOfferToSellPost({
+    required String offerId,
+  }) async {
+    final response = await _apiClient.post(
+      '/buy-posts/offers/$offerId/convert',
+    );
+    final payload = response.data;
+
+    if (payload is Map<String, dynamic>) {
+      return payload;
+    }
+
+    if (payload is Map) {
+      return Map<String, dynamic>.from(payload);
     }
 
     throw Exception('Invalid response');
@@ -31,8 +55,8 @@ class MyOfferedPostsService extends GetxService {
     required int limit,
   }) async {
     final response = await _apiClient.get(
-      '/buy-posts/offers/my-offers',
-      queryParameters: {'page': page, 'limit': limit},
+      '/buy-posts/offer-posts/my-posts/offered',
+      queryParameters: {'filter': 'ALL', 'page': page, 'limit': limit},
     );
 
     final payload = response.data;
@@ -58,12 +82,69 @@ class MyOfferedPostsService extends GetxService {
   }
 
   OfferedPost _mapOfferedPost(Map<String, dynamic> json) {
+    final directTitle = _toText(json['title']);
+    final hasSummaryShape =
+        directTitle != null &&
+        directTitle.isNotEmpty &&
+        (json['shortId'] != null || json['askingPrice'] != null);
+    if (hasSummaryShape) {
+      final offeredAtText =
+          _toText(json['offeredAt']) ??
+          _toText(json['createdAt']) ??
+          _toText(json['postedAt']);
+      final offeredAt =
+          DateTime.tryParse(offeredAtText ?? '') ?? DateTime.now();
+
+      return OfferedPost(
+        id: _toText(json['offerId']) ?? _toText(json['id']) ?? '',
+        postId: _toText(json['shortId']) ?? _buildPostId(json['id']),
+        propertyTitle: directTitle,
+        propertyPrice: _formatPrice(json['askingPrice']),
+        propertyType: _mapPropertyType(_toText(json['propertyType']) ?? 'Flat'),
+        propertyImageUrl:
+            _toText(json['thumbnail']) ??
+            _toText(json['image']) ??
+            _toText(json['photo']),
+        status: _mapStatus(
+          _toText(json['status']) ?? _toText(json['statusLabel']) ?? '',
+        ),
+        timestamp: _formatPostedTime(offeredAtText),
+        timestampPrefix: 'Offered:',
+        description: _toText(json['description']),
+        sellableLandAmount: _formatLand(
+          json['sellableAmount'] ?? json['sellableLandAmount'],
+          json['sellableUnit'],
+        ),
+        plotSize: _formatLand(json['plotSize'], json['plotUnit']),
+        shareUnit: _formatLand(json['shareAmount'], json['shareUnit']),
+        distanceFromRoad: _formatDistance(
+          json['roadDistanceMin'],
+          json['roadDistanceMax'],
+        ),
+        location: _toText(json['location']) ?? 'Location not specified',
+        propertyPhotos: _toTextList(json['photos']),
+        buyerId: _toText(json['buyerId']) ?? '',
+        buyerName: _toText(json['buyerName']) ?? 'Unknown Buyer',
+        buyerVerified: _toBool(json['buyerVerified']) ?? false,
+        buyerImageUrl: _toText(json['buyerImageUrl']),
+        originalBuyPostId: _buildBuyPostId(_toText(json['buyPostId']) ?? ''),
+        originalBuyPostTitle:
+            _toText(json['buyPostTitle']) ?? 'Original Buy Post',
+        offeredAt: offeredAt,
+        canMakeSellPostAt: offeredAt.add(const Duration(days: 3)),
+      );
+    }
+
     final buyPost = _asMap(json['buyPost']) ?? const <String, dynamic>{};
     final yourOffer =
         _asMap(json['yourOffer']) ?? _asMap(json['offerPost']) ?? json;
-    final buyer = _asMap(buyPost['postedBy']) ?? const <String, dynamic>{};
+    final buyer =
+        _asMap(json['offeredTo']) ??
+        _asMap(buyPost['postedBy']) ??
+        const <String, dynamic>{};
 
-    final offeredAtText = _toText(json['offeredAt']);
+    final offeredAtText =
+        _toText(json['offeredAt']) ?? _toText(json['createdAt']);
     final offeredAt = DateTime.tryParse(offeredAtText ?? '') ?? DateTime.now();
 
     final image =
@@ -294,11 +375,4 @@ class MyOfferedPostsService extends GetxService {
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
   }
-}
-
-class MyOfferedPostsResponse {
-  const MyOfferedPostsResponse({required this.posts, required this.total});
-
-  final List<OfferedPost> posts;
-  final int total;
 }

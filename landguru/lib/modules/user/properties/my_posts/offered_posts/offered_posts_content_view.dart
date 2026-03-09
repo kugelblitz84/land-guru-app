@@ -34,7 +34,10 @@ class OfferedPostsContentView extends StatelessWidget {
             }
 
             if (controller.filteredOfferedPosts.isEmpty) {
-              return _buildEmptyState();
+              return _buildRefreshableEmptyState(
+                onRefresh: controller.refresh,
+                child: _buildEmptyState(),
+              );
             }
 
             return RefreshIndicator(
@@ -393,6 +396,20 @@ class OfferedPostsContentView extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRefreshableEmptyState({
+    required Future<void> Function() onRefresh,
+    required Widget child,
+  }) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        children: [SizedBox(height: 260.h, child: child)],
       ),
     );
   }

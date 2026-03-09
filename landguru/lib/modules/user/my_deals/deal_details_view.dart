@@ -92,7 +92,7 @@ class _DealDetailsViewState extends State<DealDetailsView> {
       location:
           'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
       soldPrice: '40,00,000',
-      status: DealStatus.bought,
+      status: DealStatuses.bought,
       dealDate: DateTime.now().subtract(const Duration(hours: 2)),
       description:
           'A stunning newly renovated villa featuring an open-concept '
@@ -116,7 +116,7 @@ class _DealDetailsViewState extends State<DealDetailsView> {
     );
   }
 
-  bool get _isBoughtDeal => deal.status == DealStatus.bought;
+  bool get _isBoughtDeal => deal.status == DealStatuses.bought;
 
   bool _isFeatureExpanded(int index) => _expandedFeatures[index] ?? false;
 
@@ -1261,3 +1261,4 @@ class _ServiceVerification {
     required this.isVerified,
   });
 }
+

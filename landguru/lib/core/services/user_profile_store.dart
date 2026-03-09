@@ -1,38 +1,14 @@
 import 'package:get/get.dart';
 
-import '../../modules/user/profile/models/profile_model.dart';
+import '../models/user_system_model.dart';
 import '../../modules/user/profile/profile_services.dart';
 import 'api_error_handler.dart';
 import 'auth_service.dart';
 
 class UserProfileStore extends GetxService {
   final RxBool isLoading = false.obs;
-  final RxBool isOnline = true.obs;
-  final RxInt unreadNotificationCount = 0.obs;
-
-  final RxString userName = ''.obs;
-  final RxString userPhone = ''.obs;
-  final RxString userEmail = ''.obs;
-  final RxString userAddress = ''.obs;
-  final RxString profileImage = ''.obs;
-  final RxBool isVerified = false.obs;
-
-  final RxString memberSince = '--'.obs;
-  final RxInt activeDeals = 0.obs;
-  final RxInt propertiesListed = 0.obs;
-
-  final RxString division = ''.obs;
-  final RxString district = ''.obs;
-  final RxString upazilla = ''.obs;
-  final RxString pouroshova = ''.obs;
-  final RxString wardNo = ''.obs;
-  final RxString postalCode = ''.obs;
-  final RxString fullAddress = ''.obs;
-
-  final RxString nidNumber = 'Not provided'.obs;
-  final RxBool isNidVerified = false.obs;
-  final RxString tinNumber = 'Not provided'.obs;
-  final RxBool isTinVerified = false.obs;
+  final Rx<UserProfileStateModel> profileModel =
+      UserProfileStateModel.initial().obs;
 
   final _authService = Get.find<AuthService>();
   final _profileServices = Get.find<ProfileServices>();
@@ -43,27 +19,31 @@ class UserProfileStore extends GetxService {
       return;
     }
 
+    var nextState = profileModel.value;
+
     final fullName = _readString(user, const ['fullName', 'name']);
     if (fullName.isNotEmpty) {
-      userName.value = fullName;
+      nextState = nextState.copyWith(userName: fullName);
     }
 
     final email = _readString(user, const ['email']);
     if (email.isNotEmpty) {
-      userEmail.value = email;
+      nextState = nextState.copyWith(userEmail: email);
     }
 
     final phone = _readString(user, const ['phone']);
     if (phone.isNotEmpty) {
-      userPhone.value = phone;
+      nextState = nextState.copyWith(userPhone: phone);
     }
 
     final avatar = _readString(user, const ['photoUrl', 'image']);
     if (avatar.isNotEmpty) {
-      profileImage.value = avatar;
+      nextState = nextState.copyWith(profileImage: avatar);
     }
 
-    isVerified.value = _readBool(user, const ['isVerified']);
+    profileModel.value = nextState.copyWith(
+      isVerified: _readBool(user, const ['isVerified']),
+    );
   }
 
   Future<void> refreshProfile({
@@ -99,61 +79,45 @@ class UserProfileStore extends GetxService {
   }
 
   void updateUnreadCount(int count) {
-    unreadNotificationCount.value = count;
+    profileModel.value = profileModel.value.copyWith(
+      unreadNotificationCount: count,
+    );
   }
 
   void clearUnreadCount() {
-    unreadNotificationCount.value = 0;
+    updateUnreadCount(0);
   }
 
   void clear() {
-    userName.value = '';
-    userPhone.value = '';
-    userEmail.value = '';
-    userAddress.value = '';
-    profileImage.value = '';
-    isVerified.value = false;
-
-    memberSince.value = '--';
-    activeDeals.value = 0;
-    propertiesListed.value = 0;
-
-    division.value = '';
-    district.value = '';
-    upazilla.value = '';
-    pouroshova.value = '';
-    wardNo.value = '';
-    postalCode.value = '';
-    fullAddress.value = '';
-
-    nidNumber.value = 'Not provided';
-    isNidVerified.value = false;
-    tinNumber.value = 'Not provided';
-    isTinVerified.value = false;
-
-    unreadNotificationCount.value = 0;
+    profileModel.value = UserProfileStateModel.initial();
   }
 
   void _applyProfile(ProfileModel profile) {
-    userName.value = profile.fullName;
-    userEmail.value = profile.email;
-    userPhone.value = profile.phone;
-    profileImage.value = profile.photoUrl;
-    isVerified.value = profile.isVerified;
-
-    division.value = profile.address.division;
-    district.value = profile.address.district;
-    upazilla.value = profile.address.upazila;
-    pouroshova.value = profile.address.unionOrCityCorp;
-    wardNo.value = profile.address.wardNo;
-    postalCode.value = profile.address.postalCode;
-    fullAddress.value = profile.address.fullAddress;
-    userAddress.value = profile.address.fullAddress;
-
-    nidNumber.value = _maskSensitive(profile.verification.nidNumber);
-    isNidVerified.value = profile.verification.nidVerified;
-    tinNumber.value = _maskSensitive(profile.verification.tinNumber);
-    isTinVerified.value = profile.verification.tinVerified;
+    profileModel.value = profileModel.value.copyWith(
+      userName: profile.fullName,
+      userEmail: profile.email,
+      userPhone: profile.phone,
+      profileImage: profile.photoUrl,
+      isVerified: profile.isVerified,
+      division: profile.address.division,
+      district: profile.address.district,
+      upazilla: profile.address.upazila,
+      pouroshova: profile.address.unionOrCityCorp,
+      wardNo: profile.address.wardNo,
+      postalCode: profile.address.postalCode,
+      fullAddress: profile.address.fullAddress,
+      userAddress: profile.address.fullAddress,
+      nidNumber: _formatVerificationValue(
+        rawValue: profile.verification.nidNumber,
+        hasDocument: profile.verification.hasNidDocument,
+      ),
+      isNidVerified: profile.verification.nidVerified,
+      tinNumber: _formatVerificationValue(
+        rawValue: profile.verification.tinNumber,
+        hasDocument: profile.verification.hasTinDocument,
+      ),
+      isTinVerified: profile.verification.tinVerified,
+    );
 
     _authService.updateUserFields({
       'fullName': profile.fullName,
@@ -165,9 +129,11 @@ class UserProfileStore extends GetxService {
   }
 
   void _applySummary(AccountSummaryModel summary) {
-    memberSince.value = summary.memberSince;
-    activeDeals.value = summary.activeDeals;
-    propertiesListed.value = summary.propertiesListed;
+    profileModel.value = profileModel.value.copyWith(
+      memberSince: summary.memberSince,
+      activeDeals: summary.activeDeals,
+      propertiesListed: summary.propertiesListed,
+    );
   }
 
   String _maskSensitive(String value) {
@@ -183,6 +149,20 @@ class UserProfileStore extends GetxService {
     final start = input.substring(0, 2);
     final end = input.substring(input.length - 2);
     return '$start***$end';
+  }
+
+  String _formatVerificationValue({
+    required String rawValue,
+    required bool hasDocument,
+  }) {
+    final masked = _maskSensitive(rawValue);
+    if (masked != 'Not provided') {
+      return masked;
+    }
+    if (hasDocument) {
+      return 'Document uploaded';
+    }
+    return 'Not provided';
   }
 
   String _readString(Map<String, dynamic> map, List<String> keys) {

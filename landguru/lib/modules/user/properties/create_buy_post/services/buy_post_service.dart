@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import 'package:landguru/core/services/api_client.dart';
+import 'models/buy_post_details_payload.dart';
 
 class BuyPostService extends GetxService {
   BuyPostService(this._apiClient);
@@ -52,23 +53,5 @@ class BuyPostService extends GetxService {
     }
 
     return BuyPostDetailsPayload.fromJson(Map<String, dynamic>.from(payload));
-  }
-}
-
-class BuyPostDetailsPayload {
-  BuyPostDetailsPayload({required this.raw});
-
-  final Map<String, dynamic> raw;
-
-  factory BuyPostDetailsPayload.fromJson(Map<String, dynamic> json) {
-    return BuyPostDetailsPayload(raw: json);
-  }
-
-  String get id => raw['id']?.toString() ?? '';
-
-  int? get lastCompletedStep {
-    final value = raw['lastCompletedStep'];
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '');
   }
 }

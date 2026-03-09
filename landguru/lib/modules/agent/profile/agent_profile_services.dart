@@ -2,8 +2,7 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:landguru/core/core.dart';
-
-import 'models/profile_model.dart';
+import '../../../core/models/agent_system_model.dart';
 
 class AgentProfileServices extends GetxService {
   AgentProfileServices._(this._apiClient);

@@ -36,7 +36,8 @@ class AgentProfileModel {
     final detailsMap =
         _readMap(json, ['personalDetails']) ?? const <String, dynamic>{};
     final verificationMap =
-        _readMap(json, ['verificationDocs']) ?? const <String, dynamic>{};
+        _readMap(json, ['verificationDocs', 'verification']) ??
+        const <String, dynamic>{};
     final bankInfoMap =
         _readMap(json, ['bankInfo']) ?? const <String, dynamic>{};
 
@@ -236,15 +237,20 @@ class AgentVerificationDocs {
 
   factory AgentVerificationDocs.fromJson(Map<String, dynamic> json) {
     return AgentVerificationDocs(
-      nidNumber: _readString(json, ['nidNumber']) ?? '',
+      nidNumber:
+          _readString(json, ['nidNumber', 'nidNo', 'nationalIdNumber']) ?? '',
       nidFrontUrl: _readString(json, ['nidFrontUrl']) ?? '',
       nidBackUrl: _readString(json, ['nidBackUrl']) ?? '',
       isNIDVerified: _readBool(json, ['isNIDVerified']) ?? false,
-      tinNumber: _readString(json, ['tinNumber']) ?? '',
+      tinNumber: _readString(json, ['tinNumber', 'tinNo']) ?? '',
       tinCertificateUrl: _readString(json, ['tinCertificateUrl']) ?? '',
       isTINVerified: _readBool(json, ['isTINVerified']) ?? false,
     );
   }
+
+  bool get hasNidDocument =>
+      nidFrontUrl.trim().isNotEmpty || nidBackUrl.trim().isNotEmpty;
+  bool get hasTinDocument => tinCertificateUrl.trim().isNotEmpty;
 
   static String? _readString(Map<String, dynamic> json, List<String> keys) {
     for (final key in keys) {
@@ -313,5 +319,176 @@ class AgentBankInfo {
       }
     }
     return null;
+  }
+}
+
+class AgentProfileStateModel {
+  const AgentProfileStateModel({
+    required this.isOnline,
+    required this.unreadNotificationCount,
+    required this.agentName,
+    required this.agentTitle,
+    required this.agentId,
+    required this.agentType,
+    required this.isVerified,
+    required this.profileImage,
+    required this.email,
+    required this.phone,
+    required this.totalTasksCompleted,
+    required this.totalEarned,
+    required this.assignedLocation,
+    required this.servicesProvided,
+    required this.division,
+    required this.district,
+    required this.upazilla,
+    required this.pouroshova,
+    required this.wardNo,
+    required this.postalCode,
+    required this.fullAddress,
+    required this.nidNumber,
+    required this.tinNumber,
+    required this.isNidVerified,
+    required this.isTinVerified,
+    required this.bankName,
+    required this.bankAccountNo,
+    required this.swiftCode,
+    required this.routingNo,
+  });
+
+  factory AgentProfileStateModel.initial() {
+    return const AgentProfileStateModel(
+      isOnline: true,
+      unreadNotificationCount: 0,
+      agentName: '',
+      agentTitle: '',
+      agentId: '',
+      agentType: '',
+      isVerified: false,
+      profileImage: '',
+      email: '',
+      phone: '',
+      totalTasksCompleted: 0,
+      totalEarned: 0,
+      assignedLocation: '',
+      servicesProvided: <String>[],
+      division: '',
+      district: '',
+      upazilla: '',
+      pouroshova: '',
+      wardNo: '',
+      postalCode: '',
+      fullAddress: '',
+      nidNumber: 'Not provided',
+      tinNumber: 'Not provided',
+      isNidVerified: false,
+      isTinVerified: false,
+      bankName: '',
+      bankAccountNo: '',
+      swiftCode: '',
+      routingNo: '',
+    );
+  }
+
+  final bool isOnline;
+  final int unreadNotificationCount;
+  final String agentName;
+  final String agentTitle;
+  final String agentId;
+  final String agentType;
+  final bool isVerified;
+  final String profileImage;
+  final String email;
+  final String phone;
+  final int totalTasksCompleted;
+  final double totalEarned;
+  final String assignedLocation;
+  final List<String> servicesProvided;
+  final String division;
+  final String district;
+  final String upazilla;
+  final String pouroshova;
+  final String wardNo;
+  final String postalCode;
+  final String fullAddress;
+  final String nidNumber;
+  final String tinNumber;
+  final bool isNidVerified;
+  final bool isTinVerified;
+  final String bankName;
+  final String bankAccountNo;
+  final String swiftCode;
+  final String routingNo;
+
+  String get displayName {
+    if (agentTitle.trim().isNotEmpty) {
+      return '$agentTitle $agentName';
+    }
+    return agentName;
+  }
+
+  AgentProfileStateModel copyWith({
+    bool? isOnline,
+    int? unreadNotificationCount,
+    String? agentName,
+    String? agentTitle,
+    String? agentId,
+    String? agentType,
+    bool? isVerified,
+    String? profileImage,
+    String? email,
+    String? phone,
+    int? totalTasksCompleted,
+    double? totalEarned,
+    String? assignedLocation,
+    List<String>? servicesProvided,
+    String? division,
+    String? district,
+    String? upazilla,
+    String? pouroshova,
+    String? wardNo,
+    String? postalCode,
+    String? fullAddress,
+    String? nidNumber,
+    String? tinNumber,
+    bool? isNidVerified,
+    bool? isTinVerified,
+    String? bankName,
+    String? bankAccountNo,
+    String? swiftCode,
+    String? routingNo,
+  }) {
+    return AgentProfileStateModel(
+      isOnline: isOnline ?? this.isOnline,
+      unreadNotificationCount:
+          unreadNotificationCount ?? this.unreadNotificationCount,
+      agentName: agentName ?? this.agentName,
+      agentTitle: agentTitle ?? this.agentTitle,
+      agentId: agentId ?? this.agentId,
+      agentType: agentType ?? this.agentType,
+      isVerified: isVerified ?? this.isVerified,
+      profileImage: profileImage ?? this.profileImage,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      totalTasksCompleted: totalTasksCompleted ?? this.totalTasksCompleted,
+      totalEarned: totalEarned ?? this.totalEarned,
+      assignedLocation: assignedLocation ?? this.assignedLocation,
+      servicesProvided:
+          servicesProvided ?? List<String>.from(this.servicesProvided),
+      division: division ?? this.division,
+      district: district ?? this.district,
+      upazilla: upazilla ?? this.upazilla,
+      pouroshova: pouroshova ?? this.pouroshova,
+      wardNo: wardNo ?? this.wardNo,
+      postalCode: postalCode ?? this.postalCode,
+      fullAddress: fullAddress ?? this.fullAddress,
+      nidNumber: nidNumber ?? this.nidNumber,
+      tinNumber: tinNumber ?? this.tinNumber,
+      isNidVerified: isNidVerified ?? this.isNidVerified,
+      isTinVerified: isTinVerified ?? this.isTinVerified,
+      bankName: bankName ?? this.bankName,
+      bankAccountNo: bankAccountNo ?? this.bankAccountNo,
+      swiftCode: swiftCode ?? this.swiftCode,
+      routingNo: routingNo ?? this.routingNo,
+    );
   }
 }

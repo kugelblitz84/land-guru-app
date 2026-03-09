@@ -3,57 +3,87 @@ import '../../../../core/enums/property_type.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Tab enum for Sold/Bought
-enum DealTab { sold, bought }
+class DealTabs {
+  static const String sold = 'sold';
+  static const String bought = 'bought';
+}
 
 /// Deal status
-enum DealStatus { sold, bought }
+class DealStatuses {
+  static const String sold = 'sold';
+  static const String bought = 'bought';
 
-extension DealStatusExtension on DealStatus {
-  String get label {
-    switch (this) {
-      case DealStatus.sold:
+  static String label(String status) {
+    switch (status) {
+      case sold:
         return 'Sold';
-      case DealStatus.bought:
+      case bought:
         return 'Bought';
+      default:
+        return 'Unknown';
     }
   }
 
-  Color get backgroundColor => AppColors.success;
-  Color get textColor => AppColors.white;
+  static Color backgroundColor(String status) {
+    return AppColors.success;
+  }
+
+  static Color textColor(String status) {
+    return AppColors.white;
+  }
 }
 
 /// Sort options for deals
-enum DealSortBy { newest, oldest, priceHighToLow, priceLowToHigh }
+class DealSortOptions {
+  static const String newest = 'newest';
+  static const String oldest = 'oldest';
+  static const String priceHighToLow = 'price_high_to_low';
+  static const String priceLowToHigh = 'price_low_to_high';
 
-extension DealSortByExtension on DealSortBy {
-  String get label {
-    switch (this) {
-      case DealSortBy.newest:
+  static const List<String> values = [
+    newest,
+    oldest,
+    priceHighToLow,
+    priceLowToHigh,
+  ];
+
+  static String label(String option) {
+    switch (option) {
+      case newest:
         return 'Newest';
-      case DealSortBy.oldest:
+      case oldest:
         return 'Oldest';
-      case DealSortBy.priceHighToLow:
+      case priceHighToLow:
         return 'Price: High to Low';
-      case DealSortBy.priceLowToHigh:
+      case priceLowToHigh:
         return 'Price: Low to High';
+      default:
+        return 'Newest';
     }
   }
 }
 
 /// Filter by property type
-enum DealTypeFilter { all, flat, plainLand, waterLand }
+class DealTypeFilters {
+  static const String all = 'all';
+  static const String flat = 'flat';
+  static const String plainLand = 'plain_land';
+  static const String waterLand = 'water_land';
 
-extension DealTypeFilterExtension on DealTypeFilter {
-  String get label {
-    switch (this) {
-      case DealTypeFilter.all:
+  static const List<String> values = [all, flat, plainLand, waterLand];
+
+  static String label(String filter) {
+    switch (filter) {
+      case all:
         return 'All';
-      case DealTypeFilter.flat:
+      case flat:
         return 'Flat';
-      case DealTypeFilter.plainLand:
+      case plainLand:
         return 'Plain Land';
-      case DealTypeFilter.waterLand:
+      case waterLand:
         return 'Water Land';
+      default:
+        return 'All';
     }
   }
 }
@@ -67,7 +97,7 @@ class Deal {
   final PropertyType propertyType;
   final String location;
   final String soldPrice;
-  final DealStatus status;
+  final String status;
   final DateTime dealDate;
   final String? description;
 
@@ -164,7 +194,7 @@ class Deal {
 
   /// Get "Sold To" or "Bought From" label
   String get otherPartyLabel =>
-      status == DealStatus.sold ? 'Sold To' : 'Bought From';
+      status == DealStatuses.sold ? 'Sold To' : 'Bought From';
 }
 
 /// Legal document model

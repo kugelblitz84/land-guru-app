@@ -9,21 +9,38 @@ class ApiErrorHandler {
     Future<T> Function() apiCall, {
     bool showError = true,
     String errorTitle = 'Error',
+    String? fallbackMessage,
+    String Function(Object error)? errorMessageBuilder,
+    void Function(T data)? onSuccess,
+    void Function(String message, Object error)? onError,
+    bool closeCurrentSnackbar = true,
   }) async {
     try {
       final data = await apiCall();
+      onSuccess?.call(data);
       return ApiResult.success(data);
     } on DioException catch (e) {
-      final message = _parseDioError(e);
+      final message = errorMessageBuilder?.call(e) ?? _parseDioError(e);
       if (showError) {
-        _showErrorSnackbar(errorTitle, message);
+        _showErrorSnackbar(
+          errorTitle,
+          message,
+          closeCurrentSnackbar: closeCurrentSnackbar,
+        );
       }
+      onError?.call(message, e);
       return ApiResult.failure(message);
     } catch (e) {
-      final message = e.toString();
+      final message =
+          errorMessageBuilder?.call(e) ?? fallbackMessage ?? resolve(e);
       if (showError) {
-        _showErrorSnackbar(errorTitle, message);
+        _showErrorSnackbar(
+          errorTitle,
+          message,
+          closeCurrentSnackbar: closeCurrentSnackbar,
+        );
       }
+      onError?.call(message, e);
       return ApiResult.failure(message);
     }
   }
@@ -113,8 +130,12 @@ class ApiErrorHandler {
     }
   }
 
-  static void _showErrorSnackbar(String title, String message) {
-    if (Get.isSnackbarOpen) {
+  static void _showErrorSnackbar(
+    String title,
+    String message, {
+    bool closeCurrentSnackbar = true,
+  }) {
+    if (closeCurrentSnackbar && Get.isSnackbarOpen) {
       Get.closeCurrentSnackbar();
     }
 

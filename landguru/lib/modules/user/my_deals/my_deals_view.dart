@@ -34,7 +34,7 @@ class MyDealsContentView extends StatelessWidget {
 
     return DefaultTabController(
       length: 2,
-      initialIndex: controller.selectedTab.value == DealTab.sold ? 0 : 1,
+      initialIndex: controller.selectedTab.value == DealTabs.sold ? 0 : 1,
       child: Column(
         children: [
           SizedBox(height: 8.h),
@@ -93,7 +93,7 @@ class MyDealsContentView extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Obx(() {
-        final isSold = controller.selectedTab.value == DealTab.sold;
+        final isSold = controller.selectedTab.value == DealTabs.sold;
         return Row(
           children: [
             // Property Sold / Bought count
@@ -191,8 +191,9 @@ class MyDealsContentView extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: TabBar(
-          onTap: (index) =>
-              controller.changeTab(index == 0 ? DealTab.sold : DealTab.bought),
+          onTap: (index) => controller.changeTab(
+            index == 0 ? DealTabs.sold : DealTabs.bought,
+          ),
           dividerColor: Colors.transparent,
           indicatorSize: TabBarIndicatorSize.tab,
           indicatorPadding: EdgeInsets.all(6.w),
@@ -225,7 +226,7 @@ class MyDealsContentView extends StatelessWidget {
           Obx(
             () => _buildFilterDropdown(
               label: 'Sort by:',
-              value: controller.sortBy.value.label,
+              value: DealSortOptions.label(controller.sortBy.value),
               onTap: () => _showSortByMenu(controller),
             ),
           ),
@@ -234,7 +235,7 @@ class MyDealsContentView extends StatelessWidget {
           Obx(
             () => _buildFilterDropdown(
               label: 'Type:',
-              value: controller.typeFilter.value.label,
+              value: DealTypeFilters.label(controller.typeFilter.value),
               onTap: () => _showTypeFilterMenu(controller),
             ),
           ),
@@ -300,11 +301,11 @@ class MyDealsContentView extends StatelessWidget {
               ),
             ),
             SizedBox(height: 12.h),
-            ...DealSortBy.values.map((option) {
+            ...DealSortOptions.values.map((option) {
               final isSelected = controller.sortBy.value == option;
               return ListTile(
                 title: Text(
-                  option.label,
+                  DealTypeFilters.label(option),
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: isSelected
@@ -349,11 +350,11 @@ class MyDealsContentView extends StatelessWidget {
               ),
             ),
             SizedBox(height: 12.h),
-            ...DealTypeFilter.values.map((option) {
+            ...DealTypeFilters.values.map((option) {
               final isSelected = controller.typeFilter.value == option;
               return ListTile(
                 title: Text(
-                  option.label,
+                  DealSortOptions.label(option),
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: isSelected
@@ -467,9 +468,11 @@ class MyDealsContentView extends StatelessWidget {
                         textColor: AppColors.white,
                       ),
                       _buildTag(
-                        text: deal.status.label,
-                        backgroundColor: deal.status.backgroundColor,
-                        textColor: deal.status.textColor,
+                        text: DealStatuses.label(deal.status),
+                        backgroundColor: DealStatuses.backgroundColor(
+                          deal.status,
+                        ),
+                        textColor: DealStatuses.textColor(deal.status),
                         showCheckIcon: true,
                       ),
                     ],
@@ -563,7 +566,7 @@ class MyDealsContentView extends StatelessWidget {
   }
 
   Widget _buildEmptyState(MyDealsController controller) {
-    final isSold = controller.selectedTab.value == DealTab.sold;
+    final isSold = controller.selectedTab.value == DealTabs.sold;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

@@ -631,3 +631,18 @@ extension WorkLogEntryTypeExtension on WorkLogEntryType {
     }
   }
 }
+
+/// Shared list response model for Agent tasks API and mock fallback.
+class AgentTasksListResponse {
+  const AgentTasksListResponse({
+    required this.tasks,
+    required this.total,
+    this.page = 1,
+    this.limit = 10,
+  });
+
+  final List<AgentTask> tasks;
+  final int total;
+  final int page;
+  final int limit;
+}

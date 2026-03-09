@@ -286,43 +286,32 @@ class AgentEditProfileController extends GetxController {
   }
 
   void _populateFromStore() {
-    fullNameController.text = _profileStore.agentName.value;
-    phoneController.text = _profileStore.phone.value;
-    emailController.text = _profileStore.email.value;
-    postalCodeController.text = _profileStore.postalCode.value;
-    fullAddressController.text = _profileStore.fullAddress.value;
+    final profile = _profileStore.profileModel.value;
+    fullNameController.text = profile.agentName;
+    phoneController.text = profile.phone;
+    emailController.text = profile.email;
+    postalCodeController.text = profile.postalCode;
+    fullAddressController.text = profile.fullAddress;
 
-    selectedDivision.value = _ensureValueInOptions(
-      _profileStore.division.value,
-      divisions,
-    );
-    selectedDistrict.value = _ensureValueInOptions(
-      _profileStore.district.value,
-      districts,
-    );
-    selectedUpazilla.value = _ensureValueInOptions(
-      _profileStore.upazilla.value,
-      upazillas,
-    );
+    selectedDivision.value = _ensureValueInOptions(profile.division, divisions);
+    selectedDistrict.value = _ensureValueInOptions(profile.district, districts);
+    selectedUpazilla.value = _ensureValueInOptions(profile.upazilla, upazillas);
     selectedPouroshova.value = _ensureValueInOptions(
-      _profileStore.pouroshova.value,
+      profile.pouroshova,
       pouroshovas,
     );
-    selectedWardNo.value = _ensureValueInOptions(
-      _profileStore.wardNo.value,
-      wardNumbers,
-    );
+    selectedWardNo.value = _ensureValueInOptions(profile.wardNo, wardNumbers);
 
-    nidNumber.value = _profileStore.nidNumber.value;
-    tinNumber.value = _profileStore.tinNumber.value;
-    isNidVerified.value = _profileStore.isNidVerified.value;
-    isTinVerified.value = _profileStore.isTinVerified.value;
+    nidNumber.value = profile.nidNumber;
+    tinNumber.value = profile.tinNumber;
+    isNidVerified.value = profile.isNidVerified;
+    isTinVerified.value = profile.isTinVerified;
 
-    bankName.value = _profileStore.bankName.value;
-    bankAccountNo.value = _profileStore.bankAccountNo.value;
-    swiftCode.value = _profileStore.swiftCode.value;
-    routingNo.value = _profileStore.routingNo.value;
-    profileImageUrl.value = _profileStore.profileImage.value;
+    bankName.value = profile.bankName;
+    bankAccountNo.value = profile.bankAccountNo;
+    swiftCode.value = profile.swiftCode;
+    routingNo.value = profile.routingNo;
+    profileImageUrl.value = profile.profileImage;
   }
 
   String _guessContentType(String path) {

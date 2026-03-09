@@ -6,6 +6,7 @@ import '../../../routes/app_routes.dart';
 class AgentBottomNavController extends GetxController {
   /// Current selected tab index
   final RxInt currentIndex = 0.obs;
+  RxSet<int> visitedTabs = <int>{0}.obs;
 
   /// Tab items for agent
   static const List<String> tabNames = [
@@ -18,6 +19,7 @@ class AgentBottomNavController extends GetxController {
   /// Change tab
   void changeTab(int index) {
     currentIndex.value = index;
+    visitedTabs.add(index);
   }
 
   /// Navigate to specific tab by name

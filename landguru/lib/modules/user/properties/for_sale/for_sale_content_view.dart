@@ -29,7 +29,10 @@ class ForSaleContentView extends GetView<PropertiesController> {
             onRefresh: controller.refresh,
             child: Obx(() {
               if (controller.propertiesForSale.isEmpty) {
-                return _buildEmptyState();
+                return _buildRefreshableEmptyState(
+                  onRefresh: controller.refresh,
+                  child: _buildEmptyState(),
+                );
               }
               return NotificationListener<ScrollNotification>(
                 onNotification: (notification) {
@@ -407,6 +410,20 @@ class ForSaleContentView extends GetView<PropertiesController> {
             style: TextStyle(fontSize: 14.sp, color: AppColors.grey500),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRefreshableEmptyState({
+    required Future<void> Function() onRefresh,
+    required Widget child,
+  }) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        children: [SizedBox(height: 260.h, child: child)],
       ),
     );
   }

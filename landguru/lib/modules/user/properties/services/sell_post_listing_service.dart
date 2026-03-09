@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import 'package:landguru/core/models/property_listing.dart';
 import 'package:landguru/core/services/api_client.dart';
+import 'models/post_listing_response_models.dart';
 
 class SellPostListingService extends GetxService {
   SellPostListingService(this._apiClient);
@@ -40,11 +41,4 @@ class SellPostListingService extends GetxService {
 
     return SellPostListingResponse(posts: posts, total: total);
   }
-}
-
-class SellPostListingResponse {
-  SellPostListingResponse({required this.posts, required this.total});
-
-  final List<PropertyListing> posts;
-  final int total;
 }

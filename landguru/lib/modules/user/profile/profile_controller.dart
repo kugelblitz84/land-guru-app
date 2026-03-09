@@ -12,34 +12,9 @@ class ProfileController extends GetxController {
   final RxBool isLoggingOut = false.obs;
   final _profileStore = Get.find<UserProfileStore>();
 
-  // User data
+  // Profile model is the source of truth for profile views.
+  Rx<UserProfileStateModel> get profileModel => _profileStore.profileModel;
   RxBool get isLoading => _profileStore.isLoading;
-  RxString get userName => _profileStore.userName;
-  RxString get userPhone => _profileStore.userPhone;
-  RxString get userEmail => _profileStore.userEmail;
-  RxString get userAddress => _profileStore.userAddress;
-  RxString get profileImage => _profileStore.profileImage;
-  RxBool get isVerified => _profileStore.isVerified;
-
-  // Account summary
-  RxString get memberSince => _profileStore.memberSince;
-  RxInt get activeDeals => _profileStore.activeDeals;
-  RxInt get propertiesListed => _profileStore.propertiesListed;
-
-  // Additional profile data
-  RxString get division => _profileStore.division;
-  RxString get district => _profileStore.district;
-  RxString get upazilla => _profileStore.upazilla;
-  RxString get pouroshova => _profileStore.pouroshova;
-  RxString get wardNo => _profileStore.wardNo;
-  RxString get postalCode => _profileStore.postalCode;
-  RxString get fullAddress => _profileStore.fullAddress;
-
-  // Verification documents
-  RxString get nidNumber => _profileStore.nidNumber;
-  RxBool get isNidVerified => _profileStore.isNidVerified;
-  RxString get tinNumber => _profileStore.tinNumber;
-  RxBool get isTinVerified => _profileStore.isTinVerified;
 
   final _token = Get.find<TokenService>();
   final _authService = Get.find<AuthService>();
@@ -53,7 +28,10 @@ class ProfileController extends GetxController {
 
   /// Load user profile
   Future<void> loadProfile({bool forceRefresh = false}) async {
-    await _profileStore.refreshProfile(forceRefresh: forceRefresh);
+    await ApiErrorHandler.call(
+      () => _profileStore.refreshProfile(forceRefresh: forceRefresh),
+      showError: false,
+    );
   }
 
   /// Navigate to edit profile
@@ -69,29 +47,30 @@ class ProfileController extends GetxController {
   /// Logout
   Future<void> logout() async {
     isLoggingOut.value = true;
-    try {
-      _authService.clearSession();
-      _token.clear();
+    final result = await ApiErrorHandler.call(
+      () async {
+        _authService.clearSession();
+        _token.clear();
 
-      if (Get.isRegistered<UserProfileStore>()) {
-        Get.find<UserProfileStore>().clear();
-      }
-      if (Get.isRegistered<AgentProfileStore>()) {
-        Get.find<AgentProfileStore>().clear();
-      }
+        if (Get.isRegistered<UserProfileStore>()) {
+          Get.find<UserProfileStore>().clear();
+        }
+        if (Get.isRegistered<AgentProfileStore>()) {
+          Get.find<AgentProfileStore>().clear();
+        }
 
-      _clearScopedControllers();
+        _clearScopedControllers();
 
-      // Navigate to login and clear all previous routes
-      Get.offAllNamed(AppRoutes.LOGIN);
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to logout',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoggingOut.value = false;
+        // Navigate to login and clear all previous routes
+        Get.offAllNamed(AppRoutes.LOGIN);
+      },
+      errorTitle: 'Error',
+      fallbackMessage: 'Failed to logout',
+    );
+
+    isLoggingOut.value = false;
+    if (!result.isSuccess) {
+      return;
     }
   }
 

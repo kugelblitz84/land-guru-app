@@ -75,14 +75,14 @@ class CreateOfferReviewView extends GetView<CreateOfferController> {
                   InfoBanner(
                     message:
                         'You will need to upload property video, legal documents and confirm your payment for the services later when buyer confirms your post. You can also publish this post later if the buyer doesn\'t response to your post within 3-5 business days. This post will be saved as offered post.',
-                    type: InfoBannerType.info,
+                    type: InfoBannerTypes.info,
                   ),
                   SizedBox(height: 12.h),
 
                   InfoBanner(
                     message:
                         'Your full location will remain private to the buyer.',
-                    type: InfoBannerType.info,
+                    type: InfoBannerTypes.info,
                   ),
                   SizedBox(height: 24.h),
 
@@ -516,3 +516,4 @@ class CreateOfferReviewView extends GetView<CreateOfferController> {
     );
   }
 }
+

@@ -62,7 +62,8 @@ class AgentProfileView extends GetView<AgentProfileController> {
                 ),
                 child: ClipOval(
                   child: Obx(() {
-                    final imageUrl = controller.profileImage.value.trim();
+                    final imageUrl = controller.profileModel.value.profileImage
+                        .trim();
                     if (imageUrl.isEmpty) {
                       return Container(
                         color: AppColors.grey200,
@@ -134,11 +135,11 @@ class AgentProfileView extends GetView<AgentProfileController> {
             () => Column(
               children: [
                 Text(
-                  'Agent ID: ${controller.agentId.value}',
+                  'Agent ID: ${controller.profileModel.value.agentId}',
                   style: TextStyle(fontSize: 12.sp, color: AppColors.grey600),
                 ),
                 Text(
-                  'Agent Type: ${controller.agentType.value}',
+                  'Agent Type: ${controller.profileModel.value.agentType}',
                   style: TextStyle(fontSize: 12.sp, color: AppColors.grey600),
                 ),
               ],
@@ -148,7 +149,7 @@ class AgentProfileView extends GetView<AgentProfileController> {
 
           // Verified badge
           Obx(
-            () => controller.isVerified.value
+            () => controller.profileModel.value.isVerified
                 ? Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: 12.w,
@@ -225,7 +226,7 @@ class AgentProfileView extends GetView<AgentProfileController> {
                   SizedBox(height: 8.h),
                   Obx(
                     () => Text(
-                      controller.totalTasksCompleted.toString(),
+                      '${controller.profileModel.value.totalTasksCompleted}',
                       style: TextStyle(
                         fontSize: 28.sp,
                         fontWeight: FontWeight.bold,
@@ -274,7 +275,9 @@ class AgentProfileView extends GetView<AgentProfileController> {
                   SizedBox(height: 8.h),
                   Obx(
                     () => Text(
-                      controller.totalEarned.value.toStringAsFixed(0),
+                      controller.profileModel.value.totalEarned.toStringAsFixed(
+                        0,
+                      ),
                       style: TextStyle(
                         fontSize: 28.sp,
                         fontWeight: FontWeight.bold,
@@ -321,7 +324,9 @@ class AgentProfileView extends GetView<AgentProfileController> {
                         text: 'Assigned Location: ',
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      TextSpan(text: controller.assignedLocation.value),
+                      TextSpan(
+                        text: controller.profileModel.value.assignedLocation,
+                      ),
                     ],
                   ),
                 ),
@@ -333,7 +338,6 @@ class AgentProfileView extends GetView<AgentProfileController> {
     );
   }
 
-  /// Services you Provide Section
   Widget _buildServicesSection() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -348,25 +352,20 @@ class AgentProfileView extends GetView<AgentProfileController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.work_outline, color: AppColors.primary, size: 20.sp),
-                SizedBox(width: 8.w),
-                Text(
-                  'Services you Provide:',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.grey900,
-                  ),
-                ),
-              ],
+            Text(
+              'Provided Services',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.grey900,
+              ),
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 10.h),
             Obx(
-              () => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: controller.servicesProvided
+              () => Wrap(
+                spacing: 8.w,
+                runSpacing: 8.h,
+                children: controller.profileModel.value.servicesProvided
                     .asMap()
                     .entries
                     .map(

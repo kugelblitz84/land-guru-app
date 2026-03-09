@@ -200,7 +200,6 @@ class SellPostDetailsController extends GetxController {
       case MyPostStatus.draft:
         return 'Edited:';
       case MyPostStatus.quoted:
-      default:
         return 'Submitted:';
     }
   }
@@ -427,11 +426,16 @@ class SellPostDetailsController extends GetxController {
       totalPayable: post.billBreakdown!.totalPayable,
       quotationRevisions: post.billBreakdown!.quotationRevisions,
       onPay: (paymentMethod) async {
-        // Close the payment dialog
         Get.back();
 
-        // Simulate payment processing
-        await Future.delayed(const Duration(milliseconds: 800));
+        final result = await ApiErrorHandler.call(
+          () => _sellPostDetailsService.acceptQuotedPrice(postId: post.id),
+          errorTitle: 'Payment Failed',
+        );
+
+        if (!result.isSuccess) {
+          return;
+        }
 
         // Show payment confirmed dialog
         PaymentConfirmedDialog.show(

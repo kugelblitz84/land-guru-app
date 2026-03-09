@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import 'notifications_controller.dart';
+import 'models/notification_model.dart';
 
 /// Shared Notifications screen - used by both User and Agent
 class NotificationsView extends GetView<NotificationsController> {
@@ -66,16 +67,16 @@ class NotificationsView extends GetView<NotificationsController> {
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           child: Row(
             children: [
-              _buildFilterTab(label: 'All', filter: NotificationFilter.all),
+              _buildFilterTab(label: 'All', filter: NotificationFilters.all),
               SizedBox(width: 8.w),
               _buildFilterTab(
                 label: 'Action Required',
-                filter: NotificationFilter.actionRequired,
+                filter: NotificationFilters.actionRequired,
               ),
               SizedBox(width: 8.w),
               _buildFilterTab(
                 label: 'Appointments',
-                filter: NotificationFilter.appointments,
+                filter: NotificationFilters.appointments,
               ),
             ],
           ),
@@ -105,10 +106,7 @@ class NotificationsView extends GetView<NotificationsController> {
   }
 
   /// Build filter tab chip
-  Widget _buildFilterTab({
-    required String label,
-    required NotificationFilter filter,
-  }) {
+  Widget _buildFilterTab({required String label, required String filter}) {
     return Obx(() {
       final isSelected = controller.selectedFilter.value == filter;
       return GestureDetector(
@@ -320,10 +318,10 @@ class NotificationsView extends GetView<NotificationsController> {
   Widget _buildFilterEmptyState() {
     String message;
     switch (controller.selectedFilter.value) {
-      case NotificationFilter.actionRequired:
+      case NotificationFilters.actionRequired:
         message = 'No action required notifications';
         break;
-      case NotificationFilter.appointments:
+      case NotificationFilters.appointments:
         message = 'No appointment notifications';
         break;
       default:

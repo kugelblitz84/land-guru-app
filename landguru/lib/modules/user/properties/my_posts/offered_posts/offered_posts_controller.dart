@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
 
+import '../../../../../core/services/api_error_handler.dart';
 import '../../../../../core/services/nested_navigation_service.dart';
 import '../../../../../routes/app_routes.dart';
+import '../../properties_controller.dart';
 import 'models/offered_post_models.dart';
 import 'offered_post_details_view.dart';
 import 'services/my_offered_posts_service.dart';
@@ -16,6 +18,8 @@ class OfferedPostsController extends GetxController {
   static bool _hasCachedData = false;
 
   final MyOfferedPostsService _service = Get.find<MyOfferedPostsService>();
+  final PropertiesController _propertiesController =
+      Get.find<PropertiesController>();
 
   final isLoading = false.obs;
   final isLoadingMore = false.obs;
@@ -43,24 +47,21 @@ class OfferedPostsController extends GetxController {
     isLoading.value = true;
     _currentPage = 1;
     hasMore.value = true;
-    try {
-      final response = await _service.getMyOfferedPosts(
-        page: _currentPage,
-        limit: _pageLimit,
-      );
+    final result = await ApiErrorHandler.call(
+      () => _service.getMyOfferedPosts(page: _currentPage, limit: _pageLimit),
+      errorTitle: 'Error',
+      fallbackMessage: 'Failed to load offered posts',
+    );
+
+    if (result.isSuccess && result.data != null) {
+      final response = result.data!;
       offeredPosts.assignAll(response.posts);
       _apiTotal = response.total;
       hasMore.value = offeredPosts.length < _apiTotal;
       _syncCache();
-    } catch (_) {
-      Get.snackbar(
-        'Error',
-        'Failed to load offered posts',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
     }
+
+    isLoading.value = false;
   }
 
   Future<void> loadMoreIfNeeded() async {
@@ -69,13 +70,14 @@ class OfferedPostsController extends GetxController {
     }
 
     isLoadingMore.value = true;
-    try {
-      final nextPage = _currentPage + 1;
-      final response = await _service.getMyOfferedPosts(
-        page: nextPage,
-        limit: _pageLimit,
-      );
+    final nextPage = _currentPage + 1;
+    final result = await ApiErrorHandler.call(
+      () => _service.getMyOfferedPosts(page: nextPage, limit: _pageLimit),
+      showError: false,
+    );
 
+    if (result.isSuccess && result.data != null) {
+      final response = result.data!;
       final existingIds = offeredPosts.map((post) => post.id).toSet();
       final newItems = response.posts
           .where((item) => !existingIds.contains(item.id))
@@ -86,14 +88,15 @@ class OfferedPostsController extends GetxController {
       _apiTotal = response.total;
       hasMore.value = offeredPosts.length < _apiTotal;
       _syncCache();
-    } catch (_) {
+    } else {
       hasMore.value = false;
-    } finally {
-      isLoadingMore.value = false;
     }
+
+    isLoadingMore.value = false;
   }
 
   List<OfferedPost> get filteredOfferedPosts {
+    final criteria = _propertiesController.currentFilterCriteria;
     List<OfferedPost> filtered;
 
     switch (currentFilter.value) {
@@ -116,6 +119,17 @@ class OfferedPostsController extends GetxController {
         filtered = offeredPosts.toList();
     }
 
+    filtered = filtered.where((post) {
+      return criteria.matches(
+        propertyType: post.propertyType,
+        price: post.propertyPrice,
+        sellableLandAmount: post.sellableLandAmount,
+        plotSize: post.plotSize,
+        distanceFromRoad: post.distanceFromRoad,
+        location: post.location,
+      );
+    }).toList();
+
     filtered.sort((a, b) => b.offeredAt.compareTo(a.offeredAt));
     return filtered;
   }
@@ -124,6 +138,7 @@ class OfferedPostsController extends GetxController {
     currentFilter.value = filter;
   }
 
+  @override
   Future<void> refresh() async {
     await loadOfferedPosts(forceRefresh: true);
   }
@@ -165,5 +180,30 @@ class OfferedPostsController extends GetxController {
       AppRoutes.CREATE_SELL_POST_INFO,
       arguments: {'fromOfferedPost': true, 'offeredPost': post},
     );
+  }
+
+  Future<bool> convertOfferToSellPost(OfferedPost post) async {
+    final offerId = post.id.trim();
+    if (offerId.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Invalid offer ID',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final result = await ApiErrorHandler.call(
+      () => _service.convertOfferToSellPost(offerId: offerId),
+      errorTitle: 'Error',
+      fallbackMessage: 'Failed to convert offer. Please try again.',
+    );
+
+    if (!result.isSuccess) {
+      return false;
+    }
+
+    await loadOfferedPosts(forceRefresh: true);
+    return true;
   }
 }

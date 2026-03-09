@@ -31,7 +31,7 @@ class MainShellHeader extends StatelessWidget {
               ),
               Obx(
                 () => Text(
-                  '${controller.userName.value}!',
+                  '${controller.profileModel.value.userName}!',
                   style: TextStyle(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
@@ -61,7 +61,7 @@ class MainShellHeader extends StatelessWidget {
           ),
           child: ClipOval(
             child: Obx(() {
-              final avatar = controller.userAvatar.value.trim();
+              final avatar = controller.profileModel.value.profileImage.trim();
               if (avatar.isNotEmpty) {
                 return Image.network(
                   avatar,
@@ -84,7 +84,7 @@ class MainShellHeader extends StatelessWidget {
         ),
         // Online indicator
         Obx(
-          () => controller.isOnline.value
+          () => controller.profileModel.value.isOnline
               ? Positioned(
                   bottom: 2,
                   right: 2,
@@ -135,7 +135,7 @@ class MainShellHeader extends StatelessWidget {
           ),
           // Notification badge
           Obx(() {
-            final count = controller.unreadNotificationCount.value;
+            final count = controller.profileModel.value.unreadNotificationCount;
             if (count == 0) return const SizedBox.shrink();
             return Positioned(
               top: 0,

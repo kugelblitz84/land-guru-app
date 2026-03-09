@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import 'agent_appointments_controller.dart';
+import 'models/appointments_model.dart';
 
 /// Agent Appointments screen - Full version with Scaffold
 class AgentAppointmentsView extends GetView<AgentAppointmentsController> {
@@ -92,14 +93,15 @@ class AgentAppointmentsContentView
                 label: 'Upcoming',
                 isSelected:
                     controller.selectedTab.value ==
-                    AgentAppointmentTab.upcoming,
-                onTap: () => controller.changeTab(AgentAppointmentTab.upcoming),
+                    AgentAppointmentTabs.upcoming,
+                onTap: () =>
+                    controller.changeTab(AgentAppointmentTabs.upcoming),
               ),
               _buildTabButton(
                 label: 'Past',
                 isSelected:
-                    controller.selectedTab.value == AgentAppointmentTab.past,
-                onTap: () => controller.changeTab(AgentAppointmentTab.past),
+                    controller.selectedTab.value == AgentAppointmentTabs.past,
+                onTap: () => controller.changeTab(AgentAppointmentTabs.past),
               ),
             ],
           ),
@@ -297,9 +299,16 @@ class AgentAppointmentsContentView
                           textColor: AppColors.white,
                         ),
                         _buildTag(
-                          text: appointment.status.label,
-                          backgroundColor: appointment.status.backgroundColor,
-                          textColor: appointment.status.textColor,
+                          text: AgentAppointmentStatuses.label(
+                            appointment.status,
+                          ),
+                          backgroundColor:
+                              AgentAppointmentStatuses.backgroundColor(
+                                appointment.status,
+                              ),
+                          textColor: AgentAppointmentStatuses.textColor(
+                            appointment.status,
+                          ),
                         ),
                       ],
                     ),
@@ -376,7 +385,7 @@ class AgentAppointmentsContentView
             ),
             SizedBox(height: 16.h),
             Text(
-              controller.selectedTab.value == AgentAppointmentTab.upcoming
+              controller.selectedTab.value == AgentAppointmentTabs.upcoming
                   ? 'No upcoming appointments'
                   : 'No past appointments',
               style: TextStyle(

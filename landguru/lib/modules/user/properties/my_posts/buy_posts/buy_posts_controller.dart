@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
 
+import '../../../../../core/services/api_error_handler.dart';
 import '../../../../../core/services/nested_navigation_service.dart';
 import '../../../../../routes/app_routes.dart';
+import '../../properties_controller.dart';
 import 'buy_post_offer_details_view.dart';
 import 'models/buy_post_models.dart';
 import 'services/my_buy_posts_service.dart';
@@ -18,6 +20,9 @@ class BuyPostsController extends GetxController {
   static bool _hasCachedData = false;
 
   final MyBuyPostsService _service = Get.find<MyBuyPostsService>();
+  final PropertiesController _propertiesController =
+      Get.find<PropertiesController>();
+  Worker? _globalFilterWorker;
 
   final RxBool isLoading = false.obs;
   final RxBool isLoadingMore = false.obs;
@@ -44,7 +49,17 @@ class BuyPostsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _globalFilterWorker = ever<int>(
+      _propertiesController.filterApplyVersion,
+      (_) => _applyFilter(),
+    );
     loadBuyPosts();
+  }
+
+  @override
+  void onClose() {
+    _globalFilterWorker?.dispose();
+    super.onClose();
   }
 
   Future<void> loadBuyPosts({bool forceRefresh = false}) async {
@@ -56,11 +71,14 @@ class BuyPostsController extends GetxController {
     isLoading.value = true;
     _currentPage = 1;
     hasMore.value = true;
-    try {
-      final response = await _service.getMyBuyPosts(
-        page: _currentPage,
-        limit: _pageLimit,
-      );
+    final result = await ApiErrorHandler.call(
+      () => _service.getMyBuyPosts(page: _currentPage, limit: _pageLimit),
+      errorTitle: 'Error',
+      fallbackMessage: 'Failed to load buy posts',
+    );
+
+    if (result.isSuccess && result.data != null) {
+      final response = result.data!;
       allBuyPosts.assignAll(response.posts);
       _apiTotal = response.total;
       hasMore.value = allBuyPosts.length < _apiTotal;
@@ -70,15 +88,9 @@ class BuyPostsController extends GetxController {
       );
       _applyFilter();
       _syncCache();
-    } catch (_) {
-      Get.snackbar(
-        'Error',
-        'Failed to load buy posts',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
     }
+
+    isLoading.value = false;
   }
 
   Future<void> loadMoreIfNeeded() async {
@@ -87,13 +99,14 @@ class BuyPostsController extends GetxController {
     }
 
     isLoadingMore.value = true;
-    try {
-      final nextPage = _currentPage + 1;
-      final response = await _service.getMyBuyPosts(
-        page: nextPage,
-        limit: _pageLimit,
-      );
+    final nextPage = _currentPage + 1;
+    final result = await ApiErrorHandler.call(
+      () => _service.getMyBuyPosts(page: nextPage, limit: _pageLimit),
+      showError: false,
+    );
 
+    if (result.isSuccess && result.data != null) {
+      final response = result.data!;
       final existingIds = allBuyPosts.map((post) => post.id).toSet();
       final newPosts = response.posts
           .where((post) => !existingIds.contains(post.id))
@@ -110,11 +123,11 @@ class BuyPostsController extends GetxController {
       );
       _applyFilter();
       _syncCache();
-    } catch (_) {
+    } else {
       hasMore.value = false;
-    } finally {
-      isLoadingMore.value = false;
     }
+
+    isLoadingMore.value = false;
   }
 
   void changeFilter(String filter) {
@@ -128,33 +141,44 @@ class BuyPostsController extends GetxController {
   }
 
   void _applyFilter() {
+    final criteria = _propertiesController.currentFilterCriteria;
+    List<BuyPost> statusFiltered;
+
     switch (currentFilter.value) {
       case 'Offers':
-        filteredBuyPosts.assignAll(
-          allBuyPosts.where((p) => p.hasOffers).toList(),
-        );
+        statusFiltered = allBuyPosts.where((p) => p.hasOffers).toList();
         break;
       case 'Active':
-        filteredBuyPosts.assignAll(
-          allBuyPosts.where((p) => p.status == BuyPostStatus.active).toList(),
-        );
+        statusFiltered = allBuyPosts
+            .where((p) => p.status == BuyPostStatus.active)
+            .toList();
         break;
       case 'In Review':
-        filteredBuyPosts.assignAll(
-          allBuyPosts
-              .where(
-                (p) =>
-                    p.status == BuyPostStatus.pending ||
-                    p.showPendingAdminReview,
-              )
-              .toList(),
-        );
+        statusFiltered = allBuyPosts
+            .where(
+              (p) =>
+                  p.status == BuyPostStatus.pending || p.showPendingAdminReview,
+            )
+            .toList();
         break;
       case 'All':
       default:
-        filteredBuyPosts.assignAll(allBuyPosts);
+        statusFiltered = allBuyPosts.toList();
         break;
     }
+
+    final globallyFiltered = statusFiltered.where((post) {
+      return criteria.matches(
+        propertyType: post.propertyType,
+        price: post.budgetRange,
+        sellableLandAmount: post.requiredLandSize,
+        plotSize: post.requiredPlotSize,
+        distanceFromRoad: post.distanceFromRoad,
+        location: post.preferredLocation,
+      );
+    }).toList();
+
+    filteredBuyPosts.assignAll(globallyFiltered);
     _sortPosts();
   }
 
@@ -180,6 +204,7 @@ class BuyPostsController extends GetxController {
     return 0;
   }
 
+  @override
   Future<void> refresh() async {
     await loadBuyPosts(forceRefresh: true);
   }
@@ -231,6 +256,20 @@ class BuyPostsController extends GetxController {
     }
   }
 
+  Future<OfferReceived?> getOfferDetails(String offerId) async {
+    final trimmedId = offerId.trim();
+    if (trimmedId.isEmpty) {
+      return null;
+    }
+
+    final result = await ApiErrorHandler.call(
+      () => _service.getOfferDetails(offerId: trimmedId),
+      errorTitle: 'Error',
+      fallbackMessage: 'Failed to load offer details',
+    );
+    return result.data;
+  }
+
   Future<bool> acceptOffer(BuyPost buyPost, OfferReceived offer) async {
     final offerId = offer.id.trim();
     if (offerId.isEmpty) {
@@ -242,18 +281,17 @@ class BuyPostsController extends GetxController {
       return false;
     }
 
-    try {
-      await _service.acceptOffer(offerId: offerId);
-      await loadBuyPosts(forceRefresh: true);
-      return true;
-    } catch (_) {
-      Get.snackbar(
-        'Error',
-        'Failed to accept offer. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    final result = await ApiErrorHandler.call(
+      () => _service.acceptOffer(offerId: offerId),
+      errorTitle: 'Error',
+      fallbackMessage: 'Failed to accept offer. Please try again.',
+    );
+    if (!result.isSuccess) {
       return false;
     }
+
+    await loadBuyPosts(forceRefresh: true);
+    return true;
   }
 
   void viewAppointment(BuyPost post) {

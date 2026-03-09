@@ -251,9 +251,7 @@ class _OfferedByYouPopupState extends State<OfferedByYouPopup> {
           CircleAvatar(
             radius: 35.r,
             backgroundColor: AppColors.grey300,
-            backgroundImage: const AssetImage(
-              'assets/images/User_DP/Farhan.jpg',
-            ),
+            backgroundImage: _buildPostedByAvatarProvider(),
           ),
           SizedBox(width: 12.w),
           Column(
@@ -721,5 +719,19 @@ class _OfferedByYouPopupState extends State<OfferedByYouPopup> {
         ),
       ],
     );
+  }
+
+  ImageProvider _buildPostedByAvatarProvider() {
+    final avatar = post.postedByAvatarUrl?.trim();
+    if (avatar != null && avatar.isNotEmpty) {
+      final isNetwork =
+          avatar.startsWith('http://') || avatar.startsWith('https://');
+      if (isNetwork) {
+        return NetworkImage(avatar);
+      }
+      return AssetImage(avatar);
+    }
+
+    return const AssetImage('assets/images/User_DP/Farhan.jpg');
   }
 }

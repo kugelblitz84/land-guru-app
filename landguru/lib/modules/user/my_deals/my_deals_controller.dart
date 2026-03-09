@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../../../core/enums/property_type.dart';
+import '../../../core/services/api_error_handler.dart';
 import '../../../core/services/nested_navigation_service.dart';
 import 'models/deal_models.dart';
 import 'deal_details_view.dart';
@@ -12,11 +13,11 @@ class MyDealsController extends GetxController {
   static bool _hasCachedData = false;
 
   // Tab state
-  final Rx<DealTab> selectedTab = DealTab.sold.obs;
+  final RxString selectedTab = DealTabs.sold.obs;
 
   // Filter states
-  final Rx<DealSortBy> sortBy = DealSortBy.newest.obs;
-  final Rx<DealTypeFilter> typeFilter = DealTypeFilter.all.obs;
+  final RxString sortBy = DealSortOptions.newest.obs;
+  final RxString typeFilter = DealTypeFilters.all.obs;
 
   // Loading states
   final RxBool isLoading = false.obs;
@@ -40,7 +41,13 @@ class MyDealsController extends GetxController {
       return;
     }
 
-    _loadDemoData();
+    final result = await ApiErrorHandler.call(
+      () async => _loadDemoData(),
+      showError: false,
+    );
+    if (!result.isSuccess) {
+      return;
+    }
     _cachedStats = stats.value;
     _cachedDeals = List<Deal>.from(allDeals);
     _hasCachedData = true;
@@ -70,7 +77,7 @@ class MyDealsController extends GetxController {
         location:
             'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
         soldPrice: '2,00,00,000',
-        status: DealStatus.sold,
+        status: DealStatuses.sold,
         dealDate: now.subtract(const Duration(hours: 2)),
         description:
             'A stunning newly renovated villa featuring an open-concept '
@@ -127,7 +134,7 @@ class MyDealsController extends GetxController {
         propertyType: PropertyType.flat,
         location: 'Kurigram Sadar, Kurigram',
         soldPrice: '4,00,00,000',
-        status: DealStatus.sold,
+        status: DealStatuses.sold,
         dealDate: now.subtract(const Duration(hours: 2)),
         description: 'Beautiful villa with excellent location.',
         soldLandAmount: '10 Katha',
@@ -146,7 +153,7 @@ class MyDealsController extends GetxController {
         propertyType: PropertyType.flat,
         location: 'Block-C, Banani, Banani Thana, Dhaka North City Corporation',
         soldPrice: '40,00,000',
-        status: DealStatus.sold,
+        status: DealStatuses.sold,
         dealDate: now.subtract(const Duration(hours: 2)),
         description:
             'A stunning newly renovated villa featuring an open-concept '
@@ -168,7 +175,7 @@ class MyDealsController extends GetxController {
         propertyType: PropertyType.flat,
         location: 'Gazipur Sadar, Gazipur',
         soldPrice: '95,12,000',
-        status: DealStatus.sold,
+        status: DealStatuses.sold,
         dealDate: now.subtract(const Duration(hours: 2)),
         description: 'Beautiful water body land.',
         soldLandAmount: '8 Katha',
@@ -189,7 +196,7 @@ class MyDealsController extends GetxController {
         propertyType: PropertyType.plainLand,
         location: 'Uttara Sector 10, Dhaka',
         soldPrice: '1,50,00,000',
-        status: DealStatus.bought,
+        status: DealStatuses.bought,
         dealDate: now.subtract(const Duration(days: 1)),
         description:
             'Prime location land in Uttara with excellent connectivity.',
@@ -216,7 +223,7 @@ class MyDealsController extends GetxController {
         location:
             'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
         soldPrice: '40,00,000',
-        status: DealStatus.bought,
+        status: DealStatuses.bought,
         dealDate: now.subtract(const Duration(hours: 2)),
         description:
             'A stunning newly renovated villa featuring an open-concept '
@@ -259,7 +266,7 @@ class MyDealsController extends GetxController {
         propertyType: PropertyType.waterLand,
         location: 'Gazipur Sadar, Gazipur',
         soldPrice: '75,00,000',
-        status: DealStatus.bought,
+        status: DealStatuses.bought,
         dealDate: now.subtract(const Duration(days: 3)),
         description:
             'Beautiful water body land suitable for fishery or eco-tourism development.',
@@ -283,21 +290,21 @@ class MyDealsController extends GetxController {
   List<Deal> get filteredDeals {
     List<Deal> filtered = allDeals
         .where(
-          (d) => selectedTab.value == DealTab.sold
-              ? d.status == DealStatus.sold
-              : d.status == DealStatus.bought,
+          (d) => selectedTab.value == DealTabs.sold
+              ? d.status == DealStatuses.sold
+              : d.status == DealStatuses.bought,
         )
         .toList();
 
     // Apply type filter
-    if (typeFilter.value != DealTypeFilter.all) {
+    if (typeFilter.value != DealTypeFilters.all) {
       filtered = filtered.where((d) {
         switch (typeFilter.value) {
-          case DealTypeFilter.flat:
+          case DealTypeFilters.flat:
             return d.propertyType == PropertyType.flat;
-          case DealTypeFilter.plainLand:
+          case DealTypeFilters.plainLand:
             return d.propertyType == PropertyType.plainLand;
-          case DealTypeFilter.waterLand:
+          case DealTypeFilters.waterLand:
             return d.propertyType == PropertyType.waterLand;
           default:
             return true;
@@ -307,20 +314,20 @@ class MyDealsController extends GetxController {
 
     // Apply sorting
     switch (sortBy.value) {
-      case DealSortBy.newest:
+      case DealSortOptions.newest:
         filtered.sort((a, b) => b.dealDate.compareTo(a.dealDate));
         break;
-      case DealSortBy.oldest:
+      case DealSortOptions.oldest:
         filtered.sort((a, b) => a.dealDate.compareTo(b.dealDate));
         break;
-      case DealSortBy.priceHighToLow:
+      case DealSortOptions.priceHighToLow:
         filtered.sort((a, b) {
           final priceA = _parsePrice(a.soldPrice);
           final priceB = _parsePrice(b.soldPrice);
           return priceB.compareTo(priceA);
         });
         break;
-      case DealSortBy.priceLowToHigh:
+      case DealSortOptions.priceLowToHigh:
         filtered.sort((a, b) {
           final priceA = _parsePrice(a.soldPrice);
           final priceB = _parsePrice(b.soldPrice);
@@ -337,17 +344,17 @@ class MyDealsController extends GetxController {
   }
 
   /// Change tab
-  void changeTab(DealTab tab) {
+  void changeTab(String tab) {
     selectedTab.value = tab;
   }
 
   /// Change sort by
-  void changeSortBy(DealSortBy sort) {
+  void changeSortBy(String sort) {
     sortBy.value = sort;
   }
 
   /// Change type filter
-  void changeTypeFilter(DealTypeFilter filter) {
+  void changeTypeFilter(String filter) {
     typeFilter.value = filter;
   }
 

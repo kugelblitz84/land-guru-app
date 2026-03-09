@@ -11,27 +11,8 @@ import '../../shared/shell/main_shell_controller.dart';
 class AgentProfileController extends GetxController {
   final _profileStore = Get.find<AgentProfileStore>();
 
+  Rx<AgentProfileStateModel> get profileModel => _profileStore.profileModel;
   RxBool get isLoading => _profileStore.isLoading;
-
-  // Agent data
-  RxString get agentName => _profileStore.agentName;
-  RxString get agentTitle => _profileStore.agentTitle;
-  RxString get agentId => _profileStore.agentId;
-  RxString get agentType => _profileStore.agentType;
-  RxBool get isVerified => _profileStore.isVerified;
-  RxString get profileImage => _profileStore.profileImage;
-  RxString get email => _profileStore.email;
-  RxString get phone => _profileStore.phone;
-
-  // Stats
-  RxInt get totalTasksCompleted => _profileStore.totalTasksCompleted;
-  RxDouble get totalEarned => _profileStore.totalEarned;
-
-  // Assigned location
-  RxString get assignedLocation => _profileStore.assignedLocation;
-
-  // Services provided - full list from design
-  RxList<String> get servicesProvided => _profileStore.servicesProvided;
 
   final _token = Get.find<TokenService>();
   final _authService = Get.find<AuthService>();
@@ -48,7 +29,10 @@ class AgentProfileController extends GetxController {
 
   /// Load agent profile
   Future<void> loadProfile({bool forceRefresh = false}) async {
-    await _profileStore.refreshProfile(forceRefresh: forceRefresh);
+    await ApiErrorHandler.call(
+      () => _profileStore.refreshProfile(forceRefresh: forceRefresh),
+      showError: false,
+    );
   }
 
   /// Navigate to edit profile
@@ -94,30 +78,27 @@ class AgentProfileController extends GetxController {
   /// Perform actual logout
   Future<void> _performLogout() async {
     isLoading.value = true;
-    try {
-      _authService.clearSession();
-      _token.clear();
+    await ApiErrorHandler.call(
+      () async {
+        _authService.clearSession();
+        _token.clear();
 
-      if (Get.isRegistered<UserProfileStore>()) {
-        Get.find<UserProfileStore>().clear();
-      }
-      if (Get.isRegistered<AgentProfileStore>()) {
-        Get.find<AgentProfileStore>().clear();
-      }
+        if (Get.isRegistered<UserProfileStore>()) {
+          Get.find<UserProfileStore>().clear();
+        }
+        if (Get.isRegistered<AgentProfileStore>()) {
+          Get.find<AgentProfileStore>().clear();
+        }
 
-      _clearScopedControllers();
+        _clearScopedControllers();
 
-      // Navigate to login and clear navigation stack
-      Get.offAllNamed(AppRoutes.LOGIN);
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to logout. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
+        // Navigate to login and clear navigation stack
+        Get.offAllNamed(AppRoutes.LOGIN);
+      },
+      errorTitle: 'Error',
+      fallbackMessage: 'Failed to logout. Please try again.',
+    );
+    isLoading.value = false;
   }
 
   /// Refresh profile

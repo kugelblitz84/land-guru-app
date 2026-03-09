@@ -29,26 +29,57 @@ class UserBottomNavView extends GetView<UserBottomNavController> {
       },
       child: Scaffold(
         body: Obx(
-          () => IndexedStack(
-            index: controller.currentIndex.value,
-            children: [
-              _buildShellContent(const HomeContentView()),
-              _buildShellContent(const PropertiesContentView()),
-              _buildShellContent(const AppointmentsContentView()),
-              _buildShellContent(const MyDealsContentView()),
-              const ProfileView(),
-            ],
+          () => Stack(
+            children: List.generate(5, (index) {
+              final isVisited = controller.visitedTabs.contains(index);
+
+              if (!isVisited) {
+                return const SizedBox.shrink();
+              }
+
+              return Offstage(
+                offstage: controller.currentIndex.value != index,
+                child: TickerMode(
+                  enabled: controller.currentIndex.value == index,
+                  child: _buildTab(index),
+                ),
+              );
+            }),
           ),
+
+          // () => IndexedStack(
+          //   index: controller.currentIndex.value,
+          //   children: [
+          //     _tabNavigator(id: 0, content: const HomeContentView()),
+          //     _tabNavigator(id: 1, content: const PropertiesContentView()),
+          //     _tabNavigator(id: 2, content: const AppointmentsContentView()),
+          //     _tabNavigator(id: 3, content: const MyDealsContentView()),
+          //     const ProfileView(),
+          //   ],
+          // ),
         ),
         bottomNavigationBar: _buildBottomNavBar(),
       ),
     );
   }
 
-  /// Wrap content with shell (shared header)
-  Widget _buildShellContent(Widget content) {
-    return MainShellWrapper(showHeader: true, child: content);
+  Widget _buildTab(int index) {
+    switch (index) {
+      case 0:
+        return _tabNavigator(id: 0, content: const HomeContentView());
+      case 1:
+        return _tabNavigator(id: 1, content: const PropertiesContentView());
+      case 2:
+        return _tabNavigator(id: 2, content: const AppointmentsContentView());
+      case 3:
+        return _tabNavigator(id: 3, content: const MyDealsContentView());
+      case 4:
+      default:
+        return const ProfileView();
+    }
   }
+
+  /// Wrap content with shell (shared header)
 
   /// Build bottom navigation bar
   Widget _buildBottomNavBar() {
@@ -141,6 +172,24 @@ class UserBottomNavView extends GetView<UserBottomNavController> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _tabNavigator extends StatelessWidget {
+  final int id;
+  final Widget content;
+
+  const _tabNavigator({required this.id, required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      key: Get.nestedKey(id),
+      onGenerateRoute: (settings) => MaterialPageRoute(
+        builder: (context) =>
+            MainShellWrapper(showHeader: true, child: content),
       ),
     );
   }

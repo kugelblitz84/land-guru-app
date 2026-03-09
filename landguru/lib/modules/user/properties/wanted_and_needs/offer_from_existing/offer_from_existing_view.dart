@@ -65,7 +65,7 @@ class OfferFromExistingView extends GetView<OfferFromExistingController> {
                 const InfoBanner(
                   message:
                       'Your full location will remain private to the buyer.',
-                  type: InfoBannerType.info,
+                  type: InfoBannerTypes.info,
                 ),
 
                 SizedBox(height: 16.h),
@@ -611,3 +611,4 @@ class OfferFromExistingView extends GetView<OfferFromExistingController> {
     );
   }
 }
+

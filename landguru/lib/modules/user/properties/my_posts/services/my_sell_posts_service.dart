@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../../../core/services/api_client.dart';
 import '../models/my_post.dart';
-import '../models/my_post_status.dart';
+import '../models/my_sell_posts_api_models.dart';
 
 class MySellPostsService extends GetxService {
   MySellPostsService(this._apiClient);
@@ -41,58 +41,5 @@ class MySellPostsService extends GetxService {
         : int.tryParse(totalRaw?.toString() ?? '') ?? posts.length;
 
     return MySellPostsResponse(posts: posts, total: total);
-  }
-}
-
-class MySellPostsResponse {
-  MySellPostsResponse({required this.posts, required this.total});
-
-  final List<MyPost> posts;
-  final int total;
-}
-
-enum MySellPostsTab {
-  all('ALL'),
-  pending('PENDING'),
-  quoted('QUOTED'),
-  active('ACTIVE'),
-  draft('DRAFT');
-
-  const MySellPostsTab(this.apiValue);
-
-  final String apiValue;
-
-  static MySellPostsTab fromFilter(String filter) {
-    switch (filter.toLowerCase()) {
-      case 'pending':
-        return MySellPostsTab.pending;
-      case 'quoted':
-        return MySellPostsTab.quoted;
-      case 'active':
-        return MySellPostsTab.active;
-      case 'draft':
-        return MySellPostsTab.draft;
-      case 'all':
-      default:
-        return MySellPostsTab.all;
-    }
-  }
-}
-
-extension MyPostSellStatusMapper on MyPostStatus {
-  static MyPostStatus fromApiStatus(String? rawStatus) {
-    final normalized = (rawStatus ?? '').trim().toUpperCase();
-    switch (normalized) {
-      case 'PENDING':
-      case 'PENDING_ADMIN':
-        return MyPostStatus.pending;
-      case 'QUOTED':
-        return MyPostStatus.quoted;
-      case 'ACTIVE':
-        return MyPostStatus.active;
-      case 'DRAFT':
-      default:
-        return MyPostStatus.draft;
-    }
   }
 }

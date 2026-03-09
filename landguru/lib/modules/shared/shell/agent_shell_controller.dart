@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import '../../../core/models/agent_system_model.dart';
+import '../../../core/services/api_error_handler.dart';
 import '../../../core/services/agent_profile_store.dart';
 
 /// Controller for the agent shell - manages shared state across bottom nav tabs
@@ -6,11 +8,7 @@ import '../../../core/services/agent_profile_store.dart';
 class AgentShellController extends GetxController {
   final _profileStore = Get.find<AgentProfileStore>();
 
-  RxString get agentName => _profileStore.agentName;
-  RxString get agentTitle => _profileStore.agentTitle;
-  RxString get agentAvatar => _profileStore.profileImage;
-  RxBool get isOnline => _profileStore.isOnline;
-  RxInt get unreadNotificationCount => _profileStore.unreadNotificationCount;
+  Rx<AgentProfileStateModel> get profileModel => _profileStore.profileModel;
   RxBool get isLoading => _profileStore.isLoading;
 
   /// Get display name with title (e.g., "Adv. Sahil")
@@ -22,27 +20,38 @@ class AgentShellController extends GetxController {
   void onInit() {
     super.onInit();
     _profileStore.hydrateFromSession();
-    _profileStore.refreshProfile(showError: false);
+    ApiErrorHandler.call(
+      () => _profileStore.refreshProfile(showError: false),
+      showError: false,
+    );
   }
 
   /// Load agent data from API/storage
   Future<void> loadAgentData() async {
-    await _profileStore.refreshProfile(showError: false);
+    await ApiErrorHandler.call(
+      () => _profileStore.refreshProfile(showError: false),
+      showError: false,
+    );
   }
 
   /// Refresh agent data
   Future<void> refresh() async {
-    await _profileStore.refreshProfile(forceRefresh: true, showError: false);
+    await ApiErrorHandler.call(
+      () => _profileStore.refreshProfile(forceRefresh: true, showError: false),
+      showError: false,
+    );
   }
 
   /// Update agent name
   void updateAgentName(String name) {
-    _profileStore.agentName.value = name;
+    _profileStore.profileModel.value = _profileStore.profileModel.value
+        .copyWith(agentName: name);
   }
 
   /// Update agent title
   void updateAgentTitle(String title) {
-    _profileStore.agentTitle.value = title;
+    _profileStore.profileModel.value = _profileStore.profileModel.value
+        .copyWith(agentTitle: title);
   }
 
   /// Update notification count

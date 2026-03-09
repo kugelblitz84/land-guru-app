@@ -151,11 +151,12 @@ class Verification {
 
   factory Verification.fromJson(Map<String, dynamic> json) {
     return Verification(
-      nidNumber: _readString(json, ['nidNumber']) ?? '',
+      nidNumber:
+          _readString(json, ['nidNumber', 'nidNo', 'nationalIdNumber']) ?? '',
       nidFrontUrl: _readString(json, ['nidFrontUrl']) ?? '',
       nidBackUrl: _readString(json, ['nidBackUrl']) ?? '',
       isNIDVerified: _readBool(json, ['isNIDVerified']) ?? false,
-      tinNumber: _readString(json, ['tinNumber']) ?? '',
+      tinNumber: _readString(json, ['tinNumber', 'tinNo']) ?? '',
       tinCertificateUrl: _readString(json, ['tinCertificateUrl']) ?? '',
       isTINVerified: _readBool(json, ['isTINVerified']) ?? false,
     );
@@ -163,6 +164,9 @@ class Verification {
 
   bool get nidVerified => isNIDVerified;
   bool get tinVerified => isTINVerified;
+  bool get hasNidDocument =>
+      nidFrontUrl.trim().isNotEmpty || nidBackUrl.trim().isNotEmpty;
+  bool get hasTinDocument => tinCertificateUrl.trim().isNotEmpty;
 
   static String? _readString(Map<String, dynamic> json, List<String> keys) {
     for (final key in keys) {
@@ -241,5 +245,133 @@ class AccountSummaryModel {
       }
     }
     return 0;
+  }
+}
+
+class UserProfileStateModel {
+  const UserProfileStateModel({
+    required this.isOnline,
+    required this.unreadNotificationCount,
+    required this.userName,
+    required this.userPhone,
+    required this.userEmail,
+    required this.userAddress,
+    required this.profileImage,
+    required this.isVerified,
+    required this.memberSince,
+    required this.activeDeals,
+    required this.propertiesListed,
+    required this.division,
+    required this.district,
+    required this.upazilla,
+    required this.pouroshova,
+    required this.wardNo,
+    required this.postalCode,
+    required this.fullAddress,
+    required this.nidNumber,
+    required this.isNidVerified,
+    required this.tinNumber,
+    required this.isTinVerified,
+  });
+
+  factory UserProfileStateModel.initial() {
+    return const UserProfileStateModel(
+      isOnline: true,
+      unreadNotificationCount: 0,
+      userName: '',
+      userPhone: '',
+      userEmail: '',
+      userAddress: '',
+      profileImage: '',
+      isVerified: false,
+      memberSince: '--',
+      activeDeals: 0,
+      propertiesListed: 0,
+      division: '',
+      district: '',
+      upazilla: '',
+      pouroshova: '',
+      wardNo: '',
+      postalCode: '',
+      fullAddress: '',
+      nidNumber: 'Not provided',
+      isNidVerified: false,
+      tinNumber: 'Not provided',
+      isTinVerified: false,
+    );
+  }
+
+  final bool isOnline;
+  final int unreadNotificationCount;
+  final String userName;
+  final String userPhone;
+  final String userEmail;
+  final String userAddress;
+  final String profileImage;
+  final bool isVerified;
+  final String memberSince;
+  final int activeDeals;
+  final int propertiesListed;
+  final String division;
+  final String district;
+  final String upazilla;
+  final String pouroshova;
+  final String wardNo;
+  final String postalCode;
+  final String fullAddress;
+  final String nidNumber;
+  final bool isNidVerified;
+  final String tinNumber;
+  final bool isTinVerified;
+
+  UserProfileStateModel copyWith({
+    bool? isOnline,
+    int? unreadNotificationCount,
+    String? userName,
+    String? userPhone,
+    String? userEmail,
+    String? userAddress,
+    String? profileImage,
+    bool? isVerified,
+    String? memberSince,
+    int? activeDeals,
+    int? propertiesListed,
+    String? division,
+    String? district,
+    String? upazilla,
+    String? pouroshova,
+    String? wardNo,
+    String? postalCode,
+    String? fullAddress,
+    String? nidNumber,
+    bool? isNidVerified,
+    String? tinNumber,
+    bool? isTinVerified,
+  }) {
+    return UserProfileStateModel(
+      isOnline: isOnline ?? this.isOnline,
+      unreadNotificationCount:
+          unreadNotificationCount ?? this.unreadNotificationCount,
+      userName: userName ?? this.userName,
+      userPhone: userPhone ?? this.userPhone,
+      userEmail: userEmail ?? this.userEmail,
+      userAddress: userAddress ?? this.userAddress,
+      profileImage: profileImage ?? this.profileImage,
+      isVerified: isVerified ?? this.isVerified,
+      memberSince: memberSince ?? this.memberSince,
+      activeDeals: activeDeals ?? this.activeDeals,
+      propertiesListed: propertiesListed ?? this.propertiesListed,
+      division: division ?? this.division,
+      district: district ?? this.district,
+      upazilla: upazilla ?? this.upazilla,
+      pouroshova: pouroshova ?? this.pouroshova,
+      wardNo: wardNo ?? this.wardNo,
+      postalCode: postalCode ?? this.postalCode,
+      fullAddress: fullAddress ?? this.fullAddress,
+      nidNumber: nidNumber ?? this.nidNumber,
+      isNidVerified: isNidVerified ?? this.isNidVerified,
+      tinNumber: tinNumber ?? this.tinNumber,
+      isTinVerified: isTinVerified ?? this.isTinVerified,
+    );
   }
 }

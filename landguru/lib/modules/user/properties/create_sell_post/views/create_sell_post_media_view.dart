@@ -110,7 +110,7 @@ class CreateSellPostMediaView extends GetView<CreateSellPostController> {
                   InfoBanner(
                     message:
                         'Upload all raw documents of your Deeds/Khatians. We will organize and verify them for you',
-                    type: InfoBannerType.info,
+                    type: InfoBannerTypes.info,
                   ),
                   SizedBox(height: 20.h),
 
@@ -237,3 +237,4 @@ class CreateSellPostMediaView extends GetView<CreateSellPostController> {
     );
   }
 }
+

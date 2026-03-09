@@ -5,17 +5,17 @@ import '../../../../core/theme/app_colors.dart';
 import '../properties_controller.dart';
 import 'distance_range_selector.dart';
 
-/// Filter property type enum for the filter sheet
-enum FilterPropertyType {
-  plainLand('Plain Land'),
-  flat('Flat'),
-  commercial('Commercial'),
-  waterLand('Water Land'),
-  agroLand('Agro Land'),
-  blankRoof('Blank Roof');
-
-  final String label;
-  const FilterPropertyType(this.label);
+/// String constants for filter property types.
+class FilterPropertyTypes {
+  static const List<Map<String, String>> options = [
+    {'key': 'all', 'label': 'All'},
+    {'key': 'plainLand', 'label': 'Plain Land'},
+    {'key': 'flat', 'label': 'Flat'},
+    {'key': 'commercial', 'label': 'Commercial'},
+    {'key': 'waterLand', 'label': 'Water Land'},
+    {'key': 'agroLand', 'label': 'Agro Land'},
+    {'key': 'blankRoof', 'label': 'Blank Roof'},
+  ];
 }
 
 /// Land size range for filter sliders
@@ -254,11 +254,12 @@ class PropertiesFilterSheet extends StatelessWidget {
           () => Wrap(
             spacing: 8.w,
             runSpacing: 8.h,
-            children: FilterPropertyType.values.map((type) {
-              final isSelected =
-                  controller.filterPropertyType.value == type.name;
+            children: FilterPropertyTypes.options.map((type) {
+              final key = type['key'] ?? '';
+              final label = type['label'] ?? '';
+              final isSelected = controller.filterPropertyType.value == key;
               return GestureDetector(
-                onTap: () => controller.filterPropertyType.value = type.name,
+                onTap: () => controller.filterPropertyType.value = key,
                 child: Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: 16.w,
@@ -269,7 +270,7 @@ class PropertiesFilterSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
-                    type.label,
+                    label,
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w500,

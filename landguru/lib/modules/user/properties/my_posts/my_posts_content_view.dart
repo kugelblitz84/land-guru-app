@@ -172,7 +172,10 @@ class MyPostsContentView extends StatelessWidget {
             }
 
             if (controller.currentPosts.isEmpty) {
-              return _buildEmptyState(controller);
+              return _buildRefreshableEmptyState(
+                onRefresh: controller.refresh,
+                child: _buildEmptyState(controller),
+              );
             }
 
             return RefreshIndicator(
@@ -640,6 +643,20 @@ class MyPostsContentView extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRefreshableEmptyState({
+    required Future<void> Function() onRefresh,
+    required Widget child,
+  }) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        children: [SizedBox(height: 300.h, child: child)],
       ),
     );
   }

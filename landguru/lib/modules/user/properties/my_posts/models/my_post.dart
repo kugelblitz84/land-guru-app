@@ -120,7 +120,6 @@ class MyPost {
       case MyPostStatus.draft:
         return 'Edited:';
       case MyPostStatus.quoted:
-      default:
         return 'Submitted:';
     }
   }

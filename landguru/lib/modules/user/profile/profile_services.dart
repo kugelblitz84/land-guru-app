@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:landguru/core/core.dart';
-import 'models/profile_model.dart';
+import '../../../core/models/user_system_model.dart';
 import 'dart:convert';
 
 class ProfileServices extends GetxService {

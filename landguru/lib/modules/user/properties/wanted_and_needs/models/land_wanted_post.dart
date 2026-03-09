@@ -8,6 +8,7 @@ class LandWantedPost {
   final String postId; // e.g., "#BUY-1042"
   final String title;
   final String postedBy;
+  final String? postedByAvatarUrl;
   final String postedTime;
   final String preferredLocation;
   final String propertyType;
@@ -30,6 +31,7 @@ class LandWantedPost {
     required this.postId,
     required this.title,
     required this.postedBy,
+    this.postedByAvatarUrl,
     required this.postedTime,
     required this.preferredLocation,
     required this.propertyType,
@@ -72,6 +74,7 @@ class LandWantedPost {
       postId: postId,
       title: title,
       postedBy: postedBy,
+      postedByAvatarUrl: _extractBuyerAvatar(postMap, buyerMap),
       postedTime: postedTime,
       preferredLocation: preferredLocation,
       propertyType: _mapPropertyTypeLabel(postMap['propertyType']?.toString()),
@@ -93,6 +96,114 @@ class LandWantedPost {
       ),
       description: postMap['description']?.toString(),
     );
+  }
+
+  factory LandWantedPost.fromMyOfferJson(Map<String, dynamic> json) {
+    final buyPost = json['buyPost'] is Map
+        ? Map<String, dynamic>.from(json['buyPost'] as Map)
+        : <String, dynamic>{};
+
+    final buyPostId = buyPost['id']?.toString().trim();
+    final postId = (buyPostId != null && buyPostId.isNotEmpty)
+        ? '#BUY-${(buyPostId.length > 8 ? buyPostId.substring(0, 8) : buyPostId).toUpperCase()}'
+        : '#BUY';
+
+    final offeredAt =
+        json['offeredAt']?.toString() ??
+        json['createdAt']?.toString() ??
+        buyPost['postedAgo']?.toString();
+
+    final offeredType = _toPropertyType(
+      _mapPropertyTypeLabel(buyPost['propertyType']?.toString()),
+    );
+
+    return LandWantedPost(
+      id:
+          _toText(json['offerId']) ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
+      postId: postId,
+      title: _toText(buyPost['title']) ?? 'Untitled Buy Post',
+      postedBy:
+          _toText(buyPost['postedByName']) ??
+          _toText(_asMap(buyPost['postedBy'])?['name']) ??
+          'Unknown Buyer',
+      postedByAvatarUrl:
+          _toText(buyPost['postedByAvatar']) ??
+          _toText(_asMap(buyPost['postedBy'])?['avatar']) ??
+          _toText(_asMap(buyPost['postedBy'])?['image']) ??
+          _toText(_asMap(buyPost['postedBy'])?['photoUrl']),
+      postedTime: _formatPostedTime(offeredAt),
+      preferredLocation:
+          _toText(buyPost['location']) ?? 'Location not specified',
+      propertyType: _mapPropertyTypeLabel(buyPost['propertyType']?.toString()),
+      requiredLandSize: _formatMinLand(buyPost['sizeMin'], buyPost['sizeUnit']),
+      requiredPlotSize: _formatMinLand(buyPost['sizeMin'], buyPost['sizeUnit']),
+      distanceFromRoad: _formatDistanceRange(
+        buyPost['roadDistanceMin'],
+        buyPost['roadDistanceMax'],
+      ),
+      budgetRange: _formatBudgetRange(
+        buyPost['budgetMin'],
+        buyPost['budgetMax'],
+      ),
+      offerStatus: _mapOfferStatus(_toText(json['status']) ?? ''),
+      hasOffered: true,
+      description: _toText(buyPost['description']),
+      offeredPropertyTitle: _toText(json['title']),
+      offeredPropertyPrice: _formatOfferPrice(json['askingPrice']),
+      offeredPropertyType: offeredType,
+      offeredPropertyImageUrl: _toText(json['thumbnail']),
+    );
+  }
+
+  static OfferStatus _mapOfferStatus(String rawStatus) {
+    final normalized = rawStatus.trim().toUpperCase();
+    switch (normalized) {
+      case 'BUYER_ACCEPTED':
+      case 'ACCEPTED':
+      case 'PENDING_ADMIN_REVIEW':
+      case 'PENDING_ADMIN':
+        return OfferStatus.buyerAcceptedPendingAdmin;
+      case 'APPOINTMENT_SCHEDULED':
+      case 'COMPLETED':
+      case 'DONE':
+        return OfferStatus.buyerAcceptedAppointment;
+      case 'BUYER_REJECTED':
+      case 'REJECTED':
+        return OfferStatus.rejected;
+      case 'PENDING':
+      default:
+        return OfferStatus.pendingBuyerReview;
+    }
+  }
+
+  static String? _toText(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  static Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  static String? _formatOfferPrice(dynamic value) {
+    final parsed = _tryParseNum(value);
+    if (parsed == null) return _toText(value);
+    return _formatNumber(parsed);
+  }
+
+  static PropertyType? _toPropertyType(String label) {
+    final normalized = label.trim().toLowerCase();
+    if (normalized == PropertyType.plainLand.label.toLowerCase()) {
+      return PropertyType.plainLand;
+    }
+    if (normalized == PropertyType.waterLand.label.toLowerCase()) {
+      return PropertyType.waterLand;
+    }
+    return PropertyType.flat;
   }
 
   static String _extractId(Map<String, dynamic> postMap, String postId) {
@@ -157,6 +268,30 @@ class LandWantedPost {
     }
 
     return 'Unknown Buyer';
+  }
+
+  static String? _extractBuyerAvatar(
+    Map<String, dynamic> postMap,
+    Map<String, dynamic> buyerMap,
+  ) {
+    final candidates = [
+      buyerMap['avatar'],
+      buyerMap['image'],
+      buyerMap['photoUrl'],
+      postMap['postedByAvatar'],
+      _asMap(postMap['postedBy'])?['avatar'],
+      _asMap(postMap['postedBy'])?['image'],
+      _asMap(postMap['postedBy'])?['photoUrl'],
+    ];
+
+    for (final candidate in candidates) {
+      final parsed = candidate?.toString().trim();
+      if (parsed != null && parsed.isNotEmpty) {
+        return parsed;
+      }
+    }
+
+    return null;
   }
 
   static String _extractPreferredLocation(Map<String, dynamic> postMap) {

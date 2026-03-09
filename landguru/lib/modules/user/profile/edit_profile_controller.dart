@@ -102,38 +102,24 @@ class EditProfileController extends GetxController {
 
   /// Load current profile data
   void loadCurrentProfile() {
-    fullNameController.text = _profileStore.userName.value;
-    phoneController.text = _profileStore.userPhone.value;
-    emailController.text = _profileStore.userEmail.value;
-    postalCodeController.text = _profileStore.postalCode.value;
-    fullAddressController.text = _profileStore.fullAddress.value;
-    profileImage.value = _profileStore.profileImage.value;
+    final profile = _profileStore.profileModel.value;
+    fullNameController.text = profile.userName;
+    phoneController.text = profile.userPhone;
+    emailController.text = profile.userEmail;
+    postalCodeController.text = profile.postalCode;
+    fullAddressController.text = profile.fullAddress;
+    profileImage.value = profile.profileImage;
 
-    selectedDivision.value = _ensureOption(
-      divisions,
-      _profileStore.division.value,
-    );
-    selectedDistrict.value = _ensureOption(
-      districts,
-      _profileStore.district.value,
-    );
-    selectedUpazilla.value = _ensureOption(
-      upazillas,
-      _profileStore.upazilla.value,
-    );
-    selectedPouroshova.value = _ensureOption(
-      pouroshovas,
-      _profileStore.pouroshova.value,
-    );
-    selectedWardNo.value = _ensureOption(
-      wardNumbers,
-      _profileStore.wardNo.value,
-    );
+    selectedDivision.value = _ensureOption(divisions, profile.division);
+    selectedDistrict.value = _ensureOption(districts, profile.district);
+    selectedUpazilla.value = _ensureOption(upazillas, profile.upazilla);
+    selectedPouroshova.value = _ensureOption(pouroshovas, profile.pouroshova);
+    selectedWardNo.value = _ensureOption(wardNumbers, profile.wardNo);
 
-    nidNumber.value = _profileStore.nidNumber.value;
-    isNidVerified.value = _profileStore.isNidVerified.value;
-    tinNumber.value = _profileStore.tinNumber.value;
-    isTinVerified.value = _profileStore.isTinVerified.value;
+    nidNumber.value = profile.nidNumber;
+    isNidVerified.value = profile.isNidVerified;
+    tinNumber.value = profile.tinNumber;
+    isTinVerified.value = profile.isTinVerified;
   }
 
   /// Pick new profile image

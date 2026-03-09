@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../core/services/api_error_handler.dart';
 
 /// Service for Agent Notifications screen
 /// Handles: All, Action Required, Appointments tabs
@@ -28,14 +29,11 @@ class AgentNotificationsController extends GetxService {
   /// Load notifications
   Future<void> loadNotifications() async {
     isLoading.value = true;
-    try {
-      // TODO: Load notifications from API
-      await Future.delayed(const Duration(seconds: 1));
-    } catch (e) {
-      // TODO: Handle error
-    } finally {
-      isLoading.value = false;
-    }
+    await ApiErrorHandler.call(
+      () => Future<void>.delayed(const Duration(seconds: 1)),
+      showError: false,
+    );
+    isLoading.value = false;
   }
 
   /// Mark as read

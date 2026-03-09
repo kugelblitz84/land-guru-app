@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import '../../../../core/services/api_error_handler.dart';
 import '../../../../modules/user/properties/create_sell_post/services/sell_post_service.dart';
 import '../services/sell_post_details_service.dart';
+import '../services/models/sell_post_details_payload.dart';
 import '../../../../core/services/upload_service.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../routes/app_routes.dart';
@@ -115,19 +116,17 @@ class CreateSellPostController extends GetxController {
     required int preferredStep,
   }) async {
     isLoading.value = true;
-    try {
-      final payload = await _sellPostDetailsService.getSellPostById(postId);
+    final result = await ApiErrorHandler.call(
+      () => _sellPostDetailsService.getSellPostById(postId),
+      errorTitle: 'Error',
+      fallbackMessage: 'Failed to load draft post for editing',
+    );
+    if (result.isSuccess && result.data != null) {
+      final payload = result.data!;
       _applyDraftPayload(payload);
       goToStep(preferredStep.clamp(1, totalSteps));
-    } catch (_) {
-      Get.snackbar(
-        'Error',
-        'Failed to load draft post for editing',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
     }
+    isLoading.value = false;
   }
 
   int _getResumeStep(int? lastCompletedStep) {

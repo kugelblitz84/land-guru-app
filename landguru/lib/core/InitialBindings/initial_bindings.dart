@@ -18,6 +18,7 @@ import '../../modules/user/properties/wanted_and_needs/services/buy_post_offer_s
 import '../../modules/user/properties/my_posts/buy_posts/services/my_buy_posts_service.dart';
 import '../../modules/user/properties/my_posts/offered_posts/services/my_offered_posts_service.dart';
 import 'package:landguru/modules/user/profile/profile_services.dart';
+import 'package:landguru/modules/user/appointments/services/appointment_services.dart';
 import 'package:landguru/modules/agent/profile/agent_profile_services.dart';
 import 'package:landguru/modules/agent/appointments/agent_appointments_services.dart';
 import 'package:landguru/modules/agent/my_tasks/agent_task_actions_service.dart';
@@ -45,6 +46,10 @@ class InitialBindings extends Bindings {
     );
     Get.put<ProfileServices>(
       ProfileServices(Get.find<ApiClient>()),
+      permanent: true,
+    );
+    Get.put<AppointmentServices>(
+      AppointmentServices(Get.find<ApiClient>()),
       permanent: true,
     );
     Get.put<AgentProfileServices>(

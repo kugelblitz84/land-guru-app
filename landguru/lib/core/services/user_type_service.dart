@@ -1,23 +1,26 @@
 import 'package:get/get.dart';
-import '../enums/user_type.dart';
 
 /// Global service to manage the current user type (User or Agent).
 /// This determines which UI and features are available.
 class UserTypeService extends GetxService {
-  final Rxn<UserType> _currentType = Rxn<UserType>();
+  // Supported account role types in this codebase: 'user', 'agent'.
+  static const String roleUser = 'user';
+  static const String roleAgent = 'agent';
+
+  final RxnString _currentType = RxnString();
 
   /// Current user type
-  UserType? get currentType => _currentType.value;
+  String? get currentType => _currentType.value;
 
   /// Check if current user is a regular user
-  bool get isUser => _currentType.value == UserType.user;
+  bool get isUser => _currentType.value == roleUser;
 
   /// Check if current user is an agent
-  bool get isAgent => _currentType.value == UserType.agent;
+  bool get isAgent => _currentType.value == roleAgent;
 
   /// Set the current user type
-  void setUserType(UserType? type) {
-    _currentType.value = type;
+  void setUserType(String? type) {
+    _currentType.value = type?.trim().toLowerCase();
   }
 
   /// Clear the user type (on logout)

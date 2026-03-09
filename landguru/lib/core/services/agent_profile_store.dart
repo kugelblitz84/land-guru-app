@@ -1,57 +1,19 @@
 import 'package:get/get.dart';
 
+import '../models/agent_system_model.dart';
 import '../../modules/agent/profile/agent_profile_services.dart';
-import '../../modules/agent/profile/models/profile_model.dart';
 import 'api_error_handler.dart';
 import 'auth_service.dart';
 
 class AgentProfileStore extends GetxService {
   final RxBool isLoading = false.obs;
-  final RxBool isOnline = true.obs;
-  final RxInt unreadNotificationCount = 0.obs;
-
-  final RxString agentName = ''.obs;
-  final RxString agentTitle = ''.obs;
-  final RxString agentId = ''.obs;
-  final RxString agentType = ''.obs;
-  final RxBool isVerified = false.obs;
-  final RxString profileImage = ''.obs;
-  final RxString email = ''.obs;
-  final RxString phone = ''.obs;
-
-  final RxInt totalTasksCompleted = 0.obs;
-  final RxDouble totalEarned = 0.0.obs;
-
-  final RxString assignedLocation = ''.obs;
-  final RxList<String> servicesProvided = <String>[].obs;
-
-  final RxString division = ''.obs;
-  final RxString district = ''.obs;
-  final RxString upazilla = ''.obs;
-  final RxString pouroshova = ''.obs;
-  final RxString wardNo = ''.obs;
-  final RxString postalCode = ''.obs;
-  final RxString fullAddress = ''.obs;
-
-  final RxString nidNumber = 'Not provided'.obs;
-  final RxString tinNumber = 'Not provided'.obs;
-  final RxBool isNidVerified = false.obs;
-  final RxBool isTinVerified = false.obs;
-
-  final RxString bankName = ''.obs;
-  final RxString bankAccountNo = ''.obs;
-  final RxString swiftCode = ''.obs;
-  final RxString routingNo = ''.obs;
+  final Rx<AgentProfileStateModel> profileModel =
+      AgentProfileStateModel.initial().obs;
 
   final _authService = Get.find<AuthService>();
   final _profileServices = Get.find<AgentProfileServices>();
 
-  String get displayName {
-    if (agentTitle.value.isNotEmpty) {
-      return '${agentTitle.value} ${agentName.value}';
-    }
-    return agentName.value;
-  }
+  String get displayName => profileModel.value.displayName;
 
   void hydrateFromSession() {
     final user = _authService.user;
@@ -59,42 +21,46 @@ class AgentProfileStore extends GetxService {
       return;
     }
 
+    var nextState = profileModel.value;
+
     final fullName = _readString(user, const ['fullName', 'name']);
     if (fullName.isNotEmpty) {
-      agentName.value = fullName;
+      nextState = nextState.copyWith(agentName: fullName);
     }
 
     final title = _readString(user, const ['title', 'agentTitle']);
     if (title.isNotEmpty) {
-      agentTitle.value = title;
+      nextState = nextState.copyWith(agentTitle: title);
     }
 
     final id = _readString(user, const ['agentIdDisplay', 'agentId', 'id']);
     if (id.isNotEmpty) {
-      agentId.value = id;
+      nextState = nextState.copyWith(agentId: id);
     }
 
     final roleType = _readString(user, const ['agentType']);
     if (roleType.isNotEmpty) {
-      agentType.value = _formatAgentType(roleType);
+      nextState = nextState.copyWith(agentType: _formatAgentType(roleType));
     }
 
     final avatar = _readString(user, const ['photoUrl', 'image']);
     if (avatar.isNotEmpty) {
-      profileImage.value = avatar;
+      nextState = nextState.copyWith(profileImage: avatar);
     }
 
     final userEmail = _readString(user, const ['email']);
     if (userEmail.isNotEmpty) {
-      email.value = userEmail;
+      nextState = nextState.copyWith(email: userEmail);
     }
 
     final userPhone = _readString(user, const ['phone']);
     if (userPhone.isNotEmpty) {
-      phone.value = userPhone;
+      nextState = nextState.copyWith(phone: userPhone);
     }
 
-    isVerified.value = _readBool(user, const ['isVerified']);
+    profileModel.value = nextState.copyWith(
+      isVerified: _readBool(user, const ['isVerified']),
+    );
   }
 
   Future<void> refreshProfile({
@@ -130,82 +96,56 @@ class AgentProfileStore extends GetxService {
   }
 
   void updateUnreadCount(int count) {
-    unreadNotificationCount.value = count;
+    profileModel.value = profileModel.value.copyWith(
+      unreadNotificationCount: count,
+    );
   }
 
   void clearUnreadCount() {
-    unreadNotificationCount.value = 0;
+    updateUnreadCount(0);
   }
 
   void clear() {
-    agentName.value = '';
-    agentTitle.value = '';
-    agentId.value = '';
-    agentType.value = '';
-    isVerified.value = false;
-    profileImage.value = '';
-    email.value = '';
-    phone.value = '';
-
-    totalTasksCompleted.value = 0;
-    totalEarned.value = 0.0;
-
-    assignedLocation.value = '';
-    servicesProvided.clear();
-
-    division.value = '';
-    district.value = '';
-    upazilla.value = '';
-    pouroshova.value = '';
-    wardNo.value = '';
-    postalCode.value = '';
-    fullAddress.value = '';
-
-    nidNumber.value = 'Not provided';
-    tinNumber.value = 'Not provided';
-    isNidVerified.value = false;
-    isTinVerified.value = false;
-
-    bankName.value = '';
-    bankAccountNo.value = '';
-    swiftCode.value = '';
-    routingNo.value = '';
-
-    unreadNotificationCount.value = 0;
+    profileModel.value = AgentProfileStateModel.initial();
   }
 
   void _applyProfile(AgentProfileModel profile) {
-    agentName.value = profile.fullName;
-    agentId.value = profile.agentIdDisplay.isNotEmpty
-        ? profile.agentIdDisplay
-        : profile.agentId;
-    agentType.value = _formatAgentType(profile.agentType);
-    isVerified.value = profile.isVerified;
-    profileImage.value = profile.photoUrl;
-    email.value = profile.email;
-    phone.value = profile.phone;
-    assignedLocation.value = profile.assignedLocation;
-    servicesProvided.assignAll(profile.services);
-
-    division.value = profile.personalDetails.division;
-    district.value = profile.personalDetails.district;
-    upazilla.value = profile.personalDetails.upazila;
-    pouroshova.value = profile.personalDetails.unionOrCityCorp;
-    wardNo.value = profile.personalDetails.wardNo;
-    postalCode.value = profile.personalDetails.postalCode;
-    fullAddress.value = profile.personalDetails.fullAddress;
-
-    nidNumber.value = _maskSensitive(profile.verificationDocs.nidNumber);
-    tinNumber.value = _maskSensitive(profile.verificationDocs.tinNumber);
-    isNidVerified.value = profile.verificationDocs.isNIDVerified;
-    isTinVerified.value = profile.verificationDocs.isTINVerified;
-
-    bankName.value = profile.bankInfo.bankName;
-    bankAccountNo.value = profile.bankInfo.bankAccountNo;
-    swiftCode.value = profile.bankInfo.bankSwiftCode;
-    routingNo.value = profile.bankInfo.bankRoutingNo;
-
-    _applyStats(profile.stats);
+    profileModel.value = profileModel.value.copyWith(
+      agentName: profile.fullName,
+      agentId: profile.agentIdDisplay.isNotEmpty
+          ? profile.agentIdDisplay
+          : profile.agentId,
+      agentType: _formatAgentType(profile.agentType),
+      isVerified: profile.isVerified,
+      profileImage: profile.photoUrl,
+      email: profile.email,
+      phone: profile.phone,
+      assignedLocation: profile.assignedLocation,
+      servicesProvided: List<String>.from(profile.services),
+      division: profile.personalDetails.division,
+      district: profile.personalDetails.district,
+      upazilla: profile.personalDetails.upazila,
+      pouroshova: profile.personalDetails.unionOrCityCorp,
+      wardNo: profile.personalDetails.wardNo,
+      postalCode: profile.personalDetails.postalCode,
+      fullAddress: profile.personalDetails.fullAddress,
+      nidNumber: _formatVerificationValue(
+        rawValue: profile.verificationDocs.nidNumber,
+        hasDocument: profile.verificationDocs.hasNidDocument,
+      ),
+      tinNumber: _formatVerificationValue(
+        rawValue: profile.verificationDocs.tinNumber,
+        hasDocument: profile.verificationDocs.hasTinDocument,
+      ),
+      isNidVerified: profile.verificationDocs.isNIDVerified,
+      isTinVerified: profile.verificationDocs.isTINVerified,
+      bankName: profile.bankInfo.bankName,
+      bankAccountNo: profile.bankInfo.bankAccountNo,
+      swiftCode: profile.bankInfo.bankSwiftCode,
+      routingNo: profile.bankInfo.bankRoutingNo,
+      totalTasksCompleted: profile.stats.totalTaskCompleted,
+      totalEarned: profile.stats.totalEarned,
+    );
 
     _authService.updateUserFields({
       'fullName': profile.fullName,
@@ -220,8 +160,10 @@ class AgentProfileStore extends GetxService {
   }
 
   void _applyStats(AgentStats stats) {
-    totalTasksCompleted.value = stats.totalTaskCompleted;
-    totalEarned.value = stats.totalEarned;
+    profileModel.value = profileModel.value.copyWith(
+      totalTasksCompleted: stats.totalTaskCompleted,
+      totalEarned: stats.totalEarned,
+    );
   }
 
   String _maskSensitive(String value) {
@@ -237,6 +179,20 @@ class AgentProfileStore extends GetxService {
     final start = input.substring(0, 2);
     final end = input.substring(input.length - 2);
     return '$start***$end';
+  }
+
+  String _formatVerificationValue({
+    required String rawValue,
+    required bool hasDocument,
+  }) {
+    final masked = _maskSensitive(rawValue);
+    if (masked != 'Not provided') {
+      return masked;
+    }
+    if (hasDocument) {
+      return 'Document uploaded';
+    }
+    return 'Not provided';
   }
 
   String _formatAgentType(String raw) {

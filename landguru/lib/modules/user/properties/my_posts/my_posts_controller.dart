@@ -5,9 +5,11 @@ import '../../../../core/services/nested_navigation_service.dart';
 import '../../../../core/services/services.dart';
 import 'models/my_post.dart';
 import 'models/my_post_status.dart';
+import 'models/my_sell_posts_api_models.dart';
 import 'sell_posts/sell_post_details_controller.dart';
 import 'sell_posts/sell_post_details_view.dart';
 import 'services/my_sell_posts_service.dart';
+import '../properties_controller.dart';
 import 'package:landguru/routes/app_routes.dart';
 export 'models/my_post.dart';
 export 'models/my_post_status.dart';
@@ -27,6 +29,9 @@ class MyPostsController extends GetxController {
   final MySellPostsService _mySellPostsService = Get.find<MySellPostsService>();
   final SellPostDetailsService _sellPostDetailsService =
       Get.find<SellPostDetailsService>();
+  final PropertiesController _propertiesController =
+      Get.find<PropertiesController>();
+  Worker? _globalFilterWorker;
 
   // Sub-tab state: 0 = Sell Posts, 1 = Buy Posts, 2 = Offered Posts
   final RxInt subTabIndex = 0.obs;
@@ -72,7 +77,17 @@ class MyPostsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _globalFilterWorker = ever<int>(
+      _propertiesController.filterApplyVersion,
+      (_) => _applyFilter(),
+    );
     loadPosts();
+  }
+
+  @override
+  void onClose() {
+    _globalFilterWorker?.dispose();
+    super.onClose();
   }
 
   /// Change sub-tab (Sell Posts / Buy Posts / Offered Posts)
@@ -137,18 +152,35 @@ class MyPostsController extends GetxController {
 
   /// Apply current filter
   void _applyFilter() {
+    final criteria = _propertiesController.currentFilterCriteria;
+
     if (subTabIndex.value == 0) {
-      filteredSellPosts.assignAll(allSellPosts);
+      final filtered = allSellPosts.where((post) {
+        return criteria.matches(
+          propertyType: post.propertyType,
+          price: post.price,
+        );
+      }).toList();
+
+      filteredSellPosts.assignAll(filtered);
       _sortPosts();
     } else if (subTabIndex.value == 1) {
+      List<MyPost> statusFiltered;
       if (currentFilter.value == 'All') {
-        filteredBuyPosts.assignAll(allBuyPosts);
+        statusFiltered = allBuyPosts.toList();
       } else {
         final status = _getStatusFromFilter(currentFilter.value);
-        filteredBuyPosts.assignAll(
-          allBuyPosts.where((p) => p.status == status).toList(),
-        );
+        statusFiltered = allBuyPosts.where((p) => p.status == status).toList();
       }
+
+      final globallyFiltered = statusFiltered.where((post) {
+        return criteria.matches(
+          propertyType: post.propertyType,
+          price: post.price,
+        );
+      }).toList();
+
+      filteredBuyPosts.assignAll(globallyFiltered);
       _sortPosts();
     }
   }
@@ -263,14 +295,14 @@ class MyPostsController extends GetxController {
       return;
     }
 
-    final tab = MySellPostsTab.fromFilter(currentFilter.value);
+    final tab = MySellPostTabValues.fromFilter(currentFilter.value);
     _sellPostsCurrentPage = 1;
     hasMoreSellPosts.value = true;
     final result = await ApiErrorHandler.call(
       () => _mySellPostsService.getMySellPosts(
         page: _sellPostsCurrentPage,
         limit: _sellPostsLimit,
-        tab: tab.apiValue,
+        tab: tab,
       ),
       showError: showError,
     );
@@ -297,7 +329,7 @@ class MyPostsController extends GetxController {
       return;
     }
 
-    final tab = MySellPostsTab.fromFilter(currentFilter.value);
+    final tab = MySellPostTabValues.fromFilter(currentFilter.value);
     isLoadingMoreSellPosts.value = true;
     try {
       final nextPage = _sellPostsCurrentPage + 1;
@@ -305,7 +337,7 @@ class MyPostsController extends GetxController {
         () => _mySellPostsService.getMySellPosts(
           page: nextPage,
           limit: _sellPostsLimit,
-          tab: tab.apiValue,
+          tab: tab,
         ),
         showError: false,
       );
@@ -343,7 +375,7 @@ class MyPostsController extends GetxController {
       () => _mySellPostsService.getMySellPosts(
         page: 1,
         limit: 1,
-        tab: MySellPostsTab.quoted.apiValue,
+        tab: MySellPostTabValues.quoted,
       ),
       showError: false,
     );

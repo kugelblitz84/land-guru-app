@@ -61,7 +61,7 @@ class AgentShellHeader extends StatelessWidget {
           ),
           child: ClipOval(
             child: Obx(() {
-              final avatar = controller.agentAvatar.value.trim();
+              final avatar = controller.profileModel.value.profileImage.trim();
               if (avatar.isNotEmpty) {
                 return Image.network(
                   avatar,
@@ -84,7 +84,7 @@ class AgentShellHeader extends StatelessWidget {
         ),
         // Online indicator
         Obx(
-          () => controller.isOnline.value
+          () => controller.profileModel.value.isOnline
               ? Positioned(
                   bottom: 2,
                   right: 2,
@@ -135,7 +135,7 @@ class AgentShellHeader extends StatelessWidget {
           ),
           // Notification badge
           Obx(() {
-            final count = controller.unreadNotificationCount.value;
+            final count = controller.profileModel.value.unreadNotificationCount;
             if (count == 0) return const SizedBox.shrink();
             return Positioned(
               top: 0,

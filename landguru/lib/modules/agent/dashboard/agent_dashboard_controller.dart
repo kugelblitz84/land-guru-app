@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../core/services/api_error_handler.dart';
 import '../../../routes/app_routes.dart';
 import '../../shared/bottom_nav/agent_bottom_nav_controller.dart';
 import 'models/dashboard_models.dart';
@@ -74,9 +75,15 @@ class AgentDashboardController extends GetxController {
     }
 
     isLoading.value = true;
-    try {
-      // TODO: Load agent dashboard data from API
-      await Future.delayed(const Duration(milliseconds: 500));
+    final result = await ApiErrorHandler.call(
+      () => Future<void>.delayed(const Duration(milliseconds: 500)),
+      errorTitle: 'Error',
+      fallbackMessage: 'Failed to load dashboard data',
+    );
+    if (!result.isSuccess) {
+      isLoading.value = false;
+      return;
+    }
 
       // Mock data
       assignedLocation.value =
@@ -130,7 +137,7 @@ class AgentDashboardController extends GetxController {
           clientName: 'Farhan',
           location:
               'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          itemType: ScheduleItemType.clientMeeting,
+          itemType: ScheduleItemTypes.clientMeeting,
         ),
         ScheduleItem(
           id: '2',
@@ -140,7 +147,7 @@ class AgentDashboardController extends GetxController {
           clientName: 'Farhan',
           location:
               'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          itemType: ScheduleItemType.siteVisit,
+          itemType: ScheduleItemTypes.siteVisit,
         ),
         ScheduleItem(
           id: '3',
@@ -150,19 +157,11 @@ class AgentDashboardController extends GetxController {
           clientName: 'Farhan',
           location:
               'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          itemType: ScheduleItemType.siteVisit,
+          itemType: ScheduleItemTypes.siteVisit,
         ),
       ];
       _syncCache();
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load dashboard data',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
+    isLoading.value = false;
   }
 
   /// Navigate to notifications
@@ -233,3 +232,4 @@ class AgentDashboardController extends GetxController {
     _hasCachedData = true;
   }
 }
+

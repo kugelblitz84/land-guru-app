@@ -4,76 +4,10 @@ import '../../../core/services/nested_navigation_service.dart';
 import '../../../core/services/services.dart';
 import '../../../routes/app_routes.dart';
 import '../../shared/bottom_nav/user_bottom_nav_controller.dart';
+import 'models/featured_property.dart';
+import '../properties/my_posts/models/my_sell_posts_api_models.dart';
 import '../properties/for_sale/property_details/property_details_controller.dart';
 import '../properties/for_sale/property_details/property_details_view.dart';
-
-/// Model for featured property
-class FeaturedProperty {
-  final String id;
-  final String postId;
-  final String title;
-  final String location;
-  final String price;
-  final String propertyType;
-  final String postType;
-  final bool isVerified;
-  final bool isLocked;
-  final String? imageUrl;
-  final String? description;
-  final String? sellableLandAmount;
-  final String? plotSize;
-  final String? distanceFromRoad;
-  final String? postedBy;
-  final String? postedByAvatarUrl;
-  final bool postedByVerified;
-  final String? postedTime;
-
-  FeaturedProperty({
-    required this.id,
-    this.postId = '',
-    required this.title,
-    required this.location,
-    required this.price,
-    required this.propertyType,
-    required this.postType,
-    required this.isVerified,
-    this.isLocked = true,
-    this.imageUrl,
-    this.description,
-    this.sellableLandAmount,
-    this.plotSize,
-    this.distanceFromRoad,
-    this.postedBy,
-    this.postedByAvatarUrl,
-    this.postedByVerified = false,
-    this.postedTime,
-  });
-
-  /// Convert to Map for navigation arguments
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'postId': postId,
-      'title': title,
-      'location': location,
-      'price': price,
-      'propertyType': propertyType,
-      'postType': postType,
-      'isVerified': isVerified,
-      'isLocked': isLocked,
-      'imageUrl': imageUrl,
-      'description': description,
-      'sellableLandAmount': sellableLandAmount,
-      'plotSize': plotSize,
-      'distanceFromRoad': distanceFromRoad,
-      'postedBy': postedBy,
-      'postedByAvatarUrl': postedByAvatarUrl,
-      'postedByVerified': postedByVerified,
-      'postedTime': postedTime,
-      'propertyPhotos': imageUrl != null ? [imageUrl] : <String>[],
-    };
-  }
-}
 
 /// Controller for the User Home/Dashboard screen
 class HomeController extends GetxController {
@@ -116,7 +50,7 @@ class HomeController extends GetxController {
         () => _mySellPostsService.getMySellPosts(
           page: 1,
           limit: 10,
-          tab: MySellPostsTab.active.apiValue,
+          tab: MySellPostTabValues.active,
         ),
       );
       final featuredResult = await ApiErrorHandler.call(

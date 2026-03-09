@@ -213,7 +213,7 @@ class CreateOfferInfoView extends GetView<CreateOfferController> {
                     InfoBanner(
                       message:
                           'Your full location will remain private to the buyer.',
-                      type: InfoBannerType.info,
+                      type: InfoBannerTypes.info,
                     ),
                     SizedBox(height: 24.h),
 
@@ -443,3 +443,4 @@ class CreateOfferInfoView extends GetView<CreateOfferController> {
     );
   }
 }
+

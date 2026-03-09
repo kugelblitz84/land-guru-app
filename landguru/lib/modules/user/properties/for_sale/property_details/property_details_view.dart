@@ -237,7 +237,7 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
                   child: const InfoBanner(
                     message:
                         'Your full location will remain private to the buyer.',
-                    type: InfoBannerType.info,
+                    type: InfoBannerTypes.info,
                   ),
                 ),
               ],
@@ -1803,3 +1803,4 @@ class RequestSubmittedDialog extends StatelessWidget {
     );
   }
 }
+

@@ -27,24 +27,57 @@ class AgentBottomNavView extends GetView<AgentBottomNavController> {
       },
       child: Scaffold(
         body: Obx(
-          () => IndexedStack(
-            index: controller.currentIndex.value,
-            children: [
-              _buildShellContent(const AgentDashboardContentView()),
-              _buildShellContent(const AgentMyTasksContentView()),
-              _buildShellContent(const AgentAppointmentsContentView()),
-              const AgentProfileView(),
-            ],
+          () => Stack(
+            children: List.generate(4, (index) {
+              if (!controller.visitedTabs.contains(index)) {
+                return const SizedBox.shrink();
+              }
+              return Offstage(
+                offstage: controller.currentIndex.value != index,
+                child: TickerMode(
+                  enabled: controller.currentIndex.value == index,
+                  child: _buildTab(index),
+                ),
+              );
+            }),
           ),
+          // () => IndexedStack(
+          //   index: controller.currentIndex.value,
+          //   children: [
+          //     _buildShellContent(const AgentDashboardContentView()),
+          //     _buildShellContent(const AgentMyTasksContentView()),
+          //     _buildShellContent(const AgentAppointmentsContentView()),
+          //     const AgentProfileView(),
+          //   ],
+          // ),
         ),
         bottomNavigationBar: _buildBottomNavBar(),
       ),
     );
   }
 
-  /// Wrap content with agent shell (shared header)
-  Widget _buildShellContent(Widget content) {
-    return AgentShellWrapper(showHeader: true, child: content);
+  Widget _buildTab(int index) {
+    switch (index) {
+      case 0:
+        return AgentShellWrapper(
+          showHeader: true,
+          child: const AgentDashboardContentView(),
+        );
+      case 1:
+        return AgentShellWrapper(
+          showHeader: true,
+          child: const AgentMyTasksContentView(),
+        );
+      case 2:
+        return AgentShellWrapper(
+          showHeader: true,
+          child: const AgentAppointmentsContentView(),
+        );
+      case 3:
+        return const AgentProfileView();
+      default:
+        return const SizedBox.shrink();
+    }
   }
 
   /// Build bottom navigation bar

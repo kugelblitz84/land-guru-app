@@ -3,56 +3,64 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Info banner type
-enum InfoBannerType { info, warning, success, error }
+class InfoBannerTypes {
+  static const String info = 'info';
+  static const String warning = 'warning';
+  static const String success = 'success';
+  static const String error = 'error';
+}
 
 /// Info banner widget for displaying important messages
 class InfoBanner extends StatelessWidget {
   final String message;
-  final InfoBannerType type;
+  final String type;
   final IconData? icon;
 
   const InfoBanner({
     super.key,
     required this.message,
-    this.type = InfoBannerType.info,
+    this.type = InfoBannerTypes.info,
     this.icon,
   });
 
   Color get _backgroundColor {
     switch (type) {
-      case InfoBannerType.info:
+      case InfoBannerTypes.info:
         return AppColors.primary.withAlpha(30);
-      case InfoBannerType.warning:
+      case InfoBannerTypes.warning:
         return AppColors.warning.withAlpha(15);
-      case InfoBannerType.success:
+      case InfoBannerTypes.success:
         return AppColors.success.withAlpha(15);
-      case InfoBannerType.error:
+      case InfoBannerTypes.error:
+      default:
         return AppColors.error.withAlpha(15);
     }
   }
 
   Color get _iconColor {
     switch (type) {
-      case InfoBannerType.info:
+      case InfoBannerTypes.info:
         return AppColors.primary;
-      case InfoBannerType.warning:
+      case InfoBannerTypes.warning:
         return AppColors.warning;
-      case InfoBannerType.success:
+      case InfoBannerTypes.success:
         return AppColors.success;
-      case InfoBannerType.error:
+      case InfoBannerTypes.error:
+      default:
         return AppColors.error;
     }
   }
 
   IconData get _defaultIcon {
     switch (type) {
-      case InfoBannerType.info:
+      case InfoBannerTypes.info:
         return Icons.info_outline;
-      case InfoBannerType.warning:
+      case InfoBannerTypes.warning:
         return Icons.warning_amber_outlined;
-      case InfoBannerType.success:
+      case InfoBannerTypes.success:
         return Icons.check_circle_outline;
-      case InfoBannerType.error:
+      case InfoBannerTypes.error:
+      default:
         return Icons.error_outline;
     }
   }
