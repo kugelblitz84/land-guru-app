@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import '../../../core/services/api_error_handler.dart';
 
 /// Service for Deal Details screen
-class DealDetailsController extends GetxService {
+class DealDetailsController extends GetxController {
   // State
   final RxBool isLoading = false.obs;
   final RxString dealId = ''.obs;
@@ -33,4 +33,3 @@ class DealDetailsController extends GetxService {
     // TODO: Implement download documents
   }
 }
-

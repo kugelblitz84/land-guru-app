@@ -432,9 +432,11 @@ class AgentTaskDetailsController extends GetxController {
 
       final uploadedUrl = await ApiErrorHandler.call<String>(
         () => _uploadService.uploadFile(
-          file: File(path),
-          contentType: _guessContentType(path),
-          type: 'DEED',
+          payload: UploadFilePayload(
+            file: File(path),
+            contentType: _guessContentType(path),
+            type: 'DEED',
+          ),
         ),
       );
 

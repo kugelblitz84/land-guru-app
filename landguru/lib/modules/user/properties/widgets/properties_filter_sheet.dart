@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../properties_controller.dart';
 import 'distance_range_selector.dart';
 
 /// String constants for filter property types.
@@ -68,7 +67,7 @@ class PriceFilterRange {
 
 /// Properties filter bottom sheet
 class PropertiesFilterSheet extends StatelessWidget {
-  final PropertiesController controller;
+  final dynamic controller;
 
   const PropertiesFilterSheet({super.key, required this.controller});
 
@@ -289,6 +288,8 @@ class PropertiesFilterSheet extends StatelessWidget {
   Widget _buildPriceRangeSection() {
     return Obx(() {
       final range = controller.filterPriceRange.value;
+      const int priceStep = 100000;
+      const double minMaxPriceFloor = 100000.0;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -316,14 +317,30 @@ class PropertiesFilterSheet extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           _buildRangeSlider(
-            startValue: range?.minPrice.toDouble() ?? 0,
-            endValue: range?.maxPrice.toDouble() ?? 100000000,
-            minValue: 0,
-            maxValue: 100000000,
+            startValue: range?.minPrice.toDouble() ?? 0.0,
+            endValue: (range?.maxPrice.toDouble() ?? 100000000.0).clamp(
+              minMaxPriceFloor,
+              100000000.0,
+            ),
+            minValue: 0.0,
+            maxValue: 100000000.0,
             onChanged: (start, end) {
+              var roundedMin = (start / priceStep).round() * priceStep;
+              var roundedMax = (end / priceStep).round() * priceStep;
+
+              // Keep the max thumb meaningful for filtering.
+              if (roundedMax < minMaxPriceFloor) {
+                roundedMax = minMaxPriceFloor.toInt();
+              }
+
+              // Allow equal bounds; if thumbs cross, snap max up to min.
+              if (roundedMax < roundedMin) {
+                roundedMax = roundedMin;
+              }
+
               controller.filterPriceRange.value = PriceFilterRange(
-                minPrice: (start / 100000).round() * 100000,
-                maxPrice: (end / 100000).round() * 100000,
+                minPrice: roundedMin,
+                maxPrice: roundedMax,
               );
             },
           ),
@@ -444,8 +461,8 @@ class PropertiesFilterSheet extends StatelessWidget {
     required void Function(double start, double end) onChanged,
   }) {
     // Clamp values to valid range
-    double clampedStart = startValue.clamp(minValue, maxValue);
-    double clampedEnd = endValue.clamp(minValue, maxValue);
+    double clampedStart = startValue.clamp(minValue, maxValue).toDouble();
+    double clampedEnd = endValue.clamp(minValue, maxValue).toDouble();
 
     // Ensure start <= end
     if (clampedStart > clampedEnd) {

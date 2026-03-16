@@ -191,7 +191,8 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
               PropertyDetailRow(
                 imageAsset: 'assets/Logos/DistanceFromRoad.png',
                 label: 'Distance from Road',
-                value: property.distanceFromRoad,
+                value:
+                    '${property.distanceFromRoadMin} - ${property.distanceFromRoadMax}',
               ),
               SizedBox(height: 16.h),
 
@@ -259,9 +260,6 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
     final imagePath = property.propertyPhotos.isNotEmpty
         ? property.propertyPhotos.first
         : null;
-    final isNetwork =
-        imagePath != null &&
-        (imagePath.startsWith('http://') || imagePath.startsWith('https://'));
 
     return ClipRRect(
       borderRadius: BorderRadius.only(
@@ -272,19 +270,12 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
         height: 220.h,
         width: double.infinity,
         child: imagePath != null
-            ? (isNetwork
-                  ? Image.network(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildImagePlaceholder(),
-                    )
-                  : Image.asset(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildImagePlaceholder(),
-                    ))
+            ? Image.network(
+                imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildImagePlaceholder(),
+              )
             : _buildImagePlaceholder(),
       ),
     );
@@ -1249,6 +1240,36 @@ class _RequestAppointmentDialogState extends State<RequestAppointmentDialog> {
     }
   }
 
+  Widget _buildPropertyThumbnail(PropertyDetails property) {
+    final imageUrl = property.propertyPhotos.isNotEmpty
+        ? property.propertyPhotos.first.trim()
+        : '';
+
+    if (imageUrl.isEmpty) {
+      return Container(
+        width: 60.w,
+        height: 60.h,
+        color: AppColors.grey200,
+        child: Icon(Icons.image, color: AppColors.grey400),
+      );
+    }
+
+    return Image.network(
+      imageUrl,
+      width: 60.w,
+      height: 60.h,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          width: 60.w,
+          height: 60.h,
+          color: AppColors.grey200,
+          child: Icon(Icons.image, color: AppColors.grey400),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final property = widget.property;
@@ -1304,33 +1325,7 @@ class _RequestAppointmentDialogState extends State<RequestAppointmentDialog> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8.r),
-                      child: property.propertyPhotos.isNotEmpty
-                          ? Image.asset(
-                              property.propertyPhotos.first,
-                              width: 60.w,
-                              height: 60.h,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 60.w,
-                                  height: 60.h,
-                                  color: AppColors.grey200,
-                                  child: Icon(
-                                    Icons.image,
-                                    color: AppColors.grey400,
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
-                              width: 60.w,
-                              height: 60.h,
-                              color: AppColors.grey200,
-                              child: Icon(
-                                Icons.image,
-                                color: AppColors.grey400,
-                              ),
-                            ),
+                      child: _buildPropertyThumbnail(property),
                     ),
                     SizedBox(width: 12.w),
                     Expanded(
@@ -1575,6 +1570,36 @@ class RequestSubmittedDialog extends StatelessWidget {
     this.isOfferFlow = false,
   });
 
+  Widget _buildPropertyThumbnail() {
+    final imageUrl = property.propertyPhotos.isNotEmpty
+        ? property.propertyPhotos.first.trim()
+        : '';
+
+    if (imageUrl.isEmpty) {
+      return Container(
+        width: 60.w,
+        height: 60.h,
+        color: AppColors.grey200,
+        child: Icon(Icons.image, color: AppColors.grey400),
+      );
+    }
+
+    return Image.network(
+      imageUrl,
+      width: 60.w,
+      height: 60.h,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          width: 60.w,
+          height: 60.h,
+          color: AppColors.grey200,
+          child: Icon(Icons.image, color: AppColors.grey400),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -1642,30 +1667,7 @@ class RequestSubmittedDialog extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8.r),
-                    child: property.propertyPhotos.isNotEmpty
-                        ? Image.asset(
-                            property.propertyPhotos.first,
-                            width: 60.w,
-                            height: 60.h,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 60.w,
-                                height: 60.h,
-                                color: AppColors.grey200,
-                                child: Icon(
-                                  Icons.image,
-                                  color: AppColors.grey400,
-                                ),
-                              );
-                            },
-                          )
-                        : Container(
-                            width: 60.w,
-                            height: 60.h,
-                            color: AppColors.grey200,
-                            child: Icon(Icons.image, color: AppColors.grey400),
-                          ),
+                    child: _buildPropertyThumbnail(),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
@@ -1803,4 +1805,3 @@ class RequestSubmittedDialog extends StatelessWidget {
     );
   }
 }
-

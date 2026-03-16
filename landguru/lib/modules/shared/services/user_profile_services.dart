@@ -1,11 +1,16 @@
+import 'dart:convert';
+
 import 'package:get/get.dart';
 import 'package:landguru/core/core.dart';
-import '../../../core/models/user_system_model.dart';
-import 'dart:convert';
+
+import '../models/payloads/user_profile_payload_models.dart';
+import '../models/user_system_model.dart';
 
 class ProfileServices extends GetxService {
   ProfileServices._(this._apiClient);
+
   final ApiClient _apiClient;
+
   factory ProfileServices(ApiClient apiClient) {
     return ProfileServices._(apiClient);
   }
@@ -17,47 +22,20 @@ class ProfileServices extends GetxService {
   }
 
   Future<ProfileModel> updateUserProfile({
-    required String fullName,
-    required String email,
-    required String division,
-    required String district,
-    required String upazila,
-    required String unionOrCityCorp,
-    required String wardNo,
-    required String postalCode,
-    required String fullAddress,
-    String? photoUrl,
+    required UpdateUserProfilePayload payload,
   }) async {
-    final payload = <String, dynamic>{
-      'fullName': fullName,
-      'email': email,
-      if (photoUrl != null && photoUrl.isNotEmpty) 'photoUrl': photoUrl,
-      if (division.isNotEmpty) 'division': division,
-      if (district.isNotEmpty) 'district': district,
-      if (upazila.isNotEmpty) 'upazila': upazila,
-      if (unionOrCityCorp.isNotEmpty) 'unionOrCityCorp': unionOrCityCorp,
-      if (wardNo.isNotEmpty) 'wardNo': wardNo,
-      if (postalCode.isNotEmpty) 'postalCode': postalCode,
-      if (fullAddress.isNotEmpty) 'fullAddress': fullAddress,
-    };
-
-    final response = await _apiClient.patch('/users/profile/me', data: payload);
+    final response = await _apiClient.patch(
+      '/users/profile/me',
+      data: payload.toJson(),
+    );
     final map = _extractResponseMap(response.data);
     return ProfileModel.fromJson(map);
   }
 
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-    required String confirmPassword,
-  }) async {
+  Future<void> changePassword({required ChangePasswordPayload payload}) async {
     await _apiClient.patch(
       '/users/profile/change-password',
-      data: {
-        'currentPassword': currentPassword,
-        'newPassword': newPassword,
-        'confirmPassword': confirmPassword,
-      },
+      data: payload.toJson(),
     );
   }
 

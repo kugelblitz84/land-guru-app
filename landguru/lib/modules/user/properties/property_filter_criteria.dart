@@ -40,6 +40,8 @@ class PropertyFilterCriteria {
     String? price,
     String? sellableLandAmount,
     String? plotSize,
+    String? distanceFromRoadMin,
+    String? distanceFromRoadMax,
     String? distanceFromRoad,
     String? location,
   }) {
@@ -71,7 +73,11 @@ class PropertyFilterCriteria {
       return false;
     }
 
-    if (!_matchesDistance(distanceFromRoad)) {
+    if (!_matchesDistance(
+      distanceFromRoad: distanceFromRoad,
+      distanceFromRoadMin: distanceFromRoadMin,
+      distanceFromRoadMax: distanceFromRoadMax,
+    )) {
       return false;
     }
 
@@ -141,22 +147,37 @@ class PropertyFilterCriteria {
     return true;
   }
 
-  bool _matchesDistance(String? distanceText) {
+  bool _matchesDistance({
+    String? distanceFromRoad,
+    String? distanceFromRoadMin,
+    String? distanceFromRoadMax,
+  }) {
     if (minDistanceMeters == null && maxDistanceMeters == null) {
       return true;
     }
 
-    final parsedRange = _parseDistanceRange(distanceText);
-    if (parsedRange == null) {
-      return true;
+    double? minDistance = _extractFirstNumber(distanceFromRoadMin);
+    double? maxDistance = _extractFirstNumber(distanceFromRoadMax);
+
+    if (minDistance == null && maxDistance == null) {
+      final parsedRange = _parseDistanceRange(distanceFromRoad);
+      if (parsedRange == null) {
+        return true;
+      }
+      minDistance = parsedRange[0];
+      maxDistance = parsedRange[1];
+    } else {
+      minDistance ??= maxDistance;
+      maxDistance ??= minDistance;
     }
 
-    final minDistance = parsedRange[0];
-    final maxDistance = parsedRange[1];
-    final selectedMin = minDistanceMeters ?? minDistance;
-    final selectedMax = maxDistanceMeters ?? maxDistance;
+    final effectiveMinDistance = minDistance!;
+    final effectiveMaxDistance = maxDistance!;
+    final selectedMin = minDistanceMeters ?? effectiveMinDistance;
+    final selectedMax = maxDistanceMeters ?? effectiveMaxDistance;
 
-    return maxDistance >= selectedMin && minDistance <= selectedMax;
+    return effectiveMaxDistance >= selectedMin &&
+        effectiveMinDistance <= selectedMax;
   }
 
   bool _matchesLocation(String? rawLocation) {

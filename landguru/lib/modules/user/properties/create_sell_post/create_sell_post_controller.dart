@@ -4,8 +4,10 @@ import 'dart:math' as math;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/models/models.dart';
 import '../../../../core/services/api_error_handler.dart';
 import '../../../../modules/user/properties/create_sell_post/services/sell_post_service.dart';
+import 'models/create_sell_post_payload_model.dart';
 import '../services/sell_post_details_service.dart';
 import '../services/models/sell_post_details_payload.dart';
 import '../../../../core/services/upload_service.dart';
@@ -19,6 +21,8 @@ import '../widgets/properties_widgets.dart';
 /// Step 3: Services selection
 /// Step 4: Review & submit
 class CreateSellPostController extends GetxController {
+  CreateSellPostController(this.service, this._sellPostDetailsService);
+
   // Current step (1-4)
   final RxInt currentStep = 1.obs;
   final int totalSteps = 4;
@@ -52,9 +56,8 @@ class CreateSellPostController extends GetxController {
   final Rx<LandUnit> shareUnitUnit = LandUnit.katha.obs;
   final RxDouble shareUnitValue = 0.0.obs; // Reactive value for share unit
   final Rx<LandSizeRange?> shareUnitRange = Rx<LandSizeRange?>(null);
-  final service = Get.find<SellPostService>();
-  final SellPostDetailsService _sellPostDetailsService =
-      Get.find<SellPostDetailsService>();
+  final SellPostService service;
+  final SellPostDetailsService _sellPostDetailsService;
   // Price per katha reactive
   final RxDouble pricePerKathaValue = 0.0.obs;
 
@@ -756,9 +759,11 @@ class CreateSellPostController extends GetxController {
     final uploadService = Get.find<UploadService>();
     final uploadResult = await ApiErrorHandler.call(
       () => uploadService.uploadFile(
-        file: File(path),
-        contentType: _guessContentType(path),
-        type: 'AVATAR',
+        payload: UploadFilePayload(
+          file: File(path),
+          contentType: _guessContentType(path),
+          type: 'AVATAR',
+        ),
       ),
     );
     if (uploadResult.isSuccess && uploadResult.data != null) {
@@ -801,9 +806,11 @@ class CreateSellPostController extends GetxController {
     final uploadService = Get.find<UploadService>();
     final uploadResult = await ApiErrorHandler.call(
       () => uploadService.uploadFile(
-        file: File(path),
-        contentType: _guessContentType(path),
-        type: 'AVATAR',
+        payload: UploadFilePayload(
+          file: File(path),
+          contentType: _guessContentType(path),
+          type: 'AVATAR',
+        ),
       ),
     );
     if (uploadResult.isSuccess && uploadResult.data != null) {
@@ -917,18 +924,17 @@ class CreateSellPostController extends GetxController {
     }
     isLoading.value = true;
     try {
-      final payload = _buildStep1Payload();
+      final payload = _buildStep1PayloadModel();
 
       final existingDraftId = draftPostId.value;
       if (existingDraftId != null && existingDraftId.isNotEmpty) {
-        await service.updateDraftStep(
+        await service.updateDraftStep1(
           postId: existingDraftId,
-          step: 1,
           payload: payload,
         );
       } else {
         final response = await service.createDraftStep1(payload: payload);
-        final id = response['id']?.toString();
+        final id = response.id;
         if (id != null && id.isNotEmpty) {
           draftPostId.value = id;
         }
@@ -967,7 +973,6 @@ class CreateSellPostController extends GetxController {
     isLoading.value = true;
     try {
       final payload = _buildStep2Payload();
-      final service = Get.find<SellPostService>();
       await service.updateDraftStep(postId: id, step: 2, payload: payload);
       if (showSuccessSnack) {
         Get.snackbar(
@@ -1003,7 +1008,6 @@ class CreateSellPostController extends GetxController {
     isLoading.value = true;
     try {
       final payload = _buildStep3Payload();
-      final service = Get.find<SellPostService>();
       await service.updateDraftStep(postId: id, step: 3, payload: payload);
       if (showSuccessSnack) {
         Get.snackbar(
@@ -1024,7 +1028,9 @@ class CreateSellPostController extends GetxController {
     }
   }
 
-  Map<String, dynamic> _buildStep1Payload() {
+  CreateSellPostPayloadModel get step1PayloadModel => _buildStep1PayloadModel();
+
+  CreateSellPostPayloadModel _buildStep1PayloadModel() {
     final selectedPropertyType = propertyType.value;
     if (selectedPropertyType == null) {
       throw Exception('Property type is required.');
@@ -1032,38 +1038,33 @@ class CreateSellPostController extends GetxController {
 
     final currentLocation = location.value;
     final range = distanceRange.value;
-    final payload = <String, dynamic>{
-      'title': titleController.text.trim(),
-      'description': descriptionController.text.trim(),
-      'propertyType': selectedPropertyType.label,
-      'sellableAmount': landAmountValue.value,
-      'sellableUnit': landAmountUnit.value.label,
-      'askingPricePerUnit': pricePerKathaValue.value,
-      'askingPrice': askingPrice,
-      'isPropertyShareable': hasShareUnit.value,
-      if (range != null) 'roadDistanceMin': range.minMeters,
-      if (range != null) 'roadDistanceMax': range.maxMeters,
-      if (plotSizeValue.value > 0) 'plotSize': plotSizeValue.value,
-      if (plotSizeValue.value > 0) 'plotUnit': plotSizeUnit.value.label,
-      if (hasShareUnit.value && shareUnitValue.value > 0)
-        'shareAmount': shareUnitValue.value,
-      if (hasShareUnit.value && shareUnitValue.value > 0)
-        'shareUnit': shareUnitUnit.value.label,
-      if (currentLocation.division != null)
-        'division': currentLocation.division,
-      if (currentLocation.district != null)
-        'district': currentLocation.district,
-      if (currentLocation.upazila != null) 'upazila': currentLocation.upazila,
-      if (currentLocation.pouroshova != null)
-        'unionOrCityCorp': currentLocation.pouroshova,
-      if (currentLocation.wardNo != null) 'wardNo': currentLocation.wardNo,
-      if (currentLocation.postalCode != null)
-        'postalCode': currentLocation.postalCode,
-      if (currentLocation.fullAddress != null)
-        'fullAddress': currentLocation.fullAddress,
-    };
-
-    return payload;
+    return CreateSellPostPayloadModel(
+      title: titleController.text.trim(),
+      description: descriptionController.text.trim(),
+      propertyType: selectedPropertyType.label,
+      sellableAmount: landAmountValue.value,
+      sellableUnit: landAmountUnit.value.label,
+      askingPricePerUnit: pricePerKathaValue.value,
+      askingPrice: askingPrice,
+      isPropertyShareable: hasShareUnit.value,
+      roadDistanceMin: range?.minMeters,
+      roadDistanceMax: range?.maxMeters,
+      plotSize: plotSizeValue.value > 0 ? plotSizeValue.value : null,
+      plotUnit: plotSizeValue.value > 0 ? plotSizeUnit.value.label : null,
+      shareAmount: hasShareUnit.value && shareUnitValue.value > 0
+          ? shareUnitValue.value
+          : null,
+      shareUnit: hasShareUnit.value && shareUnitValue.value > 0
+          ? shareUnitUnit.value.label
+          : null,
+      division: currentLocation.division,
+      district: currentLocation.district,
+      upazila: currentLocation.upazila,
+      unionOrCityCorp: currentLocation.pouroshova,
+      wardNo: currentLocation.wardNo,
+      postalCode: currentLocation.postalCode,
+      fullAddress: currentLocation.fullAddress,
+    );
   }
 
   Map<String, dynamic> _buildStep2Payload() {
@@ -1105,7 +1106,6 @@ class CreateSellPostController extends GetxController {
 
     isLoading.value = true;
     try {
-      final service = Get.find<SellPostService>();
       final result = await ApiErrorHandler.call(
         () => service.submitSellPost(postId: id),
       );
@@ -1200,9 +1200,11 @@ class CreateSellPostController extends GetxController {
     final uploadService = Get.find<UploadService>();
     final uploadResult = await ApiErrorHandler.call(
       () => uploadService.uploadFile(
-        file: File(path),
-        contentType: _guessContentType(path),
-        type: 'DEED',
+        payload: UploadFilePayload(
+          file: File(path),
+          contentType: _guessContentType(path),
+          type: 'DEED',
+        ),
       ),
     );
     if (uploadResult.isSuccess && uploadResult.data != null) {

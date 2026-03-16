@@ -1,14 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/models/models.dart';
 import '../../../core/services/api_error_handler.dart';
-import '../../../core/services/agent_profile_store.dart';
+import '../../shared/controllers/agent_profile_store.dart';
 import '../../../core/services/auth_service.dart';
-import '../../../core/services/user_profile_store.dart';
+import '../../shared/controllers/user_profile_store.dart';
 import '../../../core/services/user_type_service.dart';
 import '../../../routes/app_routes.dart';
 
 /// Controller for the Login screen
 class LoginController extends GetxController {
+  LoginController(
+    this._authService,
+    this._userTypeService,
+    this._agentProfileStore,
+    this._userProfileStore,
+  );
+
+  final AuthService _authService;
+  final UserTypeService _userTypeService;
+  final AgentProfileStore _agentProfileStore;
+  final UserProfileStore _userProfileStore;
+
   // Form
   final formKey = GlobalKey<FormState>();
   final phoneController = TextEditingController();
@@ -28,13 +41,13 @@ class LoginController extends GetxController {
     if (!formKey.currentState!.validate()) return;
 
     isLoading.value = true;
-    final authService = Get.find<AuthService>();
-    final userTypeService = Get.find<UserTypeService>();
 
     final result = await ApiErrorHandler.call(
-      () => authService.login(
-        phone: phoneController.text.trim(),
-        password: passwordController.text,
+      () => _authService.login(
+        payload: LoginPayload(
+          phone: phoneController.text.trim(),
+          password: passwordController.text,
+        ),
       ),
     );
     isLoading.value = false;
@@ -43,15 +56,13 @@ class LoginController extends GetxController {
       return;
     }
 
-    if (userTypeService.isAgent) {
-      final store = Get.find<AgentProfileStore>();
-      store.hydrateFromSession();
-      await store.refreshProfile(showError: false);
+    if (_userTypeService.isAgent) {
+      _agentProfileStore.hydrateFromSession();
+      await _agentProfileStore.refreshProfile(showError: false);
       Get.offAllNamed(AppRoutes.AGENT_MAIN);
     } else {
-      final store = Get.find<UserProfileStore>();
-      store.hydrateFromSession();
-      await store.refreshProfile(showError: false);
+      _userProfileStore.hydrateFromSession();
+      await _userProfileStore.refreshProfile(showError: false);
       Get.offAllNamed(AppRoutes.MAIN);
     }
   }

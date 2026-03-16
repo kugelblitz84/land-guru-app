@@ -1,17 +1,19 @@
 import 'package:get/get.dart';
 
 import '../models/agent_system_model.dart';
-import '../../modules/agent/profile/agent_profile_services.dart';
-import 'api_error_handler.dart';
-import 'auth_service.dart';
+import '../services/agent_profile_services.dart';
+import '../../../core/services/api_error_handler.dart';
+import '../../../core/services/auth_service.dart';
 
 class AgentProfileStore extends GetxService {
+  AgentProfileStore(this._authService, this._profileServices);
+
   final RxBool isLoading = false.obs;
   final Rx<AgentProfileStateModel> profileModel =
       AgentProfileStateModel.initial().obs;
 
-  final _authService = Get.find<AuthService>();
-  final _profileServices = Get.find<AgentProfileServices>();
+  final AuthService _authService;
+  final AgentProfileServices _profileServices;
 
   String get displayName => profileModel.value.displayName;
 

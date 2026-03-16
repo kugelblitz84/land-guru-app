@@ -8,7 +8,6 @@ import '../../for_sale/property_details/widgets/property_details_widgets.dart';
 import '../../widgets/metrics_conversion_row.dart';
 import 'models/offered_post_models.dart';
 import 'offered_posts_controller.dart';
-import 'services/my_offered_posts_service.dart';
 
 /// Details View for an Offered Post
 class OfferedPostDetailsView extends StatefulWidget {
@@ -21,6 +20,7 @@ class OfferedPostDetailsView extends StatefulWidget {
 class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
   late OfferedPost offeredPost;
   bool _isDescriptionExpanded = false;
+  late final OfferedPostsController? _offeredPostsController;
 
   // Units for land size and plot size
   LandUnit _selectedLandUnit = LandUnit.katha;
@@ -35,6 +35,9 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
     super.initState();
     final args = Get.arguments as Map<String, dynamic>;
     offeredPost = args['offeredPost'] as OfferedPost;
+    _offeredPostsController = Get.isRegistered<OfferedPostsController>()
+        ? Get.find<OfferedPostsController>()
+        : null;
     _parseValues();
     _loadOfferedPostDetails();
   }
@@ -43,16 +46,20 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
     final offerId = offeredPost.id.trim();
     if (offerId.isEmpty) return;
 
-    try {
-      final service = Get.find<MyOfferedPostsService>();
-      final details = await service.getMyOfferedPostDetails(offerId: offerId);
-      if (!mounted) return;
+    final controller = _offeredPostsController;
+    if (controller == null) {
+      return;
+    }
 
-      setState(() {
-        offeredPost = details;
-        _parseValues();
-      });
-    } catch (_) {}
+    final details = await controller.loadOfferDetailsById(offerId: offerId);
+    if (!mounted || details == null) {
+      return;
+    }
+
+    setState(() {
+      offeredPost = details;
+      _parseValues();
+    });
   }
 
   /// Parse the numeric values from the post strings
@@ -213,7 +220,8 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
                   PropertyDetailRow(
                     imageAsset: 'assets/Logos/DistanceFromRoad.png',
                     label: 'Distance from Road',
-                    value: offeredPost.distanceFromRoad ?? 'Not specified',
+                    value:
+                        '${offeredPost.distanceFromRoadMin} - ${offeredPost.distanceFromRoadMax}',
                   ),
                   SizedBox(height: 16.h),
 
@@ -221,7 +229,7 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
                   PropertyDetailRow(
                     imageAsset: 'assets/Logos/Location.png',
                     label: 'Location',
-                    value: offeredPost.location ?? 'Not specified',
+                    value: offeredPost.location ?? 'N/A',
                   ),
                   SizedBox(height: 16.h),
 
@@ -269,17 +277,7 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
       return _buildImagePlaceholder();
     }
 
-    final isNetwork =
-        image.startsWith('http://') || image.startsWith('https://');
-    if (isNetwork) {
-      return Image.network(
-        image,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
-      );
-    }
-
-    return Image.asset(
+    return Image.network(
       image,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
@@ -558,26 +556,15 @@ class _OfferedPostDetailsViewState extends State<OfferedPostDetailsView> {
       return _buildBuyerAvatarFallback(avatarSize);
     }
 
-    final isNetwork =
-        image.startsWith('http://') || image.startsWith('https://');
-
     return ClipOval(
       child: SizedBox(
         width: avatarSize,
         height: avatarSize,
-        child: isNetwork
-            ? Image.network(
-                image,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    _buildBuyerAvatarFallback(avatarSize),
-              )
-            : Image.asset(
-                image,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    _buildBuyerAvatarFallback(avatarSize),
-              ),
+        child: Image.network(
+          image,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildBuyerAvatarFallback(avatarSize),
+        ),
       ),
     );
   }

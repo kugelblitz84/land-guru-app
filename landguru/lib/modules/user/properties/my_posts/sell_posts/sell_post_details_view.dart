@@ -338,9 +338,6 @@ class SellPostDetailsView extends GetView<SellPostDetailsController> {
 
   Widget _buildPropertyImage(SellPostDetails post) {
     final imagePath = post.imageUrl;
-    final isNetwork =
-        imagePath != null &&
-        (imagePath.startsWith('http://') || imagePath.startsWith('https://'));
 
     return ClipRRect(
       borderRadius: BorderRadius.only(
@@ -351,19 +348,12 @@ class SellPostDetailsView extends GetView<SellPostDetailsController> {
         height: 220.h,
         width: double.infinity,
         child: imagePath != null
-            ? (isNetwork
-                  ? Image.network(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildImagePlaceholder(),
-                    )
-                  : Image.asset(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildImagePlaceholder(),
-                    ))
+            ? Image.network(
+                imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildImagePlaceholder(),
+              )
             : _buildImagePlaceholder(),
       ),
     );

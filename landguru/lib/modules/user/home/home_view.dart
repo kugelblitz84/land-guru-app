@@ -311,30 +311,17 @@ class HomeContentView extends GetView<HomeController> {
                     top: Radius.circular(16.r),
                   ),
                   child: property.imageUrl != null
-                      ? ((property.imageUrl!.startsWith('http://') ||
-                                property.imageUrl!.startsWith('https://'))
-                            ? Image.network(
-                                property.imageUrl!,
-                                height: 180.h,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildImagePlaceholder(
-                                    property.propertyType,
-                                  );
-                                },
-                              )
-                            : Image.asset(
-                                property.imageUrl!,
-                                height: 180.h,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildImagePlaceholder(
-                                    property.propertyType,
-                                  );
-                                },
-                              ))
+                      ? Image.network(
+                          property.imageUrl!,
+                          height: 180.h,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildImagePlaceholder(
+                              property.propertyType,
+                            );
+                          },
+                        )
                       : _buildImagePlaceholder(property.propertyType),
                 ),
 

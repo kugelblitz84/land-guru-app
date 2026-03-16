@@ -46,8 +46,12 @@ class SellPostDetailsPayload {
     return '$amountText $unitText';
   }
 
-  String get distanceFromRoad =>
-      _formatDistance(raw['roadDistanceMin'], raw['roadDistanceMax']);
+  String? get distanceFromRoadMin =>
+      raw['roadDistanceMin']?.toString() ??
+      raw['distanceFromRoadMin']?.toString();
+  String? get distanceFromRoadMax =>
+      raw['roadDistanceMax']?.toString() ??
+      raw['distanceFromRoadMax']?.toString();
 
   int? get lastCompletedStep {
     final value = raw['lastCompletedStep'];
@@ -193,20 +197,6 @@ class SellPostDetailsPayload {
     final unitText = unit.toString().trim();
     if (amountText.isEmpty || unitText.isEmpty) return 'N/A';
     return '$amountText $unitText';
-  }
-
-  static String _formatDistance(dynamic min, dynamic max) {
-    final minText = min?.toString();
-    final maxText = max?.toString();
-    if (minText != null &&
-        maxText != null &&
-        minText.isNotEmpty &&
-        maxText.isNotEmpty) {
-      return '${minText}m-${maxText}m';
-    }
-    if (minText != null && minText.isNotEmpty) return '${minText}m';
-    if (maxText != null && maxText.isNotEmpty) return '${maxText}m';
-    return 'N/A';
   }
 
   static String _formatTimeAgo(String? createdAtRaw) {

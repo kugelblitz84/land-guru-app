@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
 
+import '../../../../../../core/models/models.dart';
 import '../../../../../../core/enums/post_type.dart';
 import '../../../../../../core/enums/property_type.dart';
-import '../../../../../../core/models/property_listing.dart';
+import '../../models/property_listing.dart';
 import '../../../../../../core/services/api_client.dart';
 
 class BuyPostOfferService extends GetxService {
@@ -46,7 +47,7 @@ class BuyPostOfferService extends GetxService {
     );
   }
 
-  Future<Map<String, dynamic>> createDraftOfferStep1({
+  Future<DraftEntityResponse> createDraftOfferStep1({
     required String buyPostId,
     required Map<String, dynamic> payload,
   }) async {
@@ -54,10 +55,10 @@ class BuyPostOfferService extends GetxService {
       '/buy-posts/$buyPostId/offer/new/draft',
       data: payload,
     );
-    return _extractResponseMap(response.data);
+    return DraftEntityResponse.fromPayload(response.data);
   }
 
-  Future<Map<String, dynamic>> updateDraftOfferStep2({
+  Future<DraftEntityResponse> updateDraftOfferStep2({
     required String offerId,
     required Map<String, dynamic> payload,
   }) async {
@@ -65,21 +66,11 @@ class BuyPostOfferService extends GetxService {
       '/buy-posts/offer/new/draft/$offerId',
       data: payload,
     );
-    return _extractResponseMap(response.data);
+    return DraftEntityResponse.fromPayload(response.data);
   }
 
   Future<void> submitFinalOffer({required String offerId}) async {
     await _apiClient.post('/buy-posts/offer/new/$offerId/submit');
-  }
-
-  Map<String, dynamic> _extractResponseMap(dynamic payload) {
-    if (payload is Map && payload['data'] is Map<String, dynamic>) {
-      return payload['data'] as Map<String, dynamic>;
-    }
-    if (payload is Map<String, dynamic>) {
-      return payload;
-    }
-    throw Exception('Invalid response');
   }
 
   PropertyListing _mapMyPostToListing(Map<String, dynamic> json) {

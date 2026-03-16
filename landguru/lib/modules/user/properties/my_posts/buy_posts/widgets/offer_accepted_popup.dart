@@ -232,19 +232,7 @@ class OfferAcceptedPopup extends StatelessWidget {
       return _buildImagePlaceholder();
     }
 
-    final isNetwork =
-        image.startsWith('http://') || image.startsWith('https://');
-    if (isNetwork) {
-      return Image.network(
-        image,
-        width: 64.w,
-        height: 64.h,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
-      );
-    }
-
-    return Image.asset(
+    return Image.network(
       image,
       width: 64.w,
       height: 64.h,

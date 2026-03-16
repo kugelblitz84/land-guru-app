@@ -90,7 +90,12 @@ class MyBuyPostsService extends GetxService {
       propertyType: _mapPropertyType(_toText(json['propertyType']) ?? 'Flat'),
       requiredLandSize: landSize,
       requiredPlotSize: plotSize,
-      distanceFromRoad: _toText(json['distanceFromRoad']) ?? 'Not specified',
+      distanceFromRoad:
+          _toText(json['distanceFromRoad']) ??
+          _formatDistanceRange(
+            json['roadDistanceMin'],
+            json['roadDistanceMax'],
+          ),
       budgetRange: budgetRange,
       description: _toText(json['description']),
       status: status,
@@ -163,13 +168,6 @@ class MyBuyPostsService extends GetxService {
         _toText(property['photo']) ??
         _toText(property['thumbnail']);
 
-    final distanceText =
-        _toText(property['distanceFromRoad']) ??
-        _formatDistanceRange(
-          property['roadDistanceMin'],
-          property['roadDistanceMax'],
-        );
-
     final offerId =
         _toText(json['offerId']) ??
         _toText(json['id']) ??
@@ -205,7 +203,12 @@ class MyBuyPostsService extends GetxService {
       ),
       plotSize: _formatLand(property['plotSize'], property['plotUnit']),
       shareUnit: _formatLand(property['shareAmount'], property['shareUnit']),
-      distanceFromRoad: distanceText,
+      distanceFromRoadMin:
+          _toText(property['roadDistanceMin']) ??
+          _toText(property['distanceFromRoadMin']),
+      distanceFromRoadMax:
+          _toText(property['roadDistanceMax']) ??
+          _toText(property['distanceFromRoadMax']),
       location: _toText(property['location']) ?? 'Location not specified',
       propertyPhotos: photos.isNotEmpty ? photos : fallbackPhotos,
       postId: _buildPostId(_toText(property['id']) ?? ''),

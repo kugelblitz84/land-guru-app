@@ -5,23 +5,37 @@ import '../../shared/bottom_nav/agent_bottom_nav_controller.dart';
 import '../../shared/bottom_nav/user_bottom_nav_controller.dart';
 import '../../shared/shell/agent_shell_controller.dart';
 import '../../shared/shell/main_shell_controller.dart';
+import '/modules/shared/models/user_system_model.dart';
 
 /// Controller for User Profile screen
 class ProfileController extends GetxController {
+  ProfileController(
+    this._profileStore,
+    this._token,
+    this._authService, {
+    AgentProfileStore? agentProfileStore,
+  }) : _agentProfileStore = agentProfileStore;
+
   // State
   final RxBool isLoggingOut = false.obs;
-  final _profileStore = Get.find<UserProfileStore>();
+  final UserProfileStore _profileStore;
 
   // Profile model is the source of truth for profile views.
   Rx<UserProfileStateModel> get profileModel => _profileStore.profileModel;
   RxBool get isLoading => _profileStore.isLoading;
 
-  final _token = Get.find<TokenService>();
-  final _authService = Get.find<AuthService>();
+  final TokenService _token;
+  final AuthService _authService;
+  final AgentProfileStore? _agentProfileStore;
 
   @override
   void onInit() {
     super.onInit();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
     _profileStore.hydrateFromSession();
     loadProfile();
   }
@@ -52,12 +66,8 @@ class ProfileController extends GetxController {
         _authService.clearSession();
         _token.clear();
 
-        if (Get.isRegistered<UserProfileStore>()) {
-          Get.find<UserProfileStore>().clear();
-        }
-        if (Get.isRegistered<AgentProfileStore>()) {
-          Get.find<AgentProfileStore>().clear();
-        }
+        _profileStore.clear();
+        _agentProfileStore?.clear();
 
         _clearScopedControllers();
 

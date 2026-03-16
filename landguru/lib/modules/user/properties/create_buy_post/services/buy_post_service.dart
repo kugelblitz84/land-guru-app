@@ -1,43 +1,34 @@
 import 'package:get/get.dart';
 
+import 'package:landguru/core/models/models.dart';
 import 'package:landguru/core/services/api_client.dart';
-import 'models/buy_post_details_payload.dart';
+import '../models/create_buy_post_payload_model.dart';
+import '../models/buy_post_details_payload.dart';
 
 class BuyPostService extends GetxService {
   BuyPostService(this._apiClient);
 
   final ApiClient _apiClient;
 
-  Future<Map<String, dynamic>> createDraftStep1({
-    required Map<String, dynamic> payload,
+  Future<DraftEntityResponse> createDraftStep1({
+    required CreateBuyPostPayloadModel payload,
   }) async {
-    final response = await _apiClient.post('/buy-posts/draft', data: payload);
-    final data = response.data;
-    if (data is Map<String, dynamic>) {
-      return data;
-    }
-    if (data is Map && data['data'] is Map<String, dynamic>) {
-      return data['data'] as Map<String, dynamic>;
-    }
-    throw Exception('Invalid response');
+    final response = await _apiClient.post(
+      '/buy-posts/draft',
+      data: payload.toJson(),
+    );
+    return DraftEntityResponse.fromPayload(response.data);
   }
 
-  Future<Map<String, dynamic>> updateBuyPost({
+  Future<DraftEntityResponse> updateBuyPost({
     required String postId,
-    required Map<String, dynamic> payload,
+    required CreateBuyPostPayloadModel payload,
   }) async {
     final response = await _apiClient.patch(
       '/buy-posts/$postId',
-      data: payload,
+      data: payload.toJson(),
     );
-    final data = response.data;
-    if (data is Map<String, dynamic>) {
-      return data;
-    }
-    if (data is Map && data['data'] is Map<String, dynamic>) {
-      return data['data'] as Map<String, dynamic>;
-    }
-    throw Exception('Invalid response');
+    return DraftEntityResponse.fromPayload(response.data);
   }
 
   Future<void> submitBuyPost({required String postId}) async {

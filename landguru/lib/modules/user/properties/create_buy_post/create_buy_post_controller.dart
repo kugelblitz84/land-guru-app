@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/services/api_error_handler.dart';
 import '../../../../core/utils/currency_formatter.dart';
-import 'services/models/buy_post_details_payload.dart';
+import 'models/buy_post_details_payload.dart';
+import 'models/create_buy_post_payload_model.dart';
 import 'services/buy_post_service.dart';
 import '../../../../routes/app_routes.dart';
 import '../widgets/properties_widgets.dart';
@@ -11,6 +12,8 @@ import '../widgets/properties_widgets.dart';
 /// Step 1: Requirements (property type, size, budget, location)
 /// Step 2: Review & submit
 class CreateBuyPostController extends GetxController {
+  CreateBuyPostController(this.service);
+
   static const int minBudgetLimit = 0;
   static const int maxBudgetLimit = 9999999;
 
@@ -70,7 +73,7 @@ class CreateBuyPostController extends GetxController {
   final RxBool isSavingDraft = false.obs;
   final RxnString draftPostId = RxnString();
 
-  final service = Get.find<BuyPostService>();
+  final BuyPostService service;
 
   // Validation errors
   final RxString propertyTypeError = ''.obs;
@@ -705,12 +708,12 @@ class CreateBuyPostController extends GetxController {
     }
     isLoading.value = true;
     try {
-      final payload = _buildStep1Payload();
+      final payload = _buildStep1PayloadModel();
       final id = draftPostId.value;
 
       if (id == null || id.isEmpty) {
         final response = await service.createDraftStep1(payload: payload);
-        final createdId = response['id']?.toString();
+        final createdId = response.id;
         if (createdId != null && createdId.isNotEmpty) {
           draftPostId.value = createdId;
         }
@@ -738,7 +741,9 @@ class CreateBuyPostController extends GetxController {
     }
   }
 
-  Map<String, dynamic> _buildStep1Payload() {
+  CreateBuyPostPayloadModel get step1PayloadModel => _buildStep1PayloadModel();
+
+  CreateBuyPostPayloadModel _buildStep1PayloadModel() {
     final selectedPropertyType = propertyType.value;
     if (selectedPropertyType == null) {
       throw Exception('Property type is required.');
@@ -758,31 +763,25 @@ class CreateBuyPostController extends GetxController {
       );
     }
 
-    final payload = <String, dynamic>{
-      'title': titleController.text.trim(),
-      'description': descriptionController.text.trim(),
-      'propertyType': selectedPropertyType.label,
-      'landSizeMin': landSizeValue.value,
-      'landSizeUnit': landSizeUnit.value.label,
-      'budgetMin': parsedBudgetMin,
-      'budgetMax': parsedBudgetMax,
-      if (plotSizeValue.value > 0) 'plotSizeMin': plotSizeValue.value,
-      if (plotSizeValue.value > 0) 'plotSizeUnit': plotSizeUnit.value.label,
-      if (range != null) 'roadDistanceMin': range.minMeters,
-      if (range != null) 'roadDistanceMax': range.maxMeters,
-      if (currentLocation.division != null)
-        'division': currentLocation.division,
-      if (currentLocation.district != null)
-        'district': currentLocation.district,
-      if (currentLocation.upazila != null) 'upazila': currentLocation.upazila,
-      if (currentLocation.pouroshova != null)
-        'unionOrCityCorp': currentLocation.pouroshova,
-      if (currentLocation.wardNo != null) 'wardNo': currentLocation.wardNo,
-      if (currentLocation.postalCode != null)
-        'postalCode': currentLocation.postalCode,
-    };
-
-    return payload;
+    return CreateBuyPostPayloadModel(
+      title: titleController.text.trim(),
+      description: descriptionController.text.trim(),
+      propertyType: selectedPropertyType.label,
+      landSizeMin: landSizeValue.value,
+      landSizeUnit: landSizeUnit.value.label,
+      budgetMin: parsedBudgetMin,
+      budgetMax: parsedBudgetMax,
+      plotSizeMin: plotSizeValue.value > 0 ? plotSizeValue.value : null,
+      plotSizeUnit: plotSizeValue.value > 0 ? plotSizeUnit.value.label : null,
+      roadDistanceMin: range?.minMeters,
+      roadDistanceMax: range?.maxMeters,
+      division: currentLocation.division,
+      district: currentLocation.district,
+      upazila: currentLocation.upazila,
+      unionOrCityCorp: currentLocation.pouroshova,
+      wardNo: currentLocation.wardNo,
+      postalCode: currentLocation.postalCode,
+    );
   }
 
   bool _isBudgetRangeValid() {

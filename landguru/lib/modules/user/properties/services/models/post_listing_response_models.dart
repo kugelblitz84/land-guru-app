@@ -1,4 +1,4 @@
-import 'package:landguru/core/models/property_listing.dart';
+import 'package:landguru/modules/user/properties/models/property_listing.dart';
 import 'package:landguru/modules/user/properties/wanted_and_needs/models/land_wanted_post.dart';
 
 class SellPostListingResponse {

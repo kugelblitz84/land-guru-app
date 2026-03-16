@@ -31,6 +31,9 @@ import '../modules/shared/bottom_nav/agent_bottom_nav_view.dart';
 import '../modules/shared/bottom_nav/agent_bottom_nav_controller.dart';
 import '../modules/shared/shell/agent_shell_controller.dart';
 import '../modules/shared/shell/main_shell_controller.dart';
+import '../modules/shared/controllers/agent_profile_store.dart';
+import '../modules/shared/controllers/user_profile_store.dart';
+import '../modules/shared/services/user_profile_services.dart';
 import '../modules/agent/dashboard/agent_dashboard_controller.dart';
 import '../modules/agent/dashboard/agent_dashboard_view.dart';
 import '../modules/agent/appointments/agent_appointments_controller.dart';
@@ -56,11 +59,11 @@ import '../modules/shared/notifications/notifications_controller.dart';
 
 // Create Buy Post
 import '../modules/user/properties/create_buy_post/create_buy_post_view.dart';
-import '../modules/user/properties/create_buy_post/create_buy_post_controller.dart';
+import '../modules/user/properties/create_buy_post/create_buy_post_binding.dart';
 
 // Create Sell Post
 import '../modules/user/properties/create_sell_post/create_sell_post_view.dart';
-import '../modules/user/properties/create_sell_post/create_sell_post_controller.dart';
+import '../modules/user/properties/create_sell_post/create_sell_post_binding.dart';
 
 // Create Offer
 import '../modules/user/properties/wanted_and_needs/create_offer/create_offer_view.dart';
@@ -95,6 +98,11 @@ import '../modules/user/profile/edit_profile_view.dart';
 import '../modules/user/profile/edit_profile_controller.dart';
 import '../modules/user/profile/change_password_view.dart';
 import '../modules/user/profile/change_password_controller.dart';
+import '../core/services/auth_service.dart';
+import '../core/services/token_service.dart';
+import '../core/services/upload_service.dart';
+import '../core/services/user_type_service.dart';
+import '../modules/user/properties/wanted_and_needs/services/buy_post_offer_service.dart';
 
 /// Contains all GetPage configurations for the application.
 /// Each page includes its route, page widget, and binding for dependency injection.
@@ -120,7 +128,14 @@ class AppPages {
         if (Get.isRegistered<LoginController>()) {
           Get.delete<LoginController>(force: true);
         }
-        Get.put<LoginController>(LoginController());
+        Get.put<LoginController>(
+          LoginController(
+            Get.find<AuthService>(),
+            Get.find<UserTypeService>(),
+            Get.find<AgentProfileStore>(),
+            Get.find<UserProfileStore>(),
+          ),
+        );
       }),
     ),
 
@@ -132,7 +147,9 @@ class AppPages {
         if (Get.isRegistered<SignupController>()) {
           Get.delete<SignupController>(force: true);
         }
-        Get.put<SignupController>(SignupController());
+        Get.put<SignupController>(
+          SignupController(Get.find<AuthService>(), Get.find<UploadService>()),
+        );
       }),
     ),
     GetPage(
@@ -207,7 +224,16 @@ class AppPages {
         }
         Get.put<UserBottomNavController>(UserBottomNavController());
         Get.lazyPut<HomeController>(() => HomeController());
-        Get.lazyPut<ProfileController>(() => ProfileController());
+        Get.lazyPut<ProfileController>(
+          () => ProfileController(
+            Get.find<UserProfileStore>(),
+            Get.find<TokenService>(),
+            Get.find<AuthService>(),
+            agentProfileStore: Get.isRegistered<AgentProfileStore>()
+                ? Get.find<AgentProfileStore>()
+                : null,
+          ),
+        );
         Get.lazyPut<PropertiesController>(() => PropertiesController());
       }),
     ),
@@ -298,45 +324,35 @@ class AppPages {
     GetPage(
       name: AppRoutes.CREATE_SELL_POST_INFO,
       page: () => const CreateSellPostView(),
-      binding: BindingsBuilder(() {
-        if (Get.isRegistered<CreateSellPostController>()) {
-          Get.delete<CreateSellPostController>(force: true);
-        }
-        Get.put<CreateSellPostController>(CreateSellPostController());
-      }),
+      binding: CreateSellPostBinding(resetController: true),
     ),
     // These routes redirect to the main view (controller persists)
     GetPage(
       name: AppRoutes.CREATE_SELL_POST_MEDIA,
       page: () => const CreateSellPostView(),
-      binding: BindingsBuilder(() {}),
+      binding: CreateSellPostBinding(),
     ),
     GetPage(
       name: AppRoutes.CREATE_SELL_POST_SERVICES,
       page: () => const CreateSellPostView(),
-      binding: BindingsBuilder(() {}),
+      binding: CreateSellPostBinding(),
     ),
     GetPage(
       name: AppRoutes.CREATE_SELL_POST_REVIEW,
       page: () => const CreateSellPostView(),
-      binding: BindingsBuilder(() {}),
+      binding: CreateSellPostBinding(),
     ),
 
     // CREATE BUY POST FLOW (2 Steps) - Single route with step-based view
     GetPage(
       name: AppRoutes.CREATE_BUY_POST_INFO,
       page: () => const CreateBuyPostView(),
-      binding: BindingsBuilder(() {
-        if (Get.isRegistered<CreateBuyPostController>()) {
-          Get.delete<CreateBuyPostController>(force: true);
-        }
-        Get.put<CreateBuyPostController>(CreateBuyPostController());
-      }),
+      binding: CreateBuyPostBinding(resetController: true),
     ),
     GetPage(
       name: AppRoutes.CREATE_BUY_POST_REVIEW,
       page: () => const CreateBuyPostView(),
-      binding: BindingsBuilder(() {}),
+      binding: CreateBuyPostBinding(),
     ),
 
     // CREATE OFFER FLOW (3 Steps) - Single route with step-based view
@@ -348,7 +364,10 @@ class AppPages {
           Get.delete<CreateOfferController>(force: true);
         }
         final args = Get.arguments as Map<String, dynamic>?;
-        final controller = CreateOfferController();
+        final controller = CreateOfferController(
+          Get.find<BuyPostOfferService>(),
+          Get.find<UploadService>(),
+        );
         if (args != null) {
           controller.initWithBuyPost(
             args['postId'] ?? '',
@@ -375,7 +394,7 @@ class AppPages {
       page: () => const OfferFromExistingView(),
       binding: BindingsBuilder(() {
         Get.lazyPut<OfferFromExistingController>(
-          () => OfferFromExistingController(),
+          () => OfferFromExistingController(Get.find<BuyPostOfferService>()),
         );
       }),
     ),
@@ -427,7 +446,16 @@ class AppPages {
       name: AppRoutes.PROFILE,
       page: () => const ProfileView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<ProfileController>(() => ProfileController());
+        Get.lazyPut<ProfileController>(
+          () => ProfileController(
+            Get.find<UserProfileStore>(),
+            Get.find<TokenService>(),
+            Get.find<AuthService>(),
+            agentProfileStore: Get.isRegistered<AgentProfileStore>()
+                ? Get.find<AgentProfileStore>()
+                : null,
+          ),
+        );
       }),
     ),
     GetPage(
@@ -437,7 +465,13 @@ class AppPages {
         if (Get.isRegistered<EditProfileController>()) {
           Get.delete<EditProfileController>(force: true);
         }
-        Get.put<EditProfileController>(EditProfileController());
+        Get.put<EditProfileController>(
+          EditProfileController(
+            Get.find<ProfileServices>(),
+            Get.find<UserProfileStore>(),
+            Get.find<UploadService>(),
+          ),
+        );
       }),
     ),
     GetPage(
@@ -447,7 +481,9 @@ class AppPages {
         if (Get.isRegistered<ChangePasswordController>()) {
           Get.delete<ChangePasswordController>(force: true);
         }
-        Get.put<ChangePasswordController>(ChangePasswordController());
+        Get.put<ChangePasswordController>(
+          ChangePasswordController(Get.find<ProfileServices>()),
+        );
       }),
     ),
 

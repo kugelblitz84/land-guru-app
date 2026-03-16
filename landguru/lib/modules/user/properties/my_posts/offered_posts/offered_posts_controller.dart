@@ -125,7 +125,8 @@ class OfferedPostsController extends GetxController {
         price: post.propertyPrice,
         sellableLandAmount: post.sellableLandAmount,
         plotSize: post.plotSize,
-        distanceFromRoad: post.distanceFromRoad,
+        distanceFromRoadMin: post.distanceFromRoadMin,
+        distanceFromRoadMax: post.distanceFromRoadMax,
         location: post.location,
       );
     }).toList();
@@ -205,5 +206,24 @@ class OfferedPostsController extends GetxController {
 
     await loadOfferedPosts(forceRefresh: true);
     return true;
+  }
+
+  Future<OfferedPost?> loadOfferDetailsById({required String offerId}) async {
+    final normalizedOfferId = offerId.trim();
+    if (normalizedOfferId.isEmpty) {
+      return null;
+    }
+
+    final result = await ApiErrorHandler.call(
+      () => _service.getMyOfferedPostDetails(offerId: normalizedOfferId),
+      showError: false,
+      fallbackMessage: 'Failed to load offer details',
+    );
+
+    if (!result.isSuccess || result.data == null) {
+      return null;
+    }
+
+    return result.data;
   }
 }

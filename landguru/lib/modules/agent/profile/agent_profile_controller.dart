@@ -6,6 +6,7 @@ import '../../shared/bottom_nav/agent_bottom_nav_controller.dart';
 import '../../shared/bottom_nav/user_bottom_nav_controller.dart';
 import '../../shared/shell/agent_shell_controller.dart';
 import '../../shared/shell/main_shell_controller.dart';
+import '/modules/shared/models/agent_system_model.dart';
 
 /// Controller for Agent Profile screen
 class AgentProfileController extends GetxController {
@@ -23,6 +24,11 @@ class AgentProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
     _profileStore.hydrateFromSession();
     loadProfile();
   }

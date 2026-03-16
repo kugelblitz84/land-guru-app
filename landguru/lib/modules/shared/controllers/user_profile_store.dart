@@ -1,17 +1,19 @@
 import 'package:get/get.dart';
 
 import '../models/user_system_model.dart';
-import '../../modules/user/profile/profile_services.dart';
-import 'api_error_handler.dart';
-import 'auth_service.dart';
+import '../services/user_profile_services.dart';
+import '../../../core/services/api_error_handler.dart';
+import '../../../core/services/auth_service.dart';
 
 class UserProfileStore extends GetxService {
+  UserProfileStore(this._authService, this._profileServices);
+
   final RxBool isLoading = false.obs;
   final Rx<UserProfileStateModel> profileModel =
       UserProfileStateModel.initial().obs;
 
-  final _authService = Get.find<AuthService>();
-  final _profileServices = Get.find<ProfileServices>();
+  final AuthService _authService;
+  final ProfileServices _profileServices;
 
   void hydrateFromSession() {
     final user = _authService.user;

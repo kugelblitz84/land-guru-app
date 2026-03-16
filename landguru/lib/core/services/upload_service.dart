@@ -3,36 +3,28 @@ import 'dart:io';
 import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 
+import '../models/models.dart';
 import 'api_client.dart';
-
-class UploadResult {
-  final String uploadUrl;
-  final String fileUrl;
-
-  const UploadResult({required this.uploadUrl, required this.fileUrl});
-}
 
 class UploadService extends GetxService {
   UploadService(this._apiClient);
 
   final ApiClient _apiClient;
 
-  Future<UploadResult> getPresignedUrl({
-    required String filename,
-    required String contentType,
-    required String type,
+  Future<UploadResultPayload> getPresignedUrl({
+    required PresignedUrlRequestPayload payload,
   }) async {
     final response = await _apiClient.post(
       '/s3/presign-put',
-      data: {'filename': filename, 'contentType': contentType, 'type': type},
+      data: payload.toJson(),
     );
 
-    final payload = _unwrapData(response.data);
-    if (payload == null) {
+    final presignData = _unwrapData(response.data);
+    if (presignData == null) {
       throw Exception('Invalid presign response');
     }
 
-    final uploadUrl = _readFirstString(payload, [
+    final uploadUrl = _readFirstString(presignData, [
       'uploadUrl',
       'presignedUrl',
       'signedUrl',
@@ -44,7 +36,7 @@ class UploadService extends GetxService {
     }
 
     final fileUrl =
-        _readFirstString(payload, [
+        _readFirstString(presignData, [
           'fileUrl',
           'publicUrl',
           'location',
@@ -53,21 +45,20 @@ class UploadService extends GetxService {
         ]) ??
         _stripQuery(uploadUrl);
 
-    return UploadResult(uploadUrl: uploadUrl, fileUrl: fileUrl);
+    return UploadResultPayload(uploadUrl: uploadUrl, fileUrl: fileUrl);
   }
 
-  Future<String> uploadFile({
-    required File file,
-    required String contentType,
-    required String type,
-  }) async {
+  Future<String> uploadFile({required UploadFilePayload payload}) async {
+    final file = payload.file;
     final filename = file.uri.pathSegments.isEmpty
         ? 'upload'
         : file.uri.pathSegments.last;
     final presign = await getPresignedUrl(
-      filename: filename,
-      contentType: contentType,
-      type: type,
+      payload: PresignedUrlRequestPayload(
+        filename: filename,
+        contentType: payload.contentType,
+        type: payload.type,
+      ),
     );
 
     final fileLength = await file.length();
@@ -77,7 +68,10 @@ class UploadService extends GetxService {
       presign.uploadUrl,
       data: file.openRead(),
       options: dio.Options(
-        headers: {'Content-Type': contentType, 'Content-Length': fileLength},
+        headers: {
+          'Content-Type': payload.contentType,
+          'Content-Length': fileLength,
+        },
       ),
     );
 

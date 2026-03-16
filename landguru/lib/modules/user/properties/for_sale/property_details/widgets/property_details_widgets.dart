@@ -174,7 +174,7 @@ class PropertyDetailRow extends StatelessWidget {
   final IconData? icon;
   final Color? iconColor;
   final String label;
-  final String value;
+  final String? value;
   final String? iconPrefix;
   final String? imageAsset;
 
@@ -183,7 +183,7 @@ class PropertyDetailRow extends StatelessWidget {
     this.icon,
     this.iconColor,
     required this.label,
-    required this.value,
+    this.value,
     this.iconPrefix,
     this.imageAsset,
   });
@@ -251,7 +251,7 @@ class PropertyDetailRow extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 4.0),
             child: Text(
-              value,
+              value ?? 'N/A',
               style: TextStyle(fontSize: 13.sp, color: AppColors.grey600),
             ),
           ),
@@ -562,35 +562,16 @@ class PropertyPhotosSection extends StatelessWidget {
                   margin: EdgeInsets.only(right: 8.w),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.r),
-                    child:
-                        (photos[index].startsWith('http://') ||
-                            photos[index].startsWith('https://'))
-                        ? Image.network(
-                            photos[index],
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: AppColors.grey200,
-                                child: Icon(
-                                  Icons.image,
-                                  color: AppColors.grey400,
-                                ),
-                              );
-                            },
-                          )
-                        : Image.asset(
-                            photos[index],
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: AppColors.grey200,
-                                child: Icon(
-                                  Icons.image,
-                                  color: AppColors.grey400,
-                                ),
-                              );
-                            },
-                          ),
+                    child: Image.network(
+                      photos[index],
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppColors.grey200,
+                          child: Icon(Icons.image, color: AppColors.grey400),
+                        );
+                      },
+                    ),
                   ),
                 );
               },
@@ -807,17 +788,6 @@ class PostedBySection extends StatelessWidget {
       );
     }
 
-    final isNetwork =
-        imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
-
-    if (!isNetwork) {
-      return CircleAvatar(
-        radius: 22.r,
-        backgroundColor: AppColors.grey200,
-        child: Icon(Icons.person, color: AppColors.grey600, size: 20.sp),
-      );
-    }
-
     return ClipOval(
       child: SizedBox(
         width: 44.w,
@@ -825,7 +795,7 @@ class PostedBySection extends StatelessWidget {
         child: Image.network(
           imageUrl,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
+          errorBuilder: (context, error, stackTrace) => Container(
             color: AppColors.grey200,
             child: Icon(Icons.person, color: AppColors.grey600, size: 20.sp),
           ),

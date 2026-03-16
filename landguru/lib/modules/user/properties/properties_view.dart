@@ -6,6 +6,7 @@ import 'properties_controller.dart';
 import 'for_sale/for_sale_content_view.dart';
 import 'my_posts/my_posts_content_view.dart';
 import 'wanted_and_needs/wanted_content_view.dart';
+import 'widgets/properties_search_filter_bar.dart';
 
 /// Properties listing screen - Full version with Scaffold
 /// Use this for standalone navigation (not within shell)
@@ -57,78 +58,14 @@ class PropertiesContentView extends GetView<PropertiesController> {
   }
 
   Widget _buildSearchBar() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Row(
-        children: [
-          // Search field
-          Expanded(
-            child: Container(
-              height: 48.h,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(12.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withAlpha(25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.search, color: AppColors.grey500, size: 20.sp),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: TextField(
-                      controller: controller.searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search location, area',
-                        hintStyle: TextStyle(
-                          fontSize: 14.sp,
-                          color: AppColors.grey400,
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: AppColors.grey900,
-                      ),
-                      onSubmitted: (_) => controller.search(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(width: 12.w),
-
-          // Filter button
-          GestureDetector(
-            onTap: controller.openFilter,
-            child: Container(
-              width: 48.w,
-              height: 48.h,
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(12.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withAlpha(25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(Icons.tune, color: AppColors.grey700, size: 22.sp),
-            ),
-          ),
-        ],
-      ),
+    return PropertiesSearchFilterBar(
+      searchController: controller.searchController,
+      onSearchChanged: controller.updateSearch,
+      onSearchSubmitted: (_) => controller.search(),
+      onFilterTap: controller.openFilter,
+      inputBackgroundColor: AppColors.white,
+      buttonBackgroundColor: AppColors.white,
+      showShadow: true,
     );
   }
 

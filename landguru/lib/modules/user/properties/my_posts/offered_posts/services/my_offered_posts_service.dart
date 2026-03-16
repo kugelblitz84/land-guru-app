@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../../../../../../core/enums/property_type.dart';
+import '../../../../../../../core/models/models.dart';
 import '../../../../../../../core/services/api_client.dart';
 import '../models/my_offered_posts_response.dart';
 import '../models/offered_post_models.dart';
@@ -31,23 +32,13 @@ class MyOfferedPostsService extends GetxService {
     throw Exception('Invalid response');
   }
 
-  Future<Map<String, dynamic>> convertOfferToSellPost({
+  Future<DraftEntityResponse> convertOfferToSellPost({
     required String offerId,
   }) async {
     final response = await _apiClient.post(
       '/buy-posts/offers/$offerId/convert',
     );
-    final payload = response.data;
-
-    if (payload is Map<String, dynamic>) {
-      return payload;
-    }
-
-    if (payload is Map) {
-      return Map<String, dynamic>.from(payload);
-    }
-
-    throw Exception('Invalid response');
+    return DraftEntityResponse.fromPayload(response.data);
   }
 
   Future<MyOfferedPostsResponse> getMyOfferedPosts({
@@ -117,10 +108,8 @@ class MyOfferedPostsService extends GetxService {
         ),
         plotSize: _formatLand(json['plotSize'], json['plotUnit']),
         shareUnit: _formatLand(json['shareAmount'], json['shareUnit']),
-        distanceFromRoad: _formatDistance(
-          json['roadDistanceMin'],
-          json['roadDistanceMax'],
-        ),
+        distanceFromRoadMin: _toText(json['roadDistanceMin']),
+        distanceFromRoadMax: _toText(json['roadDistanceMax']),
         location: _toText(json['location']) ?? 'Location not specified',
         propertyPhotos: _toTextList(json['photos']),
         buyerId: _toText(json['buyerId']) ?? '',
@@ -182,10 +171,8 @@ class MyOfferedPostsService extends GetxService {
       ),
       plotSize: _formatLand(yourOffer['plotSize'], yourOffer['plotUnit']),
       shareUnit: _formatLand(yourOffer['shareAmount'], yourOffer['shareUnit']),
-      distanceFromRoad: _formatDistance(
-        yourOffer['roadDistanceMin'],
-        yourOffer['roadDistanceMax'],
-      ),
+      distanceFromRoadMin: _toText(yourOffer['roadDistanceMin']),
+      distanceFromRoadMax: _toText(yourOffer['roadDistanceMax']),
       location: _toText(buyPost['location']) ?? 'Location not specified',
       propertyPhotos: _toTextList(yourOffer['photos']),
       buyerId: _toText(buyer['id']) ?? '',
@@ -253,18 +240,6 @@ class MyOfferedPostsService extends GetxService {
     }
 
     return '$amountText $unitText';
-  }
-
-  String _formatDistance(dynamic min, dynamic max) {
-    final minText = _toText(min);
-    final maxText = _toText(max);
-    final hasMin = minText != null && minText.isNotEmpty;
-    final hasMax = maxText != null && maxText.isNotEmpty;
-
-    if (hasMin && hasMax) return '${minText}m-${maxText}m';
-    if (hasMin) return '${minText}m';
-    if (hasMax) return '${maxText}m';
-    return 'Not specified';
   }
 
   String _formatPrice(dynamic value) {

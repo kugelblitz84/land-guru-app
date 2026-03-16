@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../core/services/nested_navigation_service.dart';
 import '../../../../../core/services/services.dart';
-import '../../widgets/metrics_input_field.dart';
 import '../../widgets/metrics_conversion_row.dart';
 import 'models/property_details_models.dart';
 
@@ -12,6 +11,10 @@ class PropertyDetailsController extends GetxController {
       Get.find<SellPostDetailsService>();
   final BuyPostOfferService _buyPostOfferService =
       Get.find<BuyPostOfferService>();
+  final UserProfileStore? _userProfileStore =
+      Get.isRegistered<UserProfileStore>()
+      ? Get.find<UserProfileStore>()
+      : null;
 
   // State
   final RxBool isLoading = false.obs;
@@ -145,12 +148,10 @@ class PropertyDetailsController extends GetxController {
     'Court case verification passed',
   ];
 
-  // User data for appointment form (mock - would come from user account)
-  final RxString userName = 'Farhan'.obs;
-  final RxString userPhone = '+8801700000000'.obs;
-  final RxString userAddress =
-      'Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.'
-          .obs;
+  // User data for appointment form
+  final RxString userName = ''.obs;
+  final RxString userPhone = ''.obs;
+  final RxString userAddress = ''.obs;
 
   @override
   void onInit() {
@@ -162,6 +163,51 @@ class PropertyDetailsController extends GetxController {
     }
 
     loadPropertyDetails();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _hydrateUserProfileData();
+      _refreshUserProfileData();
+    });
+  }
+
+  void _hydrateUserProfileData() {
+    if (_userProfileStore == null) {
+      return;
+    }
+
+    _userProfileStore.hydrateFromSession();
+    final profile = _userProfileStore.profileModel.value;
+
+    if (profile.userName.trim().isNotEmpty) {
+      userName.value = profile.userName.trim();
+    }
+    if (profile.userPhone.trim().isNotEmpty) {
+      userPhone.value = profile.userPhone.trim();
+    }
+
+    final profileAddress = profile.userAddress.trim().isNotEmpty
+        ? profile.userAddress.trim()
+        : profile.fullAddress.trim();
+    if (profileAddress.isNotEmpty) {
+      userAddress.value = profileAddress;
+    }
+  }
+
+  Future<void> _refreshUserProfileData() async {
+    if (_userProfileStore == null) {
+      return;
+    }
+
+    try {
+      await _userProfileStore.refreshProfile(showError: false);
+      _hydrateUserProfileData();
+    } catch (_) {
+      // Keep locally hydrated data when background refresh fails.
+    }
   }
 
   /// Load property from route arguments
@@ -229,7 +275,8 @@ class PropertyDetailsController extends GetxController {
         location: args['location'] ?? 'Location not specified',
         sellableLandAmount: args['sellableLandAmount'] ?? 'N/A',
         plotSize: args['plotSize'] ?? 'N/A',
-        distanceFromRoad: args['distanceFromRoad'] ?? 'N/A',
+        distanceFromRoadMin: args['distanceFromRoadMin'] ?? 'N/A',
+        distanceFromRoadMax: args['distanceFromRoadMax'] ?? 'N/A',
         landShapeImageUrl: null,
         propertyPhotos: photos,
         postedBy: args['postedBy'] ?? 'Unknown',
@@ -282,7 +329,8 @@ class PropertyDetailsController extends GetxController {
         sellableLandAmount: payload.sellableLandAmount,
         plotSize: payload.plotSize,
         shareUnit: payload.shareUnit,
-        distanceFromRoad: payload.distanceFromRoad,
+        distanceFromRoadMin: payload.distanceFromRoadMin,
+        distanceFromRoadMax: payload.distanceFromRoadMax,
         landShapeImageUrl: null,
         propertyPhotos: photos,
         postedBy: payload.sellerName,
@@ -357,7 +405,8 @@ class PropertyDetailsController extends GetxController {
       location: property.value!.location,
       sellableLandAmount: property.value!.sellableLandAmount,
       plotSize: property.value!.plotSize,
-      distanceFromRoad: property.value!.distanceFromRoad,
+      distanceFromRoadMin: property.value!.distanceFromRoadMin,
+      distanceFromRoadMax: property.value!.distanceFromRoadMax,
       landShapeImageUrl: property.value!.landShapeImageUrl,
       propertyPhotos: property.value!.propertyPhotos,
       postedBy: property.value!.postedBy,

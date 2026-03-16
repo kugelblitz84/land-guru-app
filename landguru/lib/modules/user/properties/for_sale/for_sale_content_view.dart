@@ -293,22 +293,7 @@ class ForSaleContentView extends GetView<PropertiesController> {
       return _buildImagePlaceholder(property.propertyType);
     }
 
-    final isNetworkImage =
-        imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
-
-    if (isNetworkImage) {
-      return Image.network(
-        imageUrl,
-        height: 180.h,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildImagePlaceholder(property.propertyType);
-        },
-      );
-    }
-
-    return Image.asset(
+    return Image.network(
       imageUrl,
       height: 180.h,
       width: double.infinity,

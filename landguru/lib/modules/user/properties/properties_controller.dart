@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/services/nested_navigation_service.dart';
 import '../../../routes/app_routes.dart';
 import '../../../core/enums/property_type.dart';
-import '../../../core/models/property_listing.dart';
+import 'models/property_listing.dart';
 import 'wanted_and_needs/models/offer_status.dart';
 import 'wanted_and_needs/models/land_wanted_post.dart';
 import 'widgets/distance_range_selector.dart';
@@ -16,7 +16,7 @@ import 'package:landguru/core/services/services.dart';
 // Re-export for backward compatibility
 export '../../../core/enums/property_type.dart';
 export '../../../core/enums/post_type.dart';
-export '../../../core/models/property_listing.dart';
+export 'models/property_listing.dart';
 export 'wanted_and_needs/models/offer_status.dart';
 export 'wanted_and_needs/models/land_wanted_post.dart';
 
@@ -283,12 +283,14 @@ class PropertiesController extends GetxController {
   void search() {
     searchQuery.value = searchController.text;
     _applyForSaleFiltersAndSort();
+    _applyWantedFiltersAndSort();
   }
 
   /// Update search query
   void updateSearch(String query) {
     searchQuery.value = query;
     _applyForSaleFiltersAndSort();
+    _applyWantedFiltersAndSort();
   }
 
   /// Update sort
@@ -657,6 +659,7 @@ class PropertiesController extends GetxController {
 
   /// Apply filter to offered posts
   void _applyOfferedFilter() {
+    final query = searchQuery.value.trim().toLowerCase();
     final criteria = currentFilterCriteria;
     List<LandWantedPost> statusFiltered;
 
@@ -677,6 +680,15 @@ class PropertiesController extends GetxController {
     }
 
     final globallyFiltered = statusFiltered.where((post) {
+      final matchesSearch =
+          query.isEmpty ||
+          post.title.toLowerCase().contains(query) ||
+          post.preferredLocation.toLowerCase().contains(query);
+
+      if (!matchesSearch) {
+        return false;
+      }
+
       return criteria.matches(
         propertyType: _propertyTypeFromLabel(post.propertyType),
         price: post.offeredPropertyPrice ?? post.budgetRange,
@@ -691,8 +703,18 @@ class PropertiesController extends GetxController {
   }
 
   void _applyWantedFiltersAndSort() {
+    final query = searchQuery.value.trim().toLowerCase();
     final criteria = currentFilterCriteria;
     final filtered = allWantedPosts.where((post) {
+      final matchesSearch =
+          query.isEmpty ||
+          post.title.toLowerCase().contains(query) ||
+          post.preferredLocation.toLowerCase().contains(query);
+
+      if (!matchesSearch) {
+        return false;
+      }
+
       return criteria.matches(
         propertyType: _propertyTypeFromLabel(post.propertyType),
         price: post.budgetRange,

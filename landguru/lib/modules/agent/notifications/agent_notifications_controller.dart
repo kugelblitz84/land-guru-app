@@ -3,9 +3,10 @@ import '../../../core/services/api_error_handler.dart';
 
 /// Service for Agent Notifications screen
 /// Handles: All, Action Required, Appointments tabs
-class AgentNotificationsController extends GetxService {
+class AgentNotificationsController extends GetxController {
   // Tab state
-  final RxInt selectedTabIndex = 0.obs; // 0: All, 1: Action Required, 2: Appointments
+  final RxInt selectedTabIndex =
+      0.obs; // 0: All, 1: Action Required, 2: Appointments
 
   // Loading states
   final RxBool isLoading = false.obs;

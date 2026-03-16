@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
 
 import '../services/api_error_handler.dart';
-import '../services/agent_profile_store.dart';
+import '../../modules/shared/controllers/agent_profile_store.dart';
 import '../services/auth_service.dart';
-import '../services/user_profile_store.dart';
+import '../../modules/shared/controllers/user_profile_store.dart';
 import '../services/user_type_service.dart';
 import '../../routes/app_routes.dart';
 
@@ -13,6 +13,11 @@ class BootstrapController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
     _bootstrap();
   }
 

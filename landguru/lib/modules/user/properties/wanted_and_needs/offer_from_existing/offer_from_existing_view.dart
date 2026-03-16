@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../properties_controller.dart';
 import '../../widgets/info_banner.dart';
+import '../../widgets/properties_search_filter_bar.dart';
 import 'offer_from_existing_controller.dart';
 
 /// Offer from Existing - Select from active listings to offer
@@ -108,53 +109,15 @@ class OfferFromExistingView extends GetView<OfferFromExistingController> {
   }
 
   Widget _buildSearchBar() {
-    return Row(
-      children: [
-        // Search field
-        Expanded(
-          child: Container(
-            height: 48.h,
-            decoration: BoxDecoration(
-              color: AppColors.grey100,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: TextField(
-              controller: controller.searchController,
-              decoration: InputDecoration(
-                hintText: 'Search location, area',
-                hintStyle: TextStyle(fontSize: 14.sp, color: AppColors.grey500),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: AppColors.grey500,
-                  size: 22.sp,
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 14.h,
-                ),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(width: 12.w),
-
-        // Filter button
-        GestureDetector(
-          onTap: controller.openFilterSheet,
-          child: Container(
-            width: 48.w,
-            height: 48.h,
-            decoration: BoxDecoration(
-              color: AppColors.grey100,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Center(
-              child: Icon(Icons.tune, color: AppColors.grey700, size: 24.sp),
-            ),
-          ),
-        ),
-      ],
+    return PropertiesSearchFilterBar(
+      searchController: controller.searchController,
+      onSearchChanged: controller.updateSearch,
+      onSearchSubmitted: (_) => controller.search(),
+      onFilterTap: controller.openFilterSheet,
+      inputBackgroundColor: AppColors.grey100,
+      buttonBackgroundColor: AppColors.grey100,
+      showShadow: false,
+      padding: EdgeInsets.zero,
     );
   }
 
@@ -611,4 +574,3 @@ class OfferFromExistingView extends GetView<OfferFromExistingController> {
     );
   }
 }
-

@@ -3,10 +3,17 @@ import 'package:get/get.dart';
 import 'package:landguru/core/core.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'profile_services.dart';
+import '../../shared/models/payloads/user_profile_payload_models.dart';
+import '../../shared/services/user_profile_services.dart';
 
 /// Controller for Edit Profile screen
 class EditProfileController extends GetxController {
+  EditProfileController(
+    this._profileServices,
+    this._profileStore,
+    this._uploadService,
+  );
+
   // Form
   final formKey = GlobalKey<FormState>();
 
@@ -22,8 +29,9 @@ class EditProfileController extends GetxController {
   final RxBool isSaving = false.obs;
   final RxBool isImageUploading = false.obs;
   final RxString profileImage = ''.obs;
-  final _profileServices = Get.find<ProfileServices>();
-  final _profileStore = Get.find<UserProfileStore>();
+  final ProfileServices _profileServices;
+  final UserProfileStore _profileStore;
+  final UploadService _uploadService;
   final _imagePicker = ImagePicker();
 
   // Dropdown values
@@ -93,6 +101,11 @@ class EditProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
     _profileStore.hydrateFromSession();
     loadCurrentProfile();
     _profileStore.refreshProfile(showError: false).then((_) {
@@ -133,12 +146,13 @@ class EditProfileController extends GetxController {
     }
 
     isImageUploading.value = true;
-    final uploadService = Get.find<UploadService>();
     final result = await ApiErrorHandler.call(
-      () => uploadService.uploadFile(
-        file: File(pickedFile.path),
-        contentType: _guessContentType(pickedFile.path),
-        type: 'AVATAR',
+      () => _uploadService.uploadFile(
+        payload: UploadFilePayload(
+          file: File(pickedFile.path),
+          contentType: _guessContentType(pickedFile.path),
+          type: 'AVATAR',
+        ),
       ),
     );
 
@@ -165,16 +179,18 @@ class EditProfileController extends GetxController {
     try {
       final result = await ApiErrorHandler.call(
         () => _profileServices.updateUserProfile(
-          fullName: fullNameController.text.trim(),
-          email: emailController.text.trim(),
-          division: selectedDivision.value.trim(),
-          district: selectedDistrict.value.trim(),
-          upazila: selectedUpazilla.value.trim(),
-          unionOrCityCorp: selectedPouroshova.value.trim(),
-          wardNo: selectedWardNo.value.trim(),
-          postalCode: postalCodeController.text.trim(),
-          fullAddress: fullAddressController.text.trim(),
-          photoUrl: profileImage.value.trim(),
+          payload: UpdateUserProfilePayload(
+            fullName: fullNameController.text.trim(),
+            email: emailController.text.trim(),
+            division: selectedDivision.value.trim(),
+            district: selectedDistrict.value.trim(),
+            upazila: selectedUpazilla.value.trim(),
+            unionOrCityCorp: selectedPouroshova.value.trim(),
+            wardNo: selectedWardNo.value.trim(),
+            postalCode: postalCodeController.text.trim(),
+            fullAddress: fullAddressController.text.trim(),
+            photoUrl: profileImage.value.trim(),
+          ),
         ),
       );
 

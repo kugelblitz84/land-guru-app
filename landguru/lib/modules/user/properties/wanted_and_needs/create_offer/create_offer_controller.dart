@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../core/models/models.dart';
 import '../../../../../core/services/services.dart';
 import '../../../../../core/utils/currency_formatter.dart';
 import '../../../../../routes/app_routes.dart';
@@ -13,7 +14,10 @@ import '../../widgets/properties_widgets.dart';
 /// Step 2: Property photos
 /// Step 3: Review offer & submit
 class CreateOfferController extends GetxController {
-  final BuyPostOfferService _offerService = Get.find<BuyPostOfferService>();
+  CreateOfferController(this._offerService, this._uploadService);
+
+  final BuyPostOfferService _offerService;
+  final UploadService _uploadService;
 
   // The buy post ID this offer is responding to
   String? buyPostId;
@@ -229,12 +233,13 @@ class CreateOfferController extends GetxController {
     }
 
     isUploadingMedia.value = true;
-    final uploadService = Get.find<UploadService>();
     final uploadResult = await ApiErrorHandler.call(
-      () => uploadService.uploadFile(
-        file: File(path),
-        contentType: _guessContentType(path),
-        type: 'AVATAR',
+      () => _uploadService.uploadFile(
+        payload: UploadFilePayload(
+          file: File(path),
+          contentType: _guessContentType(path),
+          type: 'AVATAR',
+        ),
       ),
     );
 
@@ -372,10 +377,7 @@ class CreateOfferController extends GetxController {
         }
         final response = result.data!;
 
-        final createdId =
-            response['offerId']?.toString() ??
-            response['id']?.toString() ??
-            response['draftOfferId']?.toString();
+        final createdId = response.id;
 
         if (createdId == null || createdId.isEmpty) {
           throw Exception('Could not get offer draft ID from server response.');
@@ -421,7 +423,8 @@ class CreateOfferController extends GetxController {
     try {
       final payload = _buildStep2Payload();
       final result = await ApiErrorHandler.call(
-        () => _offerService.updateDraftOfferStep2(offerId: id, payload: payload),
+        () =>
+            _offerService.updateDraftOfferStep2(offerId: id, payload: payload),
         errorTitle: 'Error',
         fallbackMessage: 'Failed to save offer media',
       );

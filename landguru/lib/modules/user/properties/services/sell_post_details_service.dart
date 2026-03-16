@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../../../core/models/models.dart';
 import '../../../../core/services/api_client.dart';
 import 'models/sell_post_details_payload.dart';
 
@@ -19,7 +20,7 @@ class SellPostDetailsService extends GetxService {
     return SellPostDetailsPayload.fromJson(Map<String, dynamic>.from(payload));
   }
 
-  Future<Map<String, dynamic>> updateSellPost({
+  Future<DraftEntityResponse> updateSellPost({
     required String postId,
     required Map<String, dynamic> payload,
   }) async {
@@ -28,22 +29,14 @@ class SellPostDetailsService extends GetxService {
       data: payload,
     );
 
-    final data = response.data;
-    if (data is Map<String, dynamic>) {
-      return data;
-    }
-    if (data is Map && data['data'] is Map<String, dynamic>) {
-      return data['data'] as Map<String, dynamic>;
-    }
-
-    throw Exception('Invalid response');
+    return DraftEntityResponse.fromPayload(response.data);
   }
 
   Future<void> deleteSellPost(String postId) async {
     await _apiClient.delete('/sell-posts/$postId');
   }
 
-  Future<Map<String, dynamic>> requoteSellPost({
+  Future<DraftEntityResponse> requoteSellPost({
     required String postId,
     required double proposedMandatoryFee,
     required double proposedOptionalFee,
@@ -56,31 +49,14 @@ class SellPostDetailsService extends GetxService {
       },
     );
 
-    final data = response.data;
-    if (data is Map<String, dynamic>) {
-      return data;
-    }
-    if (data is Map && data['data'] is Map<String, dynamic>) {
-      return data['data'] as Map<String, dynamic>;
-    }
-
-    throw Exception('Invalid response');
+    return DraftEntityResponse.fromPayload(response.data);
   }
 
-  Future<Map<String, dynamic>> acceptQuotedPrice({
+  Future<DraftEntityResponse> acceptQuotedPrice({
     required String postId,
   }) async {
     final response = await _apiClient.post('/sell-posts/$postId/accept-quote');
-
-    final data = response.data;
-    if (data is Map<String, dynamic>) {
-      return data;
-    }
-    if (data is Map && data['data'] is Map<String, dynamic>) {
-      return data['data'] as Map<String, dynamic>;
-    }
-
-    throw Exception('Invalid response');
+    return DraftEntityResponse.fromPayload(response.data);
   }
 
   Future<void> requestAppointment({

@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 
-import 'package:landguru/core/models/property_listing.dart';
+import 'package:landguru/modules/user/properties/models/property_listing.dart';
 import 'package:landguru/core/services/api_client.dart';
 import 'models/post_listing_response_models.dart';
 

@@ -1,38 +1,60 @@
-class ProfileModel {
-  final String id;
+class AgentProfileModel {
+  final String agentId;
   final String fullName;
-  final String email;
   final String phone;
+  final String email;
   final String photoUrl;
+  final String agentType;
   final bool isVerified;
-  final Address address;
-  final Verification verification;
-
-  ProfileModel({
-    required this.id,
+  final String agentIdDisplay;
+  final AgentStats stats;
+  final String assignedLocation;
+  final List<String> services;
+  final AgentPersonalDetails personalDetails;
+  final AgentVerificationDocs verificationDocs;
+  final AgentBankInfo bankInfo;
+  AgentProfileModel({
+    required this.agentId,
     required this.fullName,
-    required this.email,
     required this.phone,
+    required this.email,
     required this.photoUrl,
+    required this.agentType,
     required this.isVerified,
-    required this.address,
-    required this.verification,
+    required this.agentIdDisplay,
+    required this.stats,
+    required this.assignedLocation,
+    required this.services,
+    required this.personalDetails,
+    required this.verificationDocs,
+    required this.bankInfo,
   });
 
-  factory ProfileModel.fromJson(Map<String, dynamic> json) {
-    final addressMap = _readMap(json, ['address']) ?? json;
+  factory AgentProfileModel.fromJson(Map<String, dynamic> json) {
+    final statsMap = _readMap(json, ['stats']) ?? const <String, dynamic>{};
+    final detailsMap =
+        _readMap(json, ['personalDetails']) ?? const <String, dynamic>{};
     final verificationMap =
-        _readMap(json, ['verification', 'verificationDocs']) ?? json;
+        _readMap(json, ['verificationDocs', 'verification']) ??
+        const <String, dynamic>{};
+    final bankInfoMap =
+        _readMap(json, ['bankInfo']) ?? const <String, dynamic>{};
 
-    return ProfileModel(
-      id: _readString(json, ['id']) ?? '',
+    return AgentProfileModel(
+      agentId: _readString(json, ['agentId', 'id']) ?? '',
       fullName: _readString(json, ['fullName', 'name']) ?? '',
-      email: _readString(json, ['email']) ?? '',
       phone: _readString(json, ['phone']) ?? '',
+      email: _readString(json, ['email']) ?? '',
       photoUrl: _readString(json, ['photoUrl', 'image']) ?? '',
+      agentType: _readString(json, ['agentType']) ?? '',
       isVerified: _readBool(json, ['isVerified']) ?? false,
-      address: Address.fromJson(addressMap),
-      verification: Verification.fromJson(verificationMap),
+      agentIdDisplay: _readString(json, ['agentIdDisplay']) ?? '',
+      stats: AgentStats.fromJson(statsMap),
+      assignedLocation: _readString(json, ['assignedLocation']) ?? '',
+      services: _readStringList(json, ['services']),
+      personalDetails: AgentPersonalDetails.fromJson(detailsMap),
+      verificationDocs: AgentVerificationDocs.fromJson(verificationMap),
+      bankInfo: AgentBankInfo.fromJson(bankInfoMap),
     );
   }
 
@@ -55,8 +77,9 @@ class ProfileModel {
       if (value is bool) {
         return value;
       }
+
       if (value is String) {
-        final normalized = value.toLowerCase().trim();
+        final normalized = value.trim().toLowerCase();
         if (normalized == 'true') {
           return true;
         }
@@ -83,9 +106,71 @@ class ProfileModel {
     }
     return null;
   }
+
+  static List<String> _readStringList(
+    Map<String, dynamic> json,
+    List<String> keys,
+  ) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value is List) {
+        return value
+            .map((item) => item?.toString().trim() ?? '')
+            .where((item) => item.isNotEmpty)
+            .toList();
+      }
+    }
+    return <String>[];
+  }
 }
 
-class Address {
+class AgentStats {
+  final int totalTaskCompleted;
+  final double totalEarned;
+
+  AgentStats({required this.totalTaskCompleted, required this.totalEarned});
+
+  factory AgentStats.fromJson(Map<String, dynamic> json) {
+    return AgentStats(
+      totalTaskCompleted: _readInt(json, ['totalTaskCompleted']) ?? 0,
+      totalEarned: _readDouble(json, ['totalEarned']) ?? 0,
+    );
+  }
+
+  static int? _readInt(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value is int) {
+        return value;
+      }
+      if (value is num) {
+        return value.toInt();
+      }
+      if (value is String) {
+        return int.tryParse(value.trim());
+      }
+    }
+    return null;
+  }
+
+  static double? _readDouble(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value is double) {
+        return value;
+      }
+      if (value is num) {
+        return value.toDouble();
+      }
+      if (value is String) {
+        return double.tryParse(value.trim());
+      }
+    }
+    return null;
+  }
+}
+
+class AgentPersonalDetails {
   final String division;
   final String district;
   final String upazila;
@@ -94,7 +179,7 @@ class Address {
   final String postalCode;
   final String fullAddress;
 
-  Address({
+  AgentPersonalDetails({
     required this.division,
     required this.district,
     required this.upazila,
@@ -104,8 +189,8 @@ class Address {
     required this.fullAddress,
   });
 
-  factory Address.fromJson(Map<String, dynamic> json) {
-    return Address(
+  factory AgentPersonalDetails.fromJson(Map<String, dynamic> json) {
+    return AgentPersonalDetails(
       division: _readString(json, ['division']) ?? '',
       district: _readString(json, ['district']) ?? '',
       upazila: _readString(json, ['upazila', 'thana']) ?? '',
@@ -130,7 +215,7 @@ class Address {
   }
 }
 
-class Verification {
+class AgentVerificationDocs {
   final String nidNumber;
   final String nidFrontUrl;
   final String nidBackUrl;
@@ -139,7 +224,7 @@ class Verification {
   final String tinCertificateUrl;
   final bool isTINVerified;
 
-  Verification({
+  AgentVerificationDocs({
     required this.nidNumber,
     required this.nidFrontUrl,
     required this.nidBackUrl,
@@ -149,8 +234,8 @@ class Verification {
     required this.isTINVerified,
   });
 
-  factory Verification.fromJson(Map<String, dynamic> json) {
-    return Verification(
+  factory AgentVerificationDocs.fromJson(Map<String, dynamic> json) {
+    return AgentVerificationDocs(
       nidNumber:
           _readString(json, ['nidNumber', 'nidNo', 'nationalIdNumber']) ?? '',
       nidFrontUrl: _readString(json, ['nidFrontUrl']) ?? '',
@@ -187,8 +272,9 @@ class Verification {
       if (value is bool) {
         return value;
       }
+
       if (value is String) {
-        final normalized = value.toLowerCase().trim();
+        final normalized = value.trim().toLowerCase();
         if (normalized == 'true') {
           return true;
         }
@@ -201,22 +287,25 @@ class Verification {
   }
 }
 
-class AccountSummaryModel {
-  final String memberSince;
-  final int activeDeals;
-  final int propertiesListed;
+class AgentBankInfo {
+  final String bankName;
+  final String bankAccountNo;
+  final String bankSwiftCode;
+  final String bankRoutingNo;
 
-  const AccountSummaryModel({
-    required this.memberSince,
-    required this.activeDeals,
-    required this.propertiesListed,
+  AgentBankInfo({
+    required this.bankName,
+    required this.bankAccountNo,
+    required this.bankSwiftCode,
+    required this.bankRoutingNo,
   });
 
-  factory AccountSummaryModel.fromJson(Map<String, dynamic> json) {
-    return AccountSummaryModel(
-      memberSince: _readString(json, ['memberSince']) ?? '--',
-      activeDeals: _readInt(json, ['activeDeals']),
-      propertiesListed: _readInt(json, ['propertiesListed']),
+  factory AgentBankInfo.fromJson(Map<String, dynamic> json) {
+    return AgentBankInfo(
+      bankName: _readString(json, ['bankName']) ?? '',
+      bankAccountNo: _readString(json, ['bankAccountNo']) ?? '',
+      bankSwiftCode: _readString(json, ['bankSwiftCode']) ?? '',
+      bankRoutingNo: _readString(json, ['bankRoutingNo']) ?? '',
     );
   }
 
@@ -232,35 +321,22 @@ class AccountSummaryModel {
     }
     return null;
   }
-
-  static int _readInt(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value is num) {
-        return value.toInt();
-      }
-      final parsed = int.tryParse(value?.toString() ?? '');
-      if (parsed != null) {
-        return parsed;
-      }
-    }
-    return 0;
-  }
 }
 
-class UserProfileStateModel {
-  const UserProfileStateModel({
+class AgentProfileStateModel {
+  const AgentProfileStateModel({
     required this.isOnline,
     required this.unreadNotificationCount,
-    required this.userName,
-    required this.userPhone,
-    required this.userEmail,
-    required this.userAddress,
+    required this.agentName,
+    required this.agentTitle,
+    required this.agentId,
+    required this.agentType,
     required this.profileImage,
+    required this.email,
+    required this.phone,
     required this.isVerified,
-    required this.memberSince,
-    required this.activeDeals,
-    required this.propertiesListed,
+    required this.assignedLocation,
+    required this.servicesProvided,
     required this.division,
     required this.district,
     required this.upazilla,
@@ -269,24 +345,31 @@ class UserProfileStateModel {
     required this.postalCode,
     required this.fullAddress,
     required this.nidNumber,
-    required this.isNidVerified,
     required this.tinNumber,
+    required this.totalTasksCompleted,
+    required this.totalEarned,
+    required this.isNidVerified,
     required this.isTinVerified,
+    required this.bankName,
+    required this.bankAccountNo,
+    required this.swiftCode,
+    required this.routingNo,
   });
 
-  factory UserProfileStateModel.initial() {
-    return const UserProfileStateModel(
+  factory AgentProfileStateModel.initial() {
+    return const AgentProfileStateModel(
       isOnline: true,
       unreadNotificationCount: 0,
-      userName: '',
-      userPhone: '',
-      userEmail: '',
-      userAddress: '',
+      agentName: '',
+      agentTitle: '',
+      agentId: '',
+      agentType: '',
       profileImage: '',
+      email: '',
+      phone: '',
       isVerified: false,
-      memberSince: '--',
-      activeDeals: 0,
-      propertiesListed: 0,
+      assignedLocation: '',
+      servicesProvided: <String>[],
       division: '',
       district: '',
       upazilla: '',
@@ -295,23 +378,30 @@ class UserProfileStateModel {
       postalCode: '',
       fullAddress: '',
       nidNumber: 'Not provided',
-      isNidVerified: false,
       tinNumber: 'Not provided',
+      totalTasksCompleted: 0,
+      totalEarned: 0,
+      isNidVerified: false,
       isTinVerified: false,
+      bankName: '',
+      bankAccountNo: '',
+      swiftCode: '',
+      routingNo: '',
     );
   }
 
   final bool isOnline;
   final int unreadNotificationCount;
-  final String userName;
-  final String userPhone;
-  final String userEmail;
-  final String userAddress;
+  final String agentName;
+  final String agentTitle;
+  final String agentId;
+  final String agentType;
   final String profileImage;
+  final String email;
+  final String phone;
   final bool isVerified;
-  final String memberSince;
-  final int activeDeals;
-  final int propertiesListed;
+  final String assignedLocation;
+  final List<String> servicesProvided;
   final String division;
   final String district;
   final String upazilla;
@@ -320,22 +410,41 @@ class UserProfileStateModel {
   final String postalCode;
   final String fullAddress;
   final String nidNumber;
-  final bool isNidVerified;
   final String tinNumber;
+  final int totalTasksCompleted;
+  final double totalEarned;
+  final bool isNidVerified;
   final bool isTinVerified;
+  final String bankName;
+  final String bankAccountNo;
+  final String swiftCode;
+  final String routingNo;
 
-  UserProfileStateModel copyWith({
+  String get displayName {
+    final name = agentName.trim();
+    final title = agentTitle.trim();
+    if (title.isEmpty) {
+      return name;
+    }
+    if (name.isEmpty) {
+      return title;
+    }
+    return '$title $name';
+  }
+
+  AgentProfileStateModel copyWith({
     bool? isOnline,
     int? unreadNotificationCount,
-    String? userName,
-    String? userPhone,
-    String? userEmail,
-    String? userAddress,
+    String? agentName,
+    String? agentTitle,
+    String? agentId,
+    String? agentType,
     String? profileImage,
+    String? email,
+    String? phone,
     bool? isVerified,
-    String? memberSince,
-    int? activeDeals,
-    int? propertiesListed,
+    String? assignedLocation,
+    List<String>? servicesProvided,
     String? division,
     String? district,
     String? upazilla,
@@ -344,23 +453,30 @@ class UserProfileStateModel {
     String? postalCode,
     String? fullAddress,
     String? nidNumber,
-    bool? isNidVerified,
     String? tinNumber,
+    int? totalTasksCompleted,
+    double? totalEarned,
+    bool? isNidVerified,
     bool? isTinVerified,
+    String? bankName,
+    String? bankAccountNo,
+    String? swiftCode,
+    String? routingNo,
   }) {
-    return UserProfileStateModel(
+    return AgentProfileStateModel(
       isOnline: isOnline ?? this.isOnline,
       unreadNotificationCount:
           unreadNotificationCount ?? this.unreadNotificationCount,
-      userName: userName ?? this.userName,
-      userPhone: userPhone ?? this.userPhone,
-      userEmail: userEmail ?? this.userEmail,
-      userAddress: userAddress ?? this.userAddress,
+      agentName: agentName ?? this.agentName,
+      agentTitle: agentTitle ?? this.agentTitle,
+      agentId: agentId ?? this.agentId,
+      agentType: agentType ?? this.agentType,
       profileImage: profileImage ?? this.profileImage,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
       isVerified: isVerified ?? this.isVerified,
-      memberSince: memberSince ?? this.memberSince,
-      activeDeals: activeDeals ?? this.activeDeals,
-      propertiesListed: propertiesListed ?? this.propertiesListed,
+      assignedLocation: assignedLocation ?? this.assignedLocation,
+      servicesProvided: servicesProvided ?? this.servicesProvided,
       division: division ?? this.division,
       district: district ?? this.district,
       upazilla: upazilla ?? this.upazilla,
@@ -369,9 +485,15 @@ class UserProfileStateModel {
       postalCode: postalCode ?? this.postalCode,
       fullAddress: fullAddress ?? this.fullAddress,
       nidNumber: nidNumber ?? this.nidNumber,
-      isNidVerified: isNidVerified ?? this.isNidVerified,
       tinNumber: tinNumber ?? this.tinNumber,
+      totalTasksCompleted: totalTasksCompleted ?? this.totalTasksCompleted,
+      totalEarned: totalEarned ?? this.totalEarned,
+      isNidVerified: isNidVerified ?? this.isNidVerified,
       isTinVerified: isTinVerified ?? this.isTinVerified,
+      bankName: bankName ?? this.bankName,
+      bankAccountNo: bankAccountNo ?? this.bankAccountNo,
+      swiftCode: swiftCode ?? this.swiftCode,
+      routingNo: routingNo ?? this.routingNo,
     );
   }
 }

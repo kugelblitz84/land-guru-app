@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import '../../../core/models/agent_system_model.dart';
+import '../models/agent_system_model.dart';
 import '../../../core/services/api_error_handler.dart';
-import '../../../core/services/agent_profile_store.dart';
+import '../controllers/agent_profile_store.dart';
 
 /// Controller for the agent shell - manages shared state across bottom nav tabs
 /// This controller persists across all tabs and provides shared functionality
@@ -19,6 +19,11 @@ class AgentShellController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
     _profileStore.hydrateFromSession();
     ApiErrorHandler.call(
       () => _profileStore.refreshProfile(showError: false),

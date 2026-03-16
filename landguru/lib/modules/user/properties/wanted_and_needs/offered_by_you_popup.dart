@@ -724,12 +724,7 @@ class _OfferedByYouPopupState extends State<OfferedByYouPopup> {
   ImageProvider _buildPostedByAvatarProvider() {
     final avatar = post.postedByAvatarUrl?.trim();
     if (avatar != null && avatar.isNotEmpty) {
-      final isNetwork =
-          avatar.startsWith('http://') || avatar.startsWith('https://');
-      if (isNetwork) {
-        return NetworkImage(avatar);
-      }
-      return AssetImage(avatar);
+      return NetworkImage(avatar);
     }
 
     return const AssetImage('assets/images/User_DP/Farhan.jpg');

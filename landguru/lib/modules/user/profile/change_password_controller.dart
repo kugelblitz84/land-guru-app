@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:landguru/core/core.dart';
 import '../../../routes/app_routes.dart';
-import 'profile_services.dart';
+import '../../shared/models/payloads/user_profile_payload_models.dart';
+import '../../shared/services/user_profile_services.dart';
 
 /// Controller for Change Password screen
 class ChangePasswordController extends GetxController {
+  ChangePasswordController(this._profileServices);
+
   // Form
   final formKey = GlobalKey<FormState>();
 
@@ -21,7 +24,7 @@ class ChangePasswordController extends GetxController {
 
   // State
   final RxBool isLoading = false.obs;
-  final _profileServices = Get.find<ProfileServices>();
+  final ProfileServices _profileServices;
 
   /// Toggle current password visibility
   void toggleCurrentPasswordVisibility() {
@@ -76,9 +79,11 @@ class ChangePasswordController extends GetxController {
     try {
       final result = await ApiErrorHandler.call(
         () => _profileServices.changePassword(
-          currentPassword: currentPasswordController.text,
-          newPassword: newPasswordController.text,
-          confirmPassword: confirmPasswordController.text,
+          payload: ChangePasswordPayload(
+            currentPassword: currentPasswordController.text,
+            newPassword: newPasswordController.text,
+            confirmPassword: confirmPasswordController.text,
+          ),
         ),
       );
 

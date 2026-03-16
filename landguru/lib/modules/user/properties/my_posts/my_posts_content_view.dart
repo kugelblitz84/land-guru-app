@@ -511,22 +511,7 @@ class MyPostsContentView extends StatelessWidget {
       return _buildImagePlaceholder(post.propertyType);
     }
 
-    final isNetwork =
-        imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
-
-    if (isNetwork) {
-      return Image.network(
-        imageUrl,
-        width: 80.w,
-        height: 80.h,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildImagePlaceholder(post.propertyType);
-        },
-      );
-    }
-
-    return Image.asset(
+    return Image.network(
       imageUrl,
       width: 80.w,
       height: 80.h,

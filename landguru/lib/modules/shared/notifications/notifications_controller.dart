@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import '../../../core/services/api_error_handler.dart';
-import '../../../core/services/agent_profile_store.dart';
-import '../../../core/services/user_profile_store.dart';
+import '../controllers/agent_profile_store.dart';
+import '../controllers/user_profile_store.dart';
 import '../../../core/services/user_type_service.dart';
 import '../../../routes/app_routes.dart';
 import 'models/notification_model.dart';

@@ -99,6 +99,19 @@ class SellPostDetailsController extends GetxController {
             billBreakdown?['requoteCount'] ??
             payload.raw['requoteCount'],
       );
+      final distanceMin = payload.distanceFromRoadMin?.trim();
+      final distanceMax = payload.distanceFromRoadMax?.trim();
+      final distanceFromRoad =
+          (distanceMin != null &&
+              distanceMin.isNotEmpty &&
+              distanceMax != null &&
+              distanceMax.isNotEmpty)
+          ? '${distanceMin}m-${distanceMax}m'
+          : (distanceMin != null && distanceMin.isNotEmpty)
+          ? '${distanceMin}m'
+          : (distanceMax != null && distanceMax.isNotEmpty)
+          ? '${distanceMax}m'
+          : 'N/A';
 
       final normalizedServices = payload.selectedServices
           .map((service) => service.replaceAll('_', ' '))
@@ -128,7 +141,7 @@ class SellPostDetailsController extends GetxController {
         sellableLandAmount: payload.sellableLandAmount,
         plotSize: payload.plotSize,
         shareUnit: payload.shareUnit,
-        distanceFromRoad: payload.distanceFromRoad,
+        distanceFromRoad: distanceFromRoad,
         location: payload.location,
         timestamp: payload.postedTime,
         timestampPrefix: _mapTimestampPrefix(resolvedStatus),

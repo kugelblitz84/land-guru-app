@@ -310,19 +310,7 @@ class OfferedPostsContentView extends StatelessWidget {
       return _buildImagePlaceholder(post.propertyType);
     }
 
-    final isNetwork =
-        image.startsWith('http://') || image.startsWith('https://');
-    if (isNetwork) {
-      return Image.network(
-        image,
-        width: 80.w,
-        height: 80.h,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildImagePlaceholder(post.propertyType),
-      );
-    }
-
-    return Image.asset(
+    return Image.network(
       image,
       width: 80.w,
       height: 80.h,

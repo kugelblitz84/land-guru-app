@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../../../core/models/property_listing.dart';
+import '../properties/models/property_listing.dart';
 import '../../../core/services/nested_navigation_service.dart';
 import '../../../core/services/services.dart';
 import '../../../routes/app_routes.dart';

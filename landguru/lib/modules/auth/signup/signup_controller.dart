@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/models/models.dart';
 import '../../../core/services/api_error_handler.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/upload_service.dart';
@@ -16,6 +17,11 @@ import '../../../routes/app_routes.dart';
 /// Step 4: Personal info
 /// Step 5: Identity verification
 class SignupController extends GetxController {
+  SignupController(this._authService, this._uploadService);
+
+  final AuthService _authService;
+  final UploadService _uploadService;
+
   // Total steps
   static const int totalSteps = 5;
 
@@ -148,11 +154,12 @@ class SignupController extends GetxController {
     if (!phoneFormKey.currentState!.validate()) return;
 
     isLoading.value = true;
-    final authService = Get.find<AuthService>();
     final result = await ApiErrorHandler.call(
-      () => authService.sendOtp(
-        phone: phoneController.text.trim(),
-        forgetPassword: false,
+      () => _authService.sendOtp(
+        payload: SendOtpPayload(
+          phone: phoneController.text.trim(),
+          forgetPassword: false,
+        ),
       ),
     );
     isLoading.value = false;
@@ -178,11 +185,12 @@ class SignupController extends GetxController {
     }
 
     isLoading.value = true;
-    final authService = Get.find<AuthService>();
     final result = await ApiErrorHandler.call(
-      () => authService.verifyOtp(
-        phone: phoneController.text.trim(),
-        otp: otpString,
+      () => _authService.verifyOtp(
+        payload: VerifyOtpPayload(
+          phone: phoneController.text.trim(),
+          otp: otpString,
+        ),
       ),
     );
     isLoading.value = false;
@@ -203,11 +211,12 @@ class SignupController extends GetxController {
     resendCountdown.value = 60;
 
     try {
-      final authService = Get.find<AuthService>();
       final result = await ApiErrorHandler.call(
-        () => authService.sendOtp(
-          phone: phoneController.text.trim(),
-          forgetPassword: false,
+        () => _authService.sendOtp(
+          payload: SendOtpPayload(
+            phone: phoneController.text.trim(),
+            forgetPassword: false,
+          ),
         ),
       );
       if (!result.isSuccess) {
@@ -265,23 +274,24 @@ class SignupController extends GetxController {
     }
 
     isLoading.value = true;
-    final authService = Get.find<AuthService>();
     final result = await ApiErrorHandler.call(
-      () => authService.completeSignup(
-        phone: phoneController.text.trim(),
-        password: passwordController.text,
-        fullName: nameController.text.trim(),
-        email: emailController.text.trim(),
-        photoUrl: profileImagePath.value.isEmpty
-            ? null
-            : profileImagePath.value,
-        division: selectedDivision.value,
-        district: selectedDistrict.value,
-        upazila: selectedUpazilla.value,
-        unionOrCityCorp: selectedUnion.value,
-        wardNo: selectedWard.value,
-        postalCode: postalCodeController.text.trim(),
-        fullAddress: fullAddressController.text.trim(),
+      () => _authService.completeSignup(
+        payload: CompleteSignupPayload(
+          phone: phoneController.text.trim(),
+          password: passwordController.text,
+          fullName: nameController.text.trim(),
+          email: emailController.text.trim(),
+          photoUrl: profileImagePath.value.isEmpty
+              ? null
+              : profileImagePath.value,
+          division: selectedDivision.value,
+          district: selectedDistrict.value,
+          upazila: selectedUpazilla.value,
+          unionOrCityCorp: selectedUnion.value,
+          wardNo: selectedWard.value,
+          postalCode: postalCodeController.text.trim(),
+          fullAddress: fullAddressController.text.trim(),
+        ),
       ),
     );
     isLoading.value = false;
@@ -315,13 +325,14 @@ class SignupController extends GetxController {
 
     isLoading.value = true;
     if (!skipIdentity) {
-      final authService = Get.find<AuthService>();
       final result = await ApiErrorHandler.call(
-        () => authService.completeSignupIdentity(
-          phone: phoneController.text.trim(),
-          nidFrontUrl: nidFrontImagePath.value,
-          nidBackUrl: nidBackImagePath.value,
-          tinCertificateUrl: tinCertificatePath.value,
+        () => _authService.completeSignupIdentity(
+          payload: CompleteSignupIdentityPayload(
+            phone: phoneController.text.trim(),
+            nidFrontUrl: nidFrontImagePath.value,
+            nidBackUrl: nidBackImagePath.value,
+            tinCertificateUrl: tinCertificatePath.value,
+          ),
         ),
       );
       if (!result.isSuccess) {
@@ -354,12 +365,13 @@ class SignupController extends GetxController {
 
     profileImageLocalPath.value = pickedFile.path;
     isProfileImageUploading.value = true;
-    final uploadService = Get.find<UploadService>();
     final result = await ApiErrorHandler.call(
-      () => uploadService.uploadFile(
-        file: File(pickedFile.path),
-        contentType: _guessContentType(pickedFile.path),
-        type: 'AVATAR',
+      () => _uploadService.uploadFile(
+        payload: UploadFilePayload(
+          file: File(pickedFile.path),
+          contentType: _guessContentType(pickedFile.path),
+          type: 'AVATAR',
+        ),
       ),
     );
     if (result.isSuccess && result.data != null) {
@@ -377,12 +389,13 @@ class SignupController extends GetxController {
     if (pickedFile == null) return;
 
     nidFrontImagePath.value = pickedFile.path;
-    final uploadService = Get.find<UploadService>();
     final result = await ApiErrorHandler.call(
-      () => uploadService.uploadFile(
-        file: File(pickedFile.path),
-        contentType: _guessContentType(pickedFile.path),
-        type: 'DEED',
+      () => _uploadService.uploadFile(
+        payload: UploadFilePayload(
+          file: File(pickedFile.path),
+          contentType: _guessContentType(pickedFile.path),
+          type: 'DEED',
+        ),
       ),
     );
     if (result.isSuccess && result.data != null) {
@@ -401,12 +414,13 @@ class SignupController extends GetxController {
     if (pickedFile == null) return;
 
     nidBackImagePath.value = pickedFile.path;
-    final uploadService = Get.find<UploadService>();
     final result = await ApiErrorHandler.call(
-      () => uploadService.uploadFile(
-        file: File(pickedFile.path),
-        contentType: _guessContentType(pickedFile.path),
-        type: 'DEED',
+      () => _uploadService.uploadFile(
+        payload: UploadFilePayload(
+          file: File(pickedFile.path),
+          contentType: _guessContentType(pickedFile.path),
+          type: 'DEED',
+        ),
       ),
     );
     if (result.isSuccess && result.data != null) {
@@ -428,12 +442,13 @@ class SignupController extends GetxController {
     if (path == null) return;
 
     tinCertificatePath.value = path;
-    final uploadService = Get.find<UploadService>();
     final uploadResult = await ApiErrorHandler.call(
-      () => uploadService.uploadFile(
-        file: File(path),
-        contentType: _guessContentType(path),
-        type: 'DEED',
+      () => _uploadService.uploadFile(
+        payload: UploadFilePayload(
+          file: File(path),
+          contentType: _guessContentType(path),
+          type: 'DEED',
+        ),
       ),
     );
     if (uploadResult.isSuccess && uploadResult.data != null) {

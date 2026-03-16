@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../enums/property_type.dart';
-import '../enums/post_type.dart';
+import '../../../../../../core/enums/property_type.dart';
+import '../../../../../../core/enums/post_type.dart';
 
 /// Model for property listing - used across For Sale, Wanted, and Offer features
 class PropertyListing {

@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:landguru/core/core.dart';
-import '../../../core/models/agent_system_model.dart';
+
+import '../models/payloads/agent_profile_payload_models.dart';
+import '../models/agent_system_model.dart';
 
 class AgentProfileServices extends GetxService {
   AgentProfileServices._(this._apiClient);
@@ -27,38 +29,15 @@ class AgentProfileServices extends GetxService {
   }
 
   Future<void> updateAgentProfile({
-    required String fullName,
-    required String email,
-    required String division,
-    required String district,
-    required String upazila,
-    required String unionOrCityCorp,
-    required String wardNo,
-    required String postalCode,
-    required String fullAddress,
-    String? photoUrl,
+    required UpdateAgentProfilePayload payload,
   }) async {
-    final payload = <String, dynamic>{
-      'fullName': fullName,
-      'email': email,
-      if (photoUrl != null && photoUrl.isNotEmpty) 'photoUrl': photoUrl,
-      if (division.isNotEmpty) 'division': division,
-      if (district.isNotEmpty) 'district': district,
-      if (upazila.isNotEmpty) 'upazila': upazila,
-      if (unionOrCityCorp.isNotEmpty) 'unionOrCityCorp': unionOrCityCorp,
-      if (wardNo.isNotEmpty) 'wardNo': wardNo,
-      if (postalCode.isNotEmpty) 'postalCode': postalCode,
-      if (fullAddress.isNotEmpty) 'fullAddress': fullAddress,
-    };
-
-    await _apiClient.patch('/agents/profile', data: payload);
+    await _apiClient.patch('/agents/profile', data: payload.toJson());
   }
 
-  Future<void> updateProfilePhoto({required String photoUrl}) async {
-    await _apiClient.patch(
-      '/agents/profile/photo',
-      data: {'photoUrl': photoUrl},
-    );
+  Future<void> updateProfilePhoto({
+    required UpdateAgentProfilePhotoPayload payload,
+  }) async {
+    await _apiClient.patch('/agents/profile/photo', data: payload.toJson());
   }
 
   Map<String, dynamic> _extractResponseMap(dynamic payload) {

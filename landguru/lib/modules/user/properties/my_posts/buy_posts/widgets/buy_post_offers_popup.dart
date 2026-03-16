@@ -564,19 +564,7 @@ class _BuyPostOffersPopupState extends State<BuyPostOffersPopup> {
       return _buildImagePlaceholder();
     }
 
-    final isNetwork =
-        image.startsWith('http://') || image.startsWith('https://');
-    if (isNetwork) {
-      return Image.network(
-        image,
-        width: 70.w,
-        height: 70.h,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
-      );
-    }
-
-    return Image.asset(
+    return Image.network(
       image,
       width: 70.w,
       height: 70.h,

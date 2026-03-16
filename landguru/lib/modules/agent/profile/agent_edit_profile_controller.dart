@@ -4,7 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:landguru/core/core.dart';
 import 'dart:io';
 
-import 'agent_profile_services.dart';
+import '../../shared/models/payloads/agent_profile_payload_models.dart';
+import '../../shared/services/agent_profile_services.dart';
 
 /// Controller for Agent Edit Profile screen
 class AgentEditProfileController extends GetxController {
@@ -107,6 +108,11 @@ class AgentEditProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
     _profileStore.hydrateFromSession();
     loadProfile();
   }
@@ -158,9 +164,11 @@ class AgentEditProfileController extends GetxController {
       final uploadService = Get.find<UploadService>();
       final uploadResponse = await ApiErrorHandler.call(
         () => uploadService.uploadFile(
-          file: File(pickedFile.path),
-          contentType: _guessContentType(pickedFile.path),
-          type: 'AVATAR',
+          payload: UploadFilePayload(
+            file: File(pickedFile.path),
+            contentType: _guessContentType(pickedFile.path),
+            type: 'AVATAR',
+          ),
         ),
       );
 
@@ -175,7 +183,9 @@ class AgentEditProfileController extends GetxController {
 
       final photoUrl = uploadResponse.data!;
       final photoUpdateResponse = await ApiErrorHandler.call(
-        () => _profileServices.updateProfilePhoto(photoUrl: photoUrl),
+        () => _profileServices.updateProfilePhoto(
+          payload: UpdateAgentProfilePhotoPayload(photoUrl: photoUrl),
+        ),
       );
 
       if (!photoUpdateResponse.isSuccess) {
@@ -220,16 +230,18 @@ class AgentEditProfileController extends GetxController {
     try {
       final updateResponse = await ApiErrorHandler.call(
         () => _profileServices.updateAgentProfile(
-          fullName: fullNameController.text.trim(),
-          email: emailController.text.trim(),
-          division: selectedDivision.value,
-          district: selectedDistrict.value,
-          upazila: selectedUpazilla.value,
-          unionOrCityCorp: selectedPouroshova.value,
-          wardNo: selectedWardNo.value,
-          postalCode: postalCodeController.text.trim(),
-          fullAddress: fullAddressController.text.trim(),
-          photoUrl: profileImageUrl.value.trim(),
+          payload: UpdateAgentProfilePayload(
+            fullName: fullNameController.text.trim(),
+            email: emailController.text.trim(),
+            division: selectedDivision.value,
+            district: selectedDistrict.value,
+            upazila: selectedUpazilla.value,
+            unionOrCityCorp: selectedPouroshova.value,
+            wardNo: selectedWardNo.value,
+            postalCode: postalCodeController.text.trim(),
+            fullAddress: fullAddressController.text.trim(),
+            photoUrl: profileImageUrl.value.trim(),
+          ),
         ),
       );
 

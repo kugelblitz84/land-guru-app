@@ -216,7 +216,8 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
                   PropertyDetailRow(
                     imageAsset: 'assets/Logos/DistanceFromRoad.png',
                     label: 'Distance from Road',
-                    value: offer.distanceFromRoad ?? 'Not specified',
+                    value:
+                        '${offer.distanceFromRoadMin} - ${offer.distanceFromRoadMax}',
                   ),
                   SizedBox(height: 16.h),
 
@@ -224,7 +225,7 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
                   PropertyDetailRow(
                     imageAsset: 'assets/Logos/Location.png',
                     label: 'Location',
-                    value: offer.location ?? 'Not specified',
+                    value: offer.location ?? 'N/A',
                   ),
                   SizedBox(height: 16.h),
 
@@ -276,17 +277,7 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
       return _buildImagePlaceholder();
     }
 
-    final isNetwork =
-        image.startsWith('http://') || image.startsWith('https://');
-    if (isNetwork) {
-      return Image.network(
-        image,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
-      );
-    }
-
-    return Image.asset(
+    return Image.network(
       image,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
@@ -635,12 +626,7 @@ class _BuyPostOfferDetailsViewState extends State<BuyPostOfferDetailsView> {
   ImageProvider _buildSellerAvatarImageProvider() {
     final avatar = offer.sellerImageUrl?.trim();
     if (avatar != null && avatar.isNotEmpty) {
-      final isNetwork =
-          avatar.startsWith('http://') || avatar.startsWith('https://');
-      if (isNetwork) {
-        return NetworkImage(avatar);
-      }
-      return AssetImage(avatar);
+      return NetworkImage(avatar);
     }
     return const AssetImage('assets/images/User_DP/forhad.jpg');
   }

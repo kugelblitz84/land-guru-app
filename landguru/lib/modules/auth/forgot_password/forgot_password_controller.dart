@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/models/models.dart';
 import '../../../core/services/api_error_handler.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/utils/constants.dart';
@@ -92,8 +93,10 @@ class ForgotPasswordController extends GetxController {
       final authService = Get.find<AuthService>();
       final result = await ApiErrorHandler.call(
         () => authService.sendOtp(
-          phone: phoneController.text.trim(),
-          forgetPassword: true,
+          payload: SendOtpPayload(
+            phone: phoneController.text.trim(),
+            forgetPassword: true,
+          ),
         ),
       );
       if (!result.isSuccess) {
@@ -137,8 +140,10 @@ class ForgotPasswordController extends GetxController {
       final authService = Get.find<AuthService>();
       final result = await ApiErrorHandler.call(
         () => authService.verifyOtp(
-          phone: phoneController.text.trim(),
-          otp: otpString,
+          payload: VerifyOtpPayload(
+            phone: phoneController.text.trim(),
+            otp: otpString,
+          ),
         ),
       );
       if (!result.isSuccess) {
@@ -169,8 +174,10 @@ class ForgotPasswordController extends GetxController {
       final authService = Get.find<AuthService>();
       final result = await ApiErrorHandler.call(
         () => authService.sendOtp(
-          phone: phoneController.text.trim(),
-          forgetPassword: true,
+          payload: SendOtpPayload(
+            phone: phoneController.text.trim(),
+            forgetPassword: true,
+          ),
         ),
       );
       if (!result.isSuccess) {
@@ -220,10 +227,12 @@ class ForgotPasswordController extends GetxController {
       final authService = Get.find<AuthService>();
       final result = await ApiErrorHandler.call(
         () => authService.resetPasswordWithOtp(
-          phone: phoneController.text.trim(),
-          otp: otpString,
-          newPassword: passwordController.text.trim(),
-          confirmPassword: confirmPasswordController.text.trim(),
+          payload: ResetPasswordWithOtpPayload(
+            phone: phoneController.text.trim(),
+            otp: otpString,
+            newPassword: passwordController.text.trim(),
+            confirmPassword: confirmPasswordController.text.trim(),
+          ),
         ),
       );
       if (!result.isSuccess) {

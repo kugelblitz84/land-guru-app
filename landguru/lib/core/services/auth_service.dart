@@ -3,16 +3,18 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/models.dart';
 import '../utils/constants.dart';
 import 'api_client.dart';
 import 'token_service.dart';
 import 'user_type_service.dart';
 
 class AuthService extends GetxService {
-  AuthService(this._prefs, this._tokenService);
+  AuthService(this._prefs, this._tokenService, this._apiClient);
 
   final SharedPreferences _prefs;
   final TokenService _tokenService;
+  final ApiClient _apiClient;
 
   final Rxn<Map<String, dynamic>> _user = Rxn<Map<String, dynamic>>();
 
@@ -35,38 +37,18 @@ class AuthService extends GetxService {
     _syncUserType();
   }
 
-  Future<void> sendOtp({
-    required String phone,
-    bool forgetPassword = false,
-  }) async {
-    final apiClient = Get.find<ApiClient>();
-    await apiClient.post(
-      '/auth/send-otp',
-      data: {'phone': phone, 'forgetPassword': forgetPassword},
-    );
+  Future<void> sendOtp({required SendOtpPayload payload}) async {
+    await _apiClient.post('/auth/send-otp', data: payload.toJson());
   }
 
-  Future<void> verifyOtp({required String phone, required String otp}) async {
-    final apiClient = Get.find<ApiClient>();
-    await apiClient.post(
-      '/auth/verify-otp',
-      data: {'phone': phone, 'otp': otp},
-    );
+  Future<void> verifyOtp({required VerifyOtpPayload payload}) async {
+    await _apiClient.post('/auth/verify-otp', data: payload.toJson());
   }
 
   Future<void> resetPasswordWithOtp({
-    required String phone,
-    required String otp,
-    required String newPassword,
-    required String confirmPassword,
+    required ResetPasswordWithOtpPayload payload,
   }) async {
-    final apiClient = Get.find<ApiClient>();
-    final payload = {
-      'phone': phone,
-      'otp': otp,
-      'newPassword': newPassword,
-      'confirmPassword': confirmPassword,
-    };
+    final body = payload.toJson();
 
     final candidatePaths = <String>[
       '/auth/reset-password',
@@ -77,7 +59,7 @@ class AuthService extends GetxService {
     Object? lastError;
     for (final path in candidatePaths) {
       try {
-        await apiClient.post(path, data: payload);
+        await _apiClient.post(path, data: body);
         return;
       } catch (error) {
         lastError = error;
@@ -91,92 +73,47 @@ class AuthService extends GetxService {
     throw Exception('Failed to reset password');
   }
 
-  Future<Map<String, dynamic>?> completeSignup({
-    required String phone,
-    required String password,
-    required String fullName,
-    required String email,
-    String? photoUrl,
-    String? division,
-    String? district,
-    String? upazila,
-    String? unionOrCityCorp,
-    String? wardNo,
-    String? postalCode,
-    String? fullAddress,
+  Future<AuthSessionResponse> completeSignup({
+    required CompleteSignupPayload payload,
   }) async {
-    final apiClient = Get.find<ApiClient>();
-    final response = await apiClient.post(
+    final response = await _apiClient.post(
       '/auth/complete-signup',
-      data: {
-        'phone': phone,
-        'password': password,
-        'role': 'user',
-        'fullName': fullName,
-        'email': email,
-        if (photoUrl != null && photoUrl.isNotEmpty) 'photoUrl': photoUrl,
-        if (division != null && division.isNotEmpty) 'division': division,
-        if (district != null && district.isNotEmpty) 'district': district,
-        if (upazila != null && upazila.isNotEmpty) 'upazila': upazila,
-        if (unionOrCityCorp != null && unionOrCityCorp.isNotEmpty)
-          'unionOrCityCorp': unionOrCityCorp,
-        if (wardNo != null && wardNo.isNotEmpty) 'wardNo': wardNo,
-        if (postalCode != null && postalCode.isNotEmpty)
-          'postalCode': postalCode,
-        if (fullAddress != null && fullAddress.isNotEmpty)
-          'fullAddress': fullAddress,
-      },
+      data: payload.toJson(),
     );
 
-    if (response.data is Map<String, dynamic>) {
-      final data = response.data as Map<String, dynamic>;
-      final user = data['user'];
-      if (user is Map<String, dynamic>) {
-        _setUser(user);
-      }
-      return data;
+    final authResponse = AuthSessionResponse.fromPayload(response.data);
+    final user = authResponse.user;
+    if (user != null) {
+      _setUser(user);
     }
 
-    return null;
+    return authResponse;
   }
 
   Future<void> completeSignupIdentity({
-    required String phone,
-    required String nidFrontUrl,
-    required String nidBackUrl,
-    String? tinCertificateUrl,
+    required CompleteSignupIdentityPayload payload,
   }) async {
-    final apiClient = Get.find<ApiClient>();
-    await apiClient.post(
-      '/auth/complete-signup1',
-      data: {
-        'phone': phone,
-        'nidFrontUrl': nidFrontUrl,
-        'nidBackUrl': nidBackUrl,
-        if (tinCertificateUrl != null && tinCertificateUrl.isNotEmpty)
-          'tinCertificateUrl': tinCertificateUrl,
-      },
-    );
+    await _apiClient.post('/auth/complete-signup1', data: payload.toJson());
   }
 
-  Future<void> login({required String phone, required String password}) async {
-    final apiClient = Get.find<ApiClient>();
-    final response = await apiClient.post(
+  Future<AuthSessionResponse> login({required LoginPayload payload}) async {
+    final response = await _apiClient.post(
       '/auth/login',
-      data: {'phone': phone, 'password': password},
+      data: payload.toJson(),
     );
 
-    if (response.data is Map<String, dynamic>) {
-      final data = response.data as Map<String, dynamic>;
-      final token = data['accessToken']?.toString();
-      final user = data['user'];
-      if (token != null && token.isNotEmpty) {
-        _setToken(token);
-      }
-      if (user is Map<String, dynamic>) {
-        _setUser(user);
-      }
+    final authResponse = AuthSessionResponse.fromPayload(response.data);
+    final token = authResponse.accessToken;
+    if (token != null && token.isNotEmpty) {
+      _setToken(token);
     }
+
+    final user = authResponse.user;
+    if (user != null) {
+      _setUser(user);
+    }
+
+    return authResponse;
   }
 
   void clearSession() {
