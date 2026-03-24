@@ -59,19 +59,13 @@ class AgentBottomNavView extends GetView<AgentBottomNavController> {
   Widget _buildTab(int index) {
     switch (index) {
       case 0:
-        return AgentShellWrapper(
-          showHeader: true,
-          child: const AgentDashboardContentView(),
-        );
+        return _tabNavigator(id: 0, content: const AgentDashboardContentView());
       case 1:
-        return AgentShellWrapper(
-          showHeader: true,
-          child: const AgentMyTasksContentView(),
-        );
+        return _tabNavigator(id: 1, content: const AgentMyTasksContentView());
       case 2:
-        return AgentShellWrapper(
-          showHeader: true,
-          child: const AgentAppointmentsContentView(),
+        return _tabNavigator(
+          id: 2,
+          content: const AgentAppointmentsContentView(),
         );
       case 3:
         return const AgentProfileView();
@@ -165,6 +159,24 @@ class AgentBottomNavView extends GetView<AgentBottomNavController> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _tabNavigator extends StatelessWidget {
+  final int id;
+  final Widget content;
+
+  const _tabNavigator({required this.id, required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      key: Get.nestedKey(id),
+      onGenerateRoute: (settings) => MaterialPageRoute(
+        builder: (context) =>
+            AgentShellWrapper(showHeader: true, child: content),
       ),
     );
   }

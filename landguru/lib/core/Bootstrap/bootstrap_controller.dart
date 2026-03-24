@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 
-import '../services/api_error_handler.dart';
 import '../../modules/shared/controllers/agent_profile_store.dart';
 import '../services/auth_service.dart';
 import '../../modules/shared/controllers/user_profile_store.dart';
@@ -32,19 +31,19 @@ class BootstrapController extends GetxController {
 
     if (authService.isLoggedIn && userTypeService.isAgent) {
       final agentProfileStore = Get.find<AgentProfileStore>();
-      agentProfileStore.hydrateFromSession();
-      await ApiErrorHandler.call(
-        () => agentProfileStore.refreshProfile(showError: false),
-        showError: false,
-      );
+      await agentProfileStore.refreshProfile(showError: false);
+      if (!authService.isLoggedIn) {
+        Get.offAllNamed(AppRoutes.LOGIN);
+        return;
+      }
       Get.offAllNamed(AppRoutes.AGENT_MAIN);
     } else if (authService.isLoggedIn && userTypeService.isUser) {
       final userProfileStore = Get.find<UserProfileStore>();
-      userProfileStore.hydrateFromSession();
-      await ApiErrorHandler.call(
-        () => userProfileStore.refreshProfile(showError: false),
-        showError: false,
-      );
+      await userProfileStore.refreshProfile(showError: false);
+      if (!authService.isLoggedIn) {
+        Get.offAllNamed(AppRoutes.LOGIN);
+        return;
+      }
       Get.offAllNamed(AppRoutes.MAIN);
     } else {
       Get.offAllNamed(AppRoutes.LOGIN);

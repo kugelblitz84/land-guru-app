@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/models/models.dart';
 import '../../../../core/services/api_client.dart';
 import 'models/sell_post_details_payload.dart';
+import 'models/sell_post_request_payloads.dart';
 
 class SellPostDetailsService extends GetxService {
   SellPostDetailsService(this._apiClient);
@@ -22,11 +23,11 @@ class SellPostDetailsService extends GetxService {
 
   Future<DraftEntityResponse> updateSellPost({
     required String postId,
-    required Map<String, dynamic> payload,
+    required UpdateSellPostPayload payload,
   }) async {
     final response = await _apiClient.patch(
       '/sell-posts/$postId',
-      data: payload,
+      data: payload.toJson(),
     );
 
     return DraftEntityResponse.fromPayload(response.data);
@@ -38,15 +39,11 @@ class SellPostDetailsService extends GetxService {
 
   Future<DraftEntityResponse> requoteSellPost({
     required String postId,
-    required double proposedMandatoryFee,
-    required double proposedOptionalFee,
+    required RequoteSellPostPayload payload,
   }) async {
     final response = await _apiClient.post(
       '/sell-posts/$postId/requote',
-      data: {
-        'proposedMandatoryFee': proposedMandatoryFee,
-        'proposedOptionalFee': proposedOptionalFee,
-      },
+      data: payload.toJson(),
     );
 
     return DraftEntityResponse.fromPayload(response.data);
@@ -60,19 +57,11 @@ class SellPostDetailsService extends GetxService {
   }
 
   Future<void> requestAppointment({
-    required String sellPostId,
-    required String buyerName,
-    required String buyerPhone,
-    required String buyerAddress,
+    required RequestSellPostAppointmentPayload payload,
   }) async {
     await _apiClient.post(
       '/sell-posts/appointments/request',
-      data: {
-        'sellPostId': sellPostId,
-        'buyerName': buyerName,
-        'buyerPhone': buyerPhone,
-        'buyerAddress': buyerAddress,
-      },
+      data: payload.toJson(),
     );
   }
 }

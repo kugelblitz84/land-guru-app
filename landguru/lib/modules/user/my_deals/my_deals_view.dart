@@ -75,12 +75,28 @@ class MyDealsContentView extends StatelessWidget {
 
             return RefreshIndicator(
               onRefresh: controller.refresh,
-              child: ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: deals.length,
-                itemBuilder: (context, index) {
-                  return _buildDealCard(controller, deals[index]);
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  controller.onScrollNotification(notification.metrics);
+                  return false;
                 },
+                child: ListView.builder(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  itemCount:
+                      deals.length +
+                      (controller.isCurrentTabLoadingMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index >= deals.length) {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    controller.onDealListIndexBuilt(index, deals.length);
+                    return _buildDealCard(controller, deals[index]);
+                  },
+                ),
               ),
             );
           }),

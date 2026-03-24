@@ -33,6 +33,36 @@ class MyPost {
     this.quotesCount = 0,
   });
 
+  MyPost copyWith({
+    String? id,
+    String? postId,
+    String? title,
+    String? price,
+    PropertyType? propertyType,
+    PostType? postType,
+    MyPostStatus? status,
+    bool? isVerified,
+    String? imageUrl,
+    String? timestamp,
+    String? timestampPrefix,
+    int? quotesCount,
+  }) {
+    return MyPost(
+      id: id ?? this.id,
+      postId: postId ?? this.postId,
+      title: title ?? this.title,
+      price: price ?? this.price,
+      propertyType: propertyType ?? this.propertyType,
+      postType: postType ?? this.postType,
+      status: status ?? this.status,
+      isVerified: isVerified ?? this.isVerified,
+      imageUrl: imageUrl ?? this.imageUrl,
+      timestamp: timestamp ?? this.timestamp,
+      timestampPrefix: timestampPrefix ?? this.timestampPrefix,
+      quotesCount: quotesCount ?? this.quotesCount,
+    );
+  }
+
   String get propertyTypeLabel => propertyType.label;
 
   Color get propertyTypeColor => propertyType.color;

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 
@@ -62,9 +60,7 @@ class UploadService extends GetxService {
     );
 
     final fileLength = await file.length();
-    final uploadClient = dio.Dio();
-
-    await uploadClient.put(
+    await _apiClient.put(
       presign.uploadUrl,
       data: file.openRead(),
       options: dio.Options(
@@ -72,6 +68,7 @@ class UploadService extends GetxService {
           'Content-Type': payload.contentType,
           'Content-Length': fileLength,
         },
+        extra: {'skipAuth': true},
       ),
     );
 

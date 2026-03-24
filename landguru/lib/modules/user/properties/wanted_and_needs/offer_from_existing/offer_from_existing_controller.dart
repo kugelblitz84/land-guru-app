@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../core/services/services.dart';
 import '../../../../../routes/app_routes.dart';
+import '../models/models.dart';
 import '../../property_filter_criteria.dart';
 import '../../properties_controller.dart';
 import '../../widgets/distance_range_selector.dart';
@@ -359,7 +360,7 @@ class OfferFromExistingController extends GetxController {
         selectedIds.map(
           (sellPostId) => _offerService.makeOfferFromExisting(
             buyPostId: buyPostId.value,
-            sellPostId: sellPostId,
+            payload: MakeOfferFromExistingPayload(sellPostId: sellPostId),
           ),
         ),
       ),

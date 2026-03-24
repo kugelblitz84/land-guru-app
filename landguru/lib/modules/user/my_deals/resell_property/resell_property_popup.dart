@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import '../../../../core/services/api_error_handler.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../properties/widgets/metrics_conversion_row.dart';
 import '../models/deal_models.dart';
+import '../models/payloads/my_deals_payload_models.dart';
+import '../services/my_deals_service.dart';
 
 /// Resell property popup with options to update price or keep as is
 class ResellPropertyPopup extends StatefulWidget {
@@ -35,6 +39,7 @@ class _ResellPropertyPopupState extends State<ResellPropertyPopup> {
   LandUnit _selectedUnit = LandUnit.katha;
 
   bool _isSubmitting = false;
+  final MyDealsService _myDealsService = Get.find<MyDealsService>();
 
   @override
   void initState() {
@@ -76,13 +81,89 @@ class _ResellPropertyPopupState extends State<ResellPropertyPopup> {
   }
 
   Future<void> _handleSubmit() async {
+    if (_isSubmitting) {
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    final payload = _buildPayload();
+
+    final result = await ApiErrorHandler.call<ResellSubmissionResult>(
+      () => _myDealsService.resellBoughtDeal(payload: payload),
+      showError: true,
+      fallbackMessage: 'Failed to submit resell post',
+    );
+
+    if (!mounted) {
+      return;
+    }
 
     setState(() => _isSubmitting = false);
+
+    if (!result.isSuccess) {
+      return;
+    }
+
+    final apiMessage = result.data?.message.trim();
+    final successMessage = (apiMessage != null && apiMessage.isNotEmpty)
+        ? apiMessage
+        : 'Resell request submitted successfully';
+
+    Get.snackbar(
+      'Success',
+      successMessage,
+      snackPosition: SnackPosition.TOP,
+      duration: const Duration(seconds: 2),
+    );
+
     widget.onSuccess();
+  }
+
+  MyBoughtResellPayload _buildPayload() {
+    final defaultPrice = _parseMoney(widget.deal.soldPrice);
+    final defaultLandSize = double.tryParse(_landSizeController.text) ?? 0;
+    final fallbackPricePerUnit = defaultLandSize > 0
+        ? (defaultPrice / defaultLandSize).round()
+        : defaultPrice;
+
+    final askingPricePerUnit = _updatePrice
+        ? _parseMoney(_pricePerKathaController.text)
+        : fallbackPricePerUnit;
+
+    final askingPrice = _updatePrice
+        ? _toSafeInt(
+            (double.tryParse(_landSizeController.text) ?? 0) *
+                askingPricePerUnit,
+          )
+        : defaultPrice;
+
+    final description = (widget.deal.description ?? '').trim().isNotEmpty
+        ? widget.deal.description!.trim()
+        : 'Reselling my purchased property.';
+
+    return MyBoughtResellPayload(
+      dealId: widget.deal.id,
+      askingPrice: askingPrice,
+      askingPricePerUnit: askingPricePerUnit,
+      description: description,
+    );
+  }
+
+  int _parseMoney(String input) {
+    final cleaned = input.replaceAll(RegExp(r'[^0-9.]'), '').trim();
+    if (cleaned.isEmpty) {
+      return 0;
+    }
+    final parsed = double.tryParse(cleaned) ?? 0;
+    return _toSafeInt(parsed);
+  }
+
+  int _toSafeInt(double value) {
+    if (value.isNaN || value.isInfinite || value <= 0) {
+      return 0;
+    }
+    return value.round();
   }
 
   @override
@@ -558,4 +639,3 @@ class _ResellPropertyPopupState extends State<ResellPropertyPopup> {
     );
   }
 }
-

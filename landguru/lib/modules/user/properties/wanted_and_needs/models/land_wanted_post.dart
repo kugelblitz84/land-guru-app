@@ -48,6 +48,51 @@ class LandWantedPost {
     this.offeredPropertyImageUrl,
   });
 
+  LandWantedPost copyWith({
+    String? id,
+    String? postId,
+    String? title,
+    String? postedBy,
+    String? postedByAvatarUrl,
+    String? postedTime,
+    String? preferredLocation,
+    String? propertyType,
+    String? requiredLandSize,
+    String? requiredPlotSize,
+    String? distanceFromRoad,
+    String? budgetRange,
+    OfferStatus? offerStatus,
+    bool? hasOffered,
+    String? description,
+    String? offeredPropertyTitle,
+    String? offeredPropertyPrice,
+    PropertyType? offeredPropertyType,
+    String? offeredPropertyImageUrl,
+  }) {
+    return LandWantedPost(
+      id: id ?? this.id,
+      postId: postId ?? this.postId,
+      title: title ?? this.title,
+      postedBy: postedBy ?? this.postedBy,
+      postedByAvatarUrl: postedByAvatarUrl ?? this.postedByAvatarUrl,
+      postedTime: postedTime ?? this.postedTime,
+      preferredLocation: preferredLocation ?? this.preferredLocation,
+      propertyType: propertyType ?? this.propertyType,
+      requiredLandSize: requiredLandSize ?? this.requiredLandSize,
+      requiredPlotSize: requiredPlotSize ?? this.requiredPlotSize,
+      distanceFromRoad: distanceFromRoad ?? this.distanceFromRoad,
+      budgetRange: budgetRange ?? this.budgetRange,
+      offerStatus: offerStatus ?? this.offerStatus,
+      hasOffered: hasOffered ?? this.hasOffered,
+      description: description ?? this.description,
+      offeredPropertyTitle: offeredPropertyTitle ?? this.offeredPropertyTitle,
+      offeredPropertyPrice: offeredPropertyPrice ?? this.offeredPropertyPrice,
+      offeredPropertyType: offeredPropertyType ?? this.offeredPropertyType,
+      offeredPropertyImageUrl:
+          offeredPropertyImageUrl ?? this.offeredPropertyImageUrl,
+    );
+  }
+
   factory LandWantedPost.fromBuyPostJson(Map<String, dynamic> json) {
     final postMap = json['post'] is Map
         ? Map<String, dynamic>.from(json['post'] as Map)

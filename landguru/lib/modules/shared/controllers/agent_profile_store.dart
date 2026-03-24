@@ -80,6 +80,11 @@ class AgentProfileStore extends GetxService {
         showError: showError,
       );
 
+      if (profileResponse.isUnauthorized) {
+        _handleUnauthorizedSession();
+        return;
+      }
+
       if (profileResponse.isSuccess && profileResponse.data != null) {
         _applyProfile(profileResponse.data!);
       }
@@ -88,6 +93,11 @@ class AgentProfileStore extends GetxService {
         () => _profileServices.fetchAgentStats(),
         showError: false,
       );
+
+      if (statsResponse.isUnauthorized) {
+        _handleUnauthorizedSession();
+        return;
+      }
 
       if (statsResponse.isSuccess && statsResponse.data != null) {
         _applyStats(statsResponse.data!);
@@ -109,6 +119,11 @@ class AgentProfileStore extends GetxService {
 
   void clear() {
     profileModel.value = AgentProfileStateModel.initial();
+  }
+
+  void _handleUnauthorizedSession() {
+    clear();
+    _authService.clearSession();
   }
 
   void _applyProfile(AgentProfileModel profile) {

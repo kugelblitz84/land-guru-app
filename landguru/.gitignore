@@ -52,3 +52,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+API_ENDPOINTS_LIST.md
+API_INTEGRATION_PROGRESS_REPORT.md

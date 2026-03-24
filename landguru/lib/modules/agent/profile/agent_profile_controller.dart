@@ -35,10 +35,11 @@ class AgentProfileController extends GetxController {
 
   /// Load agent profile
   Future<void> loadProfile({bool forceRefresh = false}) async {
-    await ApiErrorHandler.call(
-      () => _profileStore.refreshProfile(forceRefresh: forceRefresh),
-      showError: false,
-    );
+    await _profileStore.refreshProfile(forceRefresh: forceRefresh);
+
+    if (!_authService.isLoggedIn) {
+      Get.offAllNamed(AppRoutes.LOGIN);
+    }
   }
 
   /// Navigate to edit profile

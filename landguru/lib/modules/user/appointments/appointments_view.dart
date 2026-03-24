@@ -372,118 +372,115 @@ class AppointmentsContentView extends StatelessWidget {
     AppointmentsController controller,
     Appointment appointment,
   ) {
-    return GestureDetector(
-      onTap: () => controller.goToAppointmentDetails(appointment),
-      child: Container(
-        margin: EdgeInsets.only(bottom: 16.h),
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.grey300.withAlpha(80),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Property image (square)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12.r),
-              child: appointment.propertyImageUrl != null
-                  ? Image.asset(
-                      appointment.propertyImageUrl!,
-                      width: 80.w,
-                      height: 80.h,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildImagePlaceholder(
-                          appointment.propertyType,
-                          false,
-                        );
-                      },
-                    )
-                  : _buildImagePlaceholder(appointment.propertyType, false),
-            ),
-            SizedBox(width: 12.w),
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.grey300.withAlpha(80),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Property image (square)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12.r),
+            child: appointment.propertyImageUrl != null
+                ? Image.asset(
+                    appointment.propertyImageUrl!,
+                    width: 80.w,
+                    height: 80.h,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildImagePlaceholder(
+                        appointment.propertyType,
+                        false,
+                      );
+                    },
+                  )
+                : _buildImagePlaceholder(appointment.propertyType, false),
+          ),
+          SizedBox(width: 12.w),
 
-            // Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    appointment.propertyTitle,
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.grey900,
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  appointment.propertyTitle,
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.grey900,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  appointment.postId,
+                  style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
+                ),
+                SizedBox(height: 4.h),
+                Row(
+                  children: [
+                    Text(
+                      'Price: ',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: AppColors.grey600,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    appointment.postId,
-                    style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
-                  ),
-                  SizedBox(height: 4.h),
-                  Row(
-                    children: [
-                      Text(
-                        'Price: ',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: AppColors.grey600,
-                        ),
+                    Text(
+                      '৳ ${appointment.price}',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
                       ),
-                      Text(
-                        '৳ ${appointment.price}',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                Wrap(
+                  spacing: 6.w,
+                  runSpacing: 4.h,
+                  children: [
+                    _buildTag(
+                      text: appointment.propertyTypeLabel,
+                      backgroundColor: appointment.propertyTypeColor,
+                      textColor: AppColors.white,
+                    ),
+                    _buildTag(
+                      text: AppointmentStatuses.label(appointment.status),
+                      backgroundColor: AppointmentStatuses.backgroundColor(
+                        appointment.status,
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 8.h),
-                  Wrap(
-                    spacing: 6.w,
-                    runSpacing: 4.h,
-                    children: [
-                      _buildTag(
-                        text: appointment.propertyTypeLabel,
-                        backgroundColor: appointment.propertyTypeColor,
-                        textColor: AppColors.white,
+                      textColor: AppointmentStatuses.textColor(
+                        appointment.status,
                       ),
-                      _buildTag(
-                        text: AppointmentStatuses.label(appointment.status),
-                        backgroundColor: AppointmentStatuses.backgroundColor(
-                          appointment.status,
-                        ),
-                        textColor: AppointmentStatuses.textColor(
-                          appointment.status,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    'Requested: ${appointment.requestedTimeAgo}',
-                    style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  'Requested: ${appointment.requestedTimeAgo}',
+                  style: TextStyle(fontSize: 12.sp, color: AppColors.grey500),
+                ),
+              ],
             ),
+          ),
 
-            // Arrow
-            Icon(Icons.chevron_right, color: AppColors.grey400, size: 24.sp),
-          ],
-        ),
+          // Arrow
+          Icon(Icons.chevron_right, color: AppColors.grey400, size: 24.sp),
+        ],
       ),
     );
   }

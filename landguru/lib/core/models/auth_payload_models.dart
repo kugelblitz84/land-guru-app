@@ -133,13 +133,13 @@ class AuthSessionResponse {
   const AuthSessionResponse({
     required this.raw,
     this.accessToken,
-    this.refreshToken,
+    // this.refreshToken,
     this.user,
   });
 
   final Map<String, dynamic> raw;
   final String? accessToken;
-  final String? refreshToken;
+  //final String? refreshToken;
   final Map<String, dynamic>? user;
 
   factory AuthSessionResponse.fromPayload(dynamic payload) {
@@ -187,7 +187,7 @@ class AuthSessionResponse {
     return AuthSessionResponse(
       raw: map,
       accessToken: extractToken(const ['accessToken', 'token']),
-      refreshToken: extractToken(const ['refreshToken']),
+      //refreshToken: extractToken(const ['refreshToken']),
       user: extractUser(),
     );
   }

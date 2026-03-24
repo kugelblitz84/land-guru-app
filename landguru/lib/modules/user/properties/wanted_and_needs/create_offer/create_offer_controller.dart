@@ -7,6 +7,7 @@ import '../../../../../core/models/models.dart';
 import '../../../../../core/services/services.dart';
 import '../../../../../core/utils/currency_formatter.dart';
 import '../../../../../routes/app_routes.dart';
+import '../models/models.dart';
 import '../../widgets/properties_widgets.dart';
 
 /// Controller for Create Offer flow (3 steps)
@@ -450,7 +451,7 @@ class CreateOfferController extends GetxController {
     }
   }
 
-  Map<String, dynamic> _buildStep1Payload() {
+  CreateDraftOfferStep1Payload _buildStep1Payload() {
     final selectedPropertyType = propertyType.value;
     if (selectedPropertyType == null) {
       throw Exception('Property type is required.');
@@ -491,11 +492,13 @@ class CreateOfferController extends GetxController {
         'fullAddress': currentLocation.fullAddress,
     };
 
-    return payload;
+    return CreateDraftOfferStep1Payload(data: payload);
   }
 
-  Map<String, dynamic> _buildStep2Payload() {
-    return {'photos': photos.map((photo) => photo.path).toList()};
+  UpdateDraftOfferStep2Payload _buildStep2Payload() {
+    return UpdateDraftOfferStep2Payload(
+      photos: photos.map((photo) => photo.path).toList(),
+    );
   }
 
   String _guessContentType(String path) {

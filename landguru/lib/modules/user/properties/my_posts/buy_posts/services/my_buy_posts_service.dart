@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 
 import '../../../../../../../core/enums/property_type.dart';
@@ -109,13 +108,7 @@ class MyBuyPostsService extends GetxService {
 
   Future<void> acceptOffer({required String offerId}) async {
     final path = '/buy-posts/offers/$offerId/accept';
-
-    try {
-      await _apiClient.patch(path, queryParameters: {'offerId': offerId});
-      return;
-    } on dio.DioException catch (error) {
-      throw error;
-    }
+    await _apiClient.patch(path, queryParameters: {'offerId': offerId});
   }
 
   List<OfferReceived> _readOfferList(dynamic offersRaw) {

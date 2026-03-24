@@ -256,17 +256,41 @@ class AgentEditProfileController extends GetxController {
         return;
       }
 
+      final updatePayload = updateResponse.data;
+      if (updatePayload == null) {
+        Get.snackbar(
+          'Error',
+          'Invalid profile update response',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      if (!updatePayload.success) {
+        Get.snackbar(
+          'Error',
+          updatePayload.message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
       await _profileStore.refreshProfile(forceRefresh: true, showError: false);
       _populateFromStore();
 
+      final successMessage = updatePayload.message;
+      Get.back();
       Get.snackbar(
         'Success',
-        'Profile updated successfully',
+        successMessage,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
-      Get.back();
     } catch (e) {
       Get.snackbar(
         'Error',

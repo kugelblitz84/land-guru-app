@@ -118,6 +118,60 @@ class _DealDetailsViewState extends State<DealDetailsView> {
 
   bool get _isBoughtDeal => deal.status == DealStatuses.bought;
 
+  List<RiskChecklistItem> get _riskChecklist {
+    final apiItems = deal.riskChecklist;
+    if (apiItems != null && apiItems.isNotEmpty) {
+      return apiItems;
+    }
+    return _dueDiligenceItems
+        .map((item) => RiskChecklistItem(label: item, checked: true))
+        .toList(growable: false);
+  }
+
+  List<OwnershipHistoryRecord> get _ownershipRecords {
+    final apiItems = deal.ownershipHistory;
+    if (apiItems != null && apiItems.isNotEmpty) {
+      return apiItems;
+    }
+    return _ownershipHistory
+        .map(
+          (entry) => OwnershipHistoryRecord(
+            ownerName: entry.name,
+            duration: entry.period,
+            isCurrent: entry.isCurrent,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  List<LegalDocument> get _allLegalDocs {
+    final docs = <LegalDocument>[
+      ...?deal.deedDocuments,
+      ...?deal.khatianDocuments,
+      ...?deal.porchagophMapDocuments,
+      ...?deal.otherDocuments,
+    ];
+    return docs;
+  }
+
+  List<ServiceTaken> get _resolvedServices {
+    final apiItems = deal.servicesTaken;
+    if (apiItems != null && apiItems.isNotEmpty) {
+      return apiItems;
+    }
+    return _serviceVerifications
+        .map(
+          (item) => ServiceTaken(
+            id: item.serviceName,
+            serviceName: item.serviceName,
+            agentName: item.assignedAgent,
+            agentRole: item.agentRole,
+            status: item.isVerified ? 'COMPLETED' : 'PENDING',
+          ),
+        )
+        .toList(growable: false);
+  }
+
   bool _isFeatureExpanded(int index) => _expandedFeatures[index] ?? false;
 
   void _toggleFeatureExpansion(int index) {
@@ -472,8 +526,8 @@ class _DealDetailsViewState extends State<DealDetailsView> {
                 CircleAvatar(
                   radius: 30.r,
                   backgroundColor: AppColors.grey200,
-                  backgroundImage: const AssetImage(
-                    'assets/images/User_DP/Farhan.jpg',
+                  backgroundImage: _buildAvatarImageProvider(
+                    deal.otherPartyAvatar,
                   ),
                 ),
                 SizedBox(width: 12.w),
@@ -535,6 +589,17 @@ class _DealDetailsViewState extends State<DealDetailsView> {
         ],
       ),
     );
+  }
+
+  ImageProvider _buildAvatarImageProvider(String? avatarPath) {
+    final value = avatarPath?.trim() ?? '';
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return NetworkImage(value);
+    }
+    if (value.isNotEmpty) {
+      return AssetImage(value);
+    }
+    return const AssetImage('assets/images/User_DP/Farhan.jpg');
   }
 
   Widget _buildLandAmountRow({required String label, String? value}) {
@@ -796,12 +861,14 @@ class _DealDetailsViewState extends State<DealDetailsView> {
   }
 
   Widget _buildDueDiligenceContent() {
+    final checklist = _riskChecklist;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Divider(color: AppColors.grey200),
         SizedBox(height: 12.h),
-        ..._dueDiligenceItems.map(
+        ...checklist.map(
           (item) => Padding(
             padding: EdgeInsets.only(bottom: 10.h),
             child: Row(
@@ -811,19 +878,21 @@ class _DealDetailsViewState extends State<DealDetailsView> {
                   width: 20.w,
                   height: 20.h,
                   decoration: BoxDecoration(
-                    color: AppColors.success.withAlpha(50),
+                    color: item.checked
+                        ? AppColors.success.withAlpha(50)
+                        : AppColors.grey200,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.check,
-                    color: AppColors.success,
+                    item.checked ? Icons.check : Icons.close,
+                    color: item.checked ? AppColors.success : AppColors.grey500,
                     size: 14.sp,
                   ),
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
                   child: Text(
-                    item,
+                    item.label,
                     style: TextStyle(
                       fontSize: 13.sp,
                       color: AppColors.grey700,
@@ -874,15 +943,17 @@ class _DealDetailsViewState extends State<DealDetailsView> {
   }
 
   Widget _buildOwnershipHistoryContent() {
+    final ownershipRecords = _ownershipRecords;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Divider(color: AppColors.grey200),
         SizedBox(height: 12.h),
-        ..._ownershipHistory.asMap().entries.map((entry) {
+        ...ownershipRecords.asMap().entries.map((entry) {
           final index = entry.key;
           final owner = entry.value;
-          final isLast = index == _ownershipHistory.length - 1;
+          final isLast = index == ownershipRecords.length - 1;
           final isFirst = index == 0;
 
           return Row(
@@ -934,16 +1005,16 @@ class _DealDetailsViewState extends State<DealDetailsView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            owner.name,
+                            owner.ownerName,
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w600,
                               color: AppColors.grey900,
                             ),
                           ),
-                          if (owner.period.isNotEmpty)
+                          if (owner.duration.isNotEmpty)
                             Text(
-                              owner.period,
+                              owner.duration,
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 color: isFirst
@@ -984,41 +1055,54 @@ class _DealDetailsViewState extends State<DealDetailsView> {
   }
 
   Widget _buildLegalDocumentsContent() {
+    final docs = _allLegalDocs;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Divider(color: AppColors.grey200),
         SizedBox(height: 12.h),
-        ..._legalDocuments.map(
-          (doc) => Padding(
-            padding: EdgeInsets.only(bottom: 8.h),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  margin: EdgeInsets.only(top: 6.h),
-                  width: 6.w,
-                  height: 6.h,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: Text(
-                    doc,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
+        ...((docs.isEmpty
+                ? _legalDocuments
+                      .map(
+                        (name) => LegalDocument(
+                          id: name,
+                          name: name,
+                          fileType: 'file',
+                        ),
+                      )
+                      .toList(growable: false)
+                : docs)
+            .map(
+              (doc) => Padding(
+                padding: EdgeInsets.only(bottom: 8.h),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: EdgeInsets.only(top: 6.h),
+                      width: 6.w,
+                      height: 6.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Text(
+                        doc.name,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ),
+              ),
+            )),
         SizedBox(height: 12.h),
         Text(
           'Documents will be handed over after successful purchase',
@@ -1033,6 +1117,49 @@ class _DealDetailsViewState extends State<DealDetailsView> {
   }
 
   Widget _buildPentagraphMapContent() {
+    final mapDocs = deal.porchagophMapDocuments;
+
+    if (mapDocs != null && mapDocs.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Divider(color: AppColors.grey200),
+          SizedBox(height: 12.h),
+          ...mapDocs.map(
+            (doc) => Container(
+              margin: EdgeInsets.only(bottom: 8.h),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(color: AppColors.primary.withAlpha(35)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.map_outlined,
+                    color: AppColors.primary,
+                    size: 18.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      doc.name,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1080,27 +1207,18 @@ class _DealDetailsViewState extends State<DealDetailsView> {
     );
   }
 
-  // Agent images for services
-  static const List<String> _agentImages = [
-    'assets/images/User_DP/abrar.jpg',
-    'assets/images/User_DP/Farhan.jpg',
-    'assets/images/User_DP/forhad.jpg',
-    'assets/images/User_DP/jahangir.jpg',
-    'assets/images/User_DP/rahman.jpg',
-    'assets/images/User_DP/sahil.jpg',
-  ];
-
   Widget _buildServicesTakenContent() {
+    final services = _resolvedServices;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Divider(color: AppColors.grey200),
         SizedBox(height: 12.h),
-        ..._serviceVerifications.asMap().entries.map((entry) {
+        ...services.asMap().entries.map((entry) {
           final index = entry.key;
           final service = entry.value;
-          final isLast = index == _serviceVerifications.length - 1;
-          final agentImage = _agentImages[index % _agentImages.length];
+          final isLast = index == services.length - 1;
 
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1160,7 +1278,7 @@ class _DealDetailsViewState extends State<DealDetailsView> {
                               ),
                             ),
                           ),
-                          if (service.isVerified)
+                          if (service.status.toUpperCase() == 'COMPLETED')
                             Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: 8.w,
@@ -1197,23 +1315,25 @@ class _DealDetailsViewState extends State<DealDetailsView> {
                           CircleAvatar(
                             radius: 18.r,
                             backgroundColor: AppColors.grey200,
-                            backgroundImage: AssetImage(agentImage),
+                            backgroundImage: _buildAvatarImageProvider(
+                              service.agentAvatar,
+                            ),
                           ),
                           SizedBox(width: 10.w),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                service.assignedAgent,
+                                service.agentName ?? 'Assigned Agent',
                                 style: TextStyle(
                                   fontSize: 13.sp,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.grey900,
                                 ),
                               ),
-                              if (service.agentRole.isNotEmpty)
+                              if ((service.agentRole ?? '').isNotEmpty)
                                 Text(
-                                  service.agentRole,
+                                  service.agentRole!,
                                   style: TextStyle(
                                     fontSize: 12.sp,
                                     color: AppColors.grey500,
@@ -1261,4 +1381,3 @@ class _ServiceVerification {
     required this.isVerified,
   });
 }
-

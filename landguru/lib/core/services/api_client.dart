@@ -30,7 +30,8 @@ class ApiClient extends GetxService {
       dio.InterceptorsWrapper(
         onRequest: (options, handler) {
           final token = _tokenService.token;
-          if (token != null && token.isNotEmpty) {
+          final skipAuth = options.extra['skipAuth'] == true;
+          if (!skipAuth && token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
           handler.next(options);
@@ -87,6 +88,20 @@ class ApiClient extends GetxService {
     dio.Options? options,
   }) {
     return _dio.patch<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
+
+  Future<dio.Response<T>> put<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    dio.Options? options,
+  }) {
+    return _dio.put<T>(
       path,
       data: data,
       queryParameters: queryParameters,

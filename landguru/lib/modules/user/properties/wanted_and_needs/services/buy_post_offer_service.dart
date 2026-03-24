@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../../../core/models/models.dart';
 import '../../../../../../core/enums/post_type.dart';
 import '../../../../../../core/enums/property_type.dart';
+import '../models/models.dart';
 import '../../models/property_listing.dart';
 import '../../../../../../core/services/api_client.dart';
 
@@ -39,32 +40,32 @@ class BuyPostOfferService extends GetxService {
 
   Future<void> makeOfferFromExisting({
     required String buyPostId,
-    required String sellPostId,
+    required MakeOfferFromExistingPayload payload,
   }) async {
     await _apiClient.post(
       '/buy-posts/$buyPostId/offer/existing',
-      data: {'sellPostId': sellPostId},
+      data: payload.toJson(),
     );
   }
 
   Future<DraftEntityResponse> createDraftOfferStep1({
     required String buyPostId,
-    required Map<String, dynamic> payload,
+    required CreateDraftOfferStep1Payload payload,
   }) async {
     final response = await _apiClient.post(
       '/buy-posts/$buyPostId/offer/new/draft',
-      data: payload,
+      data: payload.toJson(),
     );
     return DraftEntityResponse.fromPayload(response.data);
   }
 
   Future<DraftEntityResponse> updateDraftOfferStep2({
     required String offerId,
-    required Map<String, dynamic> payload,
+    required UpdateDraftOfferStep2Payload payload,
   }) async {
     final response = await _apiClient.patch(
       '/buy-posts/offer/new/draft/$offerId',
-      data: payload,
+      data: payload.toJson(),
     );
     return DraftEntityResponse.fromPayload(response.data);
   }

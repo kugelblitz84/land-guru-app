@@ -1067,7 +1067,7 @@ class CreateSellPostController extends GetxController {
     );
   }
 
-  Map<String, dynamic> _buildStep2Payload() {
+  CreateSellPostStepPayload _buildStep2Payload() {
     final payload = <String, dynamic>{
       'photos': photos.map((photo) => photo.path).toList(),
       'deedFiles': deedDocuments.map((doc) => doc.path).toList(),
@@ -1078,16 +1078,18 @@ class CreateSellPostController extends GetxController {
     if (videoUrl != null && videoUrl.isNotEmpty) {
       payload['videoUrl'] = videoUrl;
     }
-    return payload;
+    return CreateSellPostStepPayload(data: payload);
   }
 
-  Map<String, dynamic> _buildStep3Payload() {
+  CreateSellPostStepPayload _buildStep3Payload() {
     final serviceKeys = <String>{
       ...mandatoryServices.map((service) => service.id),
       ...selectedServices,
     };
 
-    return {'selectedServices': serviceKeys.toList()};
+    return CreateSellPostStepPayload(
+      data: {'selectedServices': serviceKeys.toList()},
+    );
   }
 
   /// Submit sell post for review

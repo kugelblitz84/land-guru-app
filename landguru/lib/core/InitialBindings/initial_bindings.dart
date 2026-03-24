@@ -17,6 +17,7 @@ import '../../modules/user/properties/services/buy_post_listing_service.dart';
 import '../../modules/user/properties/wanted_and_needs/services/buy_post_offer_service.dart';
 import '../../modules/user/properties/my_posts/buy_posts/services/my_buy_posts_service.dart';
 import '../../modules/user/properties/my_posts/offered_posts/services/my_offered_posts_service.dart';
+import '../../modules/user/my_deals/services/my_deals_service.dart';
 import 'package:landguru/modules/shared/services/user_profile_services.dart';
 import 'package:landguru/modules/user/appointments/services/appointment_services.dart';
 import 'package:landguru/modules/shared/services/agent_profile_services.dart';
@@ -109,6 +110,10 @@ class InitialBindings extends Bindings {
     );
     Get.put<BuyPostOfferService>(
       BuyPostOfferService(Get.find<ApiClient>()),
+      permanent: true,
+    );
+    Get.put<MyDealsService>(
+      MyDealsService(Get.find<ApiClient>()),
       permanent: true,
     );
   }

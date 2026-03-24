@@ -20,6 +20,7 @@ class ApiErrorHandler {
       onSuccess?.call(data);
       return ApiResult.success(data);
     } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
       final message = errorMessageBuilder?.call(e) ?? _parseDioError(e);
       if (showError) {
         _showErrorSnackbar(
@@ -29,7 +30,7 @@ class ApiErrorHandler {
         );
       }
       onError?.call(message, e);
-      return ApiResult.failure(message);
+      return ApiResult.failure(message, statusCode: statusCode);
     } catch (e) {
       final message =
           errorMessageBuilder?.call(e) ?? fallbackMessage ?? resolve(e);
@@ -152,13 +153,21 @@ class ApiResult<T> {
   final T? data;
   final String? error;
   final bool isSuccess;
+  final int? statusCode;
 
-  ApiResult._({this.data, this.error, required this.isSuccess});
+  ApiResult._({
+    this.data,
+    this.error,
+    required this.isSuccess,
+    this.statusCode,
+  });
 
   factory ApiResult.success(T data) => ApiResult._(data: data, isSuccess: true);
 
-  factory ApiResult.failure(String error) =>
-      ApiResult._(error: error, isSuccess: false);
+  factory ApiResult.failure(String error, {int? statusCode}) =>
+      ApiResult._(error: error, isSuccess: false, statusCode: statusCode);
+
+  bool get isUnauthorized => statusCode == 401;
 
   T dataOr(T fallback) => isSuccess && data != null ? data as T : fallback;
 }

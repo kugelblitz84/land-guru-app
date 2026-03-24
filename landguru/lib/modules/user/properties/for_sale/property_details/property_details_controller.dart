@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../core/services/nested_navigation_service.dart';
 import '../../../../../core/services/services.dart';
+import '../../services/models/sell_post_request_payloads.dart';
+import '../../wanted_and_needs/models/models.dart';
 import '../../widgets/metrics_conversion_row.dart';
 import 'models/property_details_models.dart';
 
@@ -450,10 +452,12 @@ class PropertyDetailsController extends GetxController {
 
     final result = await ApiErrorHandler.call(
       () => _sellPostDetailsService.requestAppointment(
-        sellPostId: propertyId.value.trim(),
-        buyerName: buyerName,
-        buyerPhone: normalizedPhone,
-        buyerAddress: normalizedAddress,
+        payload: RequestSellPostAppointmentPayload(
+          sellPostId: propertyId.value.trim(),
+          buyerName: buyerName,
+          buyerPhone: normalizedPhone,
+          buyerAddress: normalizedAddress,
+        ),
       ),
     );
 
@@ -483,7 +487,7 @@ class PropertyDetailsController extends GetxController {
     final result = await ApiErrorHandler.call(
       () => _buyPostOfferService.makeOfferFromExisting(
         buyPostId: buyPostId.value,
-        sellPostId: propertyId.value,
+        payload: MakeOfferFromExistingPayload(sellPostId: propertyId.value),
       ),
     );
 

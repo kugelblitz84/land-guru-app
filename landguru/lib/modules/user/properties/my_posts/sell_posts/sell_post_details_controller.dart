@@ -4,6 +4,7 @@ import '../../../../../core/services/nested_navigation_service.dart';
 import '../../../../../core/services/services.dart';
 import '../../../../../routes/app_routes.dart';
 import '../../widgets/metrics_conversion_row.dart';
+import '../../services/models/sell_post_request_payloads.dart';
 import '../models/my_post_status.dart';
 import 'models/sell_post_models.dart';
 import 'widgets/quoted_popups.dart';
@@ -369,7 +370,7 @@ class SellPostDetailsController extends GetxController {
   }
 
   /// Update post using API (PATCH /sell-posts/{postId})
-  Future<bool> updatePost({required Map<String, dynamic> payload}) async {
+  Future<bool> updatePost({required UpdateSellPostPayload payload}) async {
     if (postId.value.isEmpty) return false;
 
     final result = await ApiErrorHandler.call(
@@ -400,8 +401,10 @@ class SellPostDetailsController extends GetxController {
         final result = await ApiErrorHandler.call(
           () => _sellPostDetailsService.requoteSellPost(
             postId: post.id,
-            proposedMandatoryFee: mandatoryFee,
-            proposedOptionalFee: optionalFee,
+            payload: RequoteSellPostPayload(
+              proposedMandatoryFee: mandatoryFee,
+              proposedOptionalFee: optionalFee,
+            ),
           ),
           errorTitle: 'Requote Failed',
         );

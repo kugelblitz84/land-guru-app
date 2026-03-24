@@ -50,6 +50,57 @@ class PropertyDetails {
     this.hasRequestedAppointment = false,
   });
 
+  PropertyDetails copyWith({
+    String? id,
+    String? postId,
+    String? title,
+    String? price,
+    String? propertyType,
+    String? postType,
+    bool? isVerified,
+    bool? isLocked,
+    String? description,
+    String? location,
+    String? sellableLandAmount,
+    String? plotSize,
+    String? shareUnit,
+    String? distanceFromRoadMin,
+    String? distanceFromRoadMax,
+    String? landShapeImageUrl,
+    List<String>? propertyPhotos,
+    String? postedBy,
+    String? postedByAvatarUrl,
+    bool? postedByVerified,
+    String? postedTime,
+    bool? hasRequestedAppointment,
+  }) {
+    return PropertyDetails(
+      id: id ?? this.id,
+      postId: postId ?? this.postId,
+      title: title ?? this.title,
+      price: price ?? this.price,
+      propertyType: propertyType ?? this.propertyType,
+      postType: postType ?? this.postType,
+      isVerified: isVerified ?? this.isVerified,
+      isLocked: isLocked ?? this.isLocked,
+      description: description ?? this.description,
+      location: location ?? this.location,
+      sellableLandAmount: sellableLandAmount ?? this.sellableLandAmount,
+      plotSize: plotSize ?? this.plotSize,
+      shareUnit: shareUnit ?? this.shareUnit,
+      distanceFromRoadMin: distanceFromRoadMin ?? this.distanceFromRoadMin,
+      distanceFromRoadMax: distanceFromRoadMax ?? this.distanceFromRoadMax,
+      landShapeImageUrl: landShapeImageUrl ?? this.landShapeImageUrl,
+      propertyPhotos: propertyPhotos ?? this.propertyPhotos,
+      postedBy: postedBy ?? this.postedBy,
+      postedByAvatarUrl: postedByAvatarUrl ?? this.postedByAvatarUrl,
+      postedByVerified: postedByVerified ?? this.postedByVerified,
+      postedTime: postedTime ?? this.postedTime,
+      hasRequestedAppointment:
+          hasRequestedAppointment ?? this.hasRequestedAppointment,
+    );
+  }
+
   Color get propertyTypeColor {
     switch (propertyType.toLowerCase()) {
       case 'plain land':

@@ -85,82 +85,82 @@ class AgentDashboardController extends GetxController {
       return;
     }
 
-      // Mock data
-      assignedLocation.value =
-          'Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.';
+    // Mock data
+    assignedLocation.value =
+        'Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.';
 
-      stats.value = DashboardStats(
-        newRequests: 3,
-        activeJobs: 5,
-        doneThisMonth: 12,
-        currentMonth: 'Jan',
-      );
+    stats.value = DashboardStats(
+      newRequests: 3,
+      activeJobs: 5,
+      doneThisMonth: 12,
+      currentMonth: 'Jan',
+    );
 
-      // Mock requires scheduling data
-      requiresScheduling.value = [
-        SchedulingTask(
-          id: '1',
-          serviceId: '#SERV892-POST-1042',
-          serviceName: 'Pentagraph Map Verification',
-          location:
-              'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          acceptBefore: DateTime(2026, 1, 12, 12, 0),
-          assignedAt: DateTime.now().subtract(const Duration(minutes: 10)),
-        ),
-        SchedulingTask(
-          id: '2',
-          serviceId: '#SERV892-POST-1043',
-          serviceName: 'Ownership History Verification',
-          location:
-              'Block-C, Banani, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          acceptBefore: DateTime(2026, 1, 12, 14, 0),
-          assignedAt: DateTime.now().subtract(const Duration(minutes: 25)),
-        ),
-        SchedulingTask(
-          id: '3',
-          serviceId: '#SERV892-POST-1044',
-          serviceName: 'Document Verification',
-          location:
-              'Gulshan-2, Dhaka North City Corporation, Dhaka-1212, Dhaka, Bangladesh.',
-          acceptBefore: DateTime(2026, 1, 13, 10, 0),
-          assignedAt: DateTime.now().subtract(const Duration(hours: 2)),
-        ),
-      ];
+    // Mock requires scheduling data
+    requiresScheduling.value = [
+      SchedulingTask(
+        id: '1',
+        serviceId: '#SERV892-POST-1042',
+        serviceName: 'Pentagraph Map Verification',
+        location:
+            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
+        acceptBefore: DateTime(2026, 1, 12, 12, 0),
+        assignedAt: DateTime.now().subtract(const Duration(minutes: 10)),
+      ),
+      SchedulingTask(
+        id: '2',
+        serviceId: '#SERV892-POST-1043',
+        serviceName: 'Ownership History Verification',
+        location:
+            'Block-C, Banani, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
+        acceptBefore: DateTime(2026, 1, 12, 14, 0),
+        assignedAt: DateTime.now().subtract(const Duration(minutes: 25)),
+      ),
+      SchedulingTask(
+        id: '3',
+        serviceId: '#SERV892-POST-1044',
+        serviceName: 'Document Verification',
+        location:
+            'Gulshan-2, Dhaka North City Corporation, Dhaka-1212, Dhaka, Bangladesh.',
+        acceptBefore: DateTime(2026, 1, 13, 10, 0),
+        assignedAt: DateTime.now().subtract(const Duration(hours: 2)),
+      ),
+    ];
 
-      // Mock today's schedule
-      todaySchedule.value = [
-        ScheduleItem(
-          id: '1',
-          serviceId: '#SERV892-POST-1042',
-          time: '10:00 AM',
-          type: 'Client Meeting',
-          clientName: 'Farhan',
-          location:
-              'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          itemType: ScheduleItemTypes.clientMeeting,
-        ),
-        ScheduleItem(
-          id: '2',
-          serviceId: '#SERV892-POST-1042',
-          time: '12:30 PM',
-          type: 'Site Visit',
-          clientName: 'Farhan',
-          location:
-              'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          itemType: ScheduleItemTypes.siteVisit,
-        ),
-        ScheduleItem(
-          id: '3',
-          serviceId: '#SERV892-POST-1042',
-          time: '4:30 PM',
-          type: 'Site Visit',
-          clientName: 'Farhan',
-          location:
-              'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-          itemType: ScheduleItemTypes.siteVisit,
-        ),
-      ];
-      _syncCache();
+    // Mock today's schedule
+    todaySchedule.value = [
+      ScheduleItem(
+        id: '1',
+        serviceId: '#SERV892-POST-1042',
+        time: '10:00 AM',
+        type: 'Client Meeting',
+        clientName: 'Farhan',
+        location:
+            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
+        itemType: ScheduleItemTypes.clientMeeting,
+      ),
+      ScheduleItem(
+        id: '2',
+        serviceId: '#SERV892-POST-1042',
+        time: '12:30 PM',
+        type: 'Site Visit',
+        clientName: 'Farhan',
+        location:
+            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
+        itemType: ScheduleItemTypes.siteVisit,
+      ),
+      ScheduleItem(
+        id: '3',
+        serviceId: '#SERV892-POST-1042',
+        time: '4:30 PM',
+        type: 'Site Visit',
+        clientName: 'Farhan',
+        location:
+            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
+        itemType: ScheduleItemTypes.siteVisit,
+      ),
+    ];
+    _syncCache();
     isLoading.value = false;
   }
 
@@ -183,6 +183,7 @@ class AgentDashboardController extends GetxController {
     Get.toNamed(
       AppRoutes.AGENT_APPOINTMENT_DETAILS,
       arguments: {'appointmentId': item.id},
+      id: 0,
     );
   }
 
@@ -232,4 +233,3 @@ class AgentDashboardController extends GetxController {
     _hasCachedData = true;
   }
 }
-

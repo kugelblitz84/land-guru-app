@@ -52,8 +52,12 @@ class CreateSellPostPayloadModel {
       'propertyType': propertyType,
       'sellableAmount': sellableAmount,
       'sellableUnit': sellableUnit,
+      // Keep legacy alias for older API validators.
+      //'pricePerUnit': askingPricePerUnit,
       'askingPricePerUnit': askingPricePerUnit,
       'askingPrice': askingPrice,
+      // Keep legacy alias for older API validators.
+      //'isShareable': isPropertyShareable,
       'isPropertyShareable': isPropertyShareable,
       if (roadDistanceMin != null) 'roadDistanceMin': roadDistanceMin,
       if (roadDistanceMax != null) 'roadDistanceMax': roadDistanceMax,
@@ -74,4 +78,12 @@ class CreateSellPostPayloadModel {
         'fullAddress': fullAddress,
     };
   }
+}
+
+class CreateSellPostStepPayload {
+  const CreateSellPostStepPayload({required this.data});
+
+  final Map<String, dynamic> data;
+
+  Map<String, dynamic> toJson() => Map<String, dynamic>.from(data);
 }

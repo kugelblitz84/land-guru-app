@@ -63,6 +63,11 @@ class UserProfileStore extends GetxService {
         showError: showError,
       );
 
+      if (profileResponse.isUnauthorized) {
+        _handleUnauthorizedSession();
+        return;
+      }
+
       if (profileResponse.isSuccess && profileResponse.data != null) {
         _applyProfile(profileResponse.data!);
       }
@@ -71,6 +76,11 @@ class UserProfileStore extends GetxService {
         () => _profileServices.fetchAccountSummary(),
         showError: false,
       );
+
+      if (summaryResponse.isUnauthorized) {
+        _handleUnauthorizedSession();
+        return;
+      }
 
       if (summaryResponse.isSuccess && summaryResponse.data != null) {
         _applySummary(summaryResponse.data!);
@@ -92,6 +102,11 @@ class UserProfileStore extends GetxService {
 
   void clear() {
     profileModel.value = UserProfileStateModel.initial();
+  }
+
+  void _handleUnauthorizedSession() {
+    clear();
+    _authService.clearSession();
   }
 
   void _applyProfile(ProfileModel profile) {

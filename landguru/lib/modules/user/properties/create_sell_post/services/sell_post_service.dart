@@ -34,11 +34,11 @@ class SellPostService extends GetxService {
   Future<DraftEntityResponse> updateDraftStep({
     required String postId,
     required int step,
-    required Map<String, dynamic> payload,
+    required CreateSellPostStepPayload payload,
   }) async {
     final response = await _apiClient.patch(
       '/sell-posts/draft/$postId',
-      data: payload,
+      data: payload.toJson(),
       queryParameters: {'step': step},
     );
     return DraftEntityResponse.fromPayload(response.data);
