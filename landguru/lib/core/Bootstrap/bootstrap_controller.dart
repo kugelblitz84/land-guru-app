@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 
 import '../../modules/shared/controllers/agent_profile_store.dart';
 import '../services/auth_service.dart';
+import '../services/api_error_handler.dart';
+import '../services/fcm_service.dart';
 import '../../modules/shared/controllers/user_profile_store.dart';
 import '../services/user_type_service.dart';
 import '../../routes/app_routes.dart';
@@ -22,9 +24,18 @@ class BootstrapController extends GetxController {
 
   Future<void> _bootstrap() async {
     final authService = Get.find<AuthService>();
+    final fcmService = Get.find<FcmService>();
     final userTypeService = Get.find<UserTypeService>();
 
     await authService.loadFromStorage();
+    await ApiErrorHandler.call(() => fcmService.initialize(), showError: false);
+
+    if (authService.isLoggedIn) {
+      await ApiErrorHandler.call(
+        () => fcmService.syncTokenWithBackend(),
+        showError: false,
+      );
+    }
 
     if (_navigated) return;
     _navigated = true;

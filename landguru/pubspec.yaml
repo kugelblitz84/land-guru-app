@@ -41,6 +41,10 @@ dependencies:
   shared_preferences: ^2.3.2
   image_picker: ^1.1.2
   file_picker: ^10.3.10
+  url_launcher: ^6.3.2
+  webview_flutter: ^4.10.0
+  firebase_core: ^4.6.0
+  firebase_messaging: ^16.0.3
 
 dev_dependencies:
   flutter_test:
@@ -73,6 +77,9 @@ flutter:
     - assets/images/User_DP/
     - assets/Logos/
     - assets/Logos/How Offering Work/
+    - assets/Logos/Bottom_Navigation_Bar/
+    - assets/Logos/Bottom_Navigation_Bar/User/
+    - assets/Logos/Bottom_Navigation_Bar/Agent/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

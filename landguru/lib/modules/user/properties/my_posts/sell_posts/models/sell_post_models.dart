@@ -145,3 +145,110 @@ class DueDiligenceItem {
 
   const DueDiligenceItem({required this.title, this.isPassed = true});
 }
+
+class QuotePaymentMethod {
+  final String code;
+  final String name;
+
+  const QuotePaymentMethod({required this.code, required this.name});
+
+  factory QuotePaymentMethod.fromMap(Map<String, dynamic> map) {
+    final code = map['code']?.toString().trim() ?? '';
+    final name = map['name']?.toString().trim();
+
+    return QuotePaymentMethod(
+      code: code,
+      name: (name == null || name.isEmpty) ? code : name,
+    );
+  }
+}
+
+class QuotePaymentSummary {
+  final String postId;
+  final String title;
+  final String status;
+  final double askingPrice;
+  final double validatedPrice;
+  final double mandatoryServiceFee;
+  final double optionalServiceFee;
+  final double totalPayable;
+  final int quoteRevisedCount;
+  final List<QuotePaymentMethod> paymentMethods;
+  final Map<String, dynamic> raw;
+
+  const QuotePaymentSummary({
+    required this.postId,
+    required this.title,
+    required this.status,
+    required this.askingPrice,
+    required this.validatedPrice,
+    required this.mandatoryServiceFee,
+    required this.optionalServiceFee,
+    required this.totalPayable,
+    required this.quoteRevisedCount,
+    required this.paymentMethods,
+    required this.raw,
+  });
+
+  factory QuotePaymentSummary.fromPayload(dynamic payload) {
+    final normalized = _extractMap(payload);
+
+    return QuotePaymentSummary(
+      postId: normalized['postId']?.toString() ?? '',
+      title: normalized['title']?.toString() ?? '',
+      status: normalized['status']?.toString() ?? '',
+      askingPrice: _asDouble(normalized['askingPrice']),
+      validatedPrice: _asDouble(normalized['validatedPrice']),
+      mandatoryServiceFee: _asDouble(normalized['mandatoryServiceFee']),
+      optionalServiceFee: _asDouble(normalized['optionalServiceFee']),
+      totalPayable: _asDouble(normalized['totalPayable']),
+      quoteRevisedCount: _asInt(normalized['quoteRevisedCount']),
+      paymentMethods: _extractPaymentMethods(normalized['paymentMethods']),
+      raw: normalized,
+    );
+  }
+
+  static Map<String, dynamic> _extractMap(dynamic payload) {
+    if (payload is Map<String, dynamic>) {
+      final nested = payload['data'];
+      if (nested is Map<String, dynamic>) {
+        return nested;
+      }
+      if (nested is Map) {
+        return Map<String, dynamic>.from(nested);
+      }
+      return payload;
+    }
+
+    if (payload is Map) {
+      final nested = payload['data'];
+      if (nested is Map) {
+        return Map<String, dynamic>.from(nested);
+      }
+      return Map<String, dynamic>.from(payload);
+    }
+
+    throw Exception('Invalid response');
+  }
+
+  static List<QuotePaymentMethod> _extractPaymentMethods(dynamic raw) {
+    if (raw is! List) return <QuotePaymentMethod>[];
+
+    return raw
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .map(QuotePaymentMethod.fromMap)
+        .where((method) => method.code.isNotEmpty)
+        .toList();
+  }
+
+  static double _asDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static int _asInt(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+}

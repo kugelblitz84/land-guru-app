@@ -18,6 +18,15 @@ class NestedNavigationService {
   /// Check if nested navigation is available (we're inside the main shell)
   static bool get isAvailable => _navController != null;
 
+  /// Returns the active nested navigator id for tab stacks (0-3).
+  static int? get _activeTabNavigatorId {
+    final controller = _navController;
+    if (controller == null) return null;
+
+    final index = controller.currentIndex.value;
+    return (index >= 0 && index <= 3) ? index : null;
+  }
+
   /// Navigate to a page using GetX navigation.
   static Future<T?>? to<T>(
     Widget page, {
@@ -26,10 +35,8 @@ class NestedNavigationService {
     RouteSettings? settings,
     Transition? transition,
     Duration? duration,
+    int? id,
   }) {
-    // Execute binding if provided
-    binding?.dependencies();
-
     return Get.to<T>(
       () => page,
       routeName: settings?.name,
@@ -37,6 +44,7 @@ class NestedNavigationService {
       binding: binding,
       transition: transition ?? Transition.rightToLeft,
       duration: duration,
+      id: id ?? _activeTabNavigatorId,
     );
   }
 
@@ -53,22 +61,45 @@ class NestedNavigationService {
       controller.changeTab(tabIndex);
     }
 
+    final nestedId = (tabIndex >= 0 && tabIndex <= 3) ? tabIndex : null;
+
     return Get.to<T>(
       () => page,
       routeName: settings?.name,
       arguments: settings?.arguments,
       transition: transition ?? Transition.rightToLeft,
       duration: duration,
+      id: nestedId,
     );
   }
 
   /// Go back to previous page.
   static void back<T>({T? result}) {
-    Get.back(result: result);
+    final nestedId = _activeTabNavigatorId;
+    if (nestedId != null) {
+      final nestedState = Get.nestedKey(nestedId)?.currentState;
+      if (nestedState?.canPop() ?? false) {
+        nestedState?.pop(result);
+        return;
+      }
+    }
+
+    final rootState = Get.key.currentState;
+    if (rootState?.canPop() ?? false) {
+      rootState?.pop(result);
+    }
   }
 
   /// Check if we can pop from current route stack.
   static bool canPop() {
+    final nestedId = _activeTabNavigatorId;
+    if (nestedId != null) {
+      final canPopNested = Get.nestedKey(nestedId)?.currentState?.canPop();
+      if (canPopNested == true) {
+        return true;
+      }
+    }
+
     return Get.key.currentState?.canPop() ?? false;
   }
 

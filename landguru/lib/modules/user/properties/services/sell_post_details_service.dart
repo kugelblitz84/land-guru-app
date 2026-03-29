@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/models/models.dart';
 import '../../../../core/services/api_client.dart';
+import '../my_posts/sell_posts/models/sell_post_models.dart';
 import 'models/sell_post_details_payload.dart';
 import 'models/sell_post_request_payloads.dart';
 
@@ -37,6 +38,16 @@ class SellPostDetailsService extends GetxService {
     await _apiClient.delete('/sell-posts/$postId');
   }
 
+  Future<QuotePaymentSummary> getQuotePaymentSummary({
+    required String postId,
+  }) async {
+    final response = await _apiClient.get(
+      '/sell-posts/$postId/quote-payment-summary',
+    );
+
+    return QuotePaymentSummary.fromPayload(response.data);
+  }
+
   Future<DraftEntityResponse> requoteSellPost({
     required String postId,
     required RequoteSellPostPayload payload,
@@ -51,8 +62,12 @@ class SellPostDetailsService extends GetxService {
 
   Future<DraftEntityResponse> acceptQuotedPrice({
     required String postId,
+    required String tranId,
   }) async {
-    final response = await _apiClient.post('/sell-posts/$postId/accept-quote');
+    final response = await _apiClient.post(
+      '/sell-posts/$postId/accept-quote',
+      data: {'tranId': tranId},
+    );
     return DraftEntityResponse.fromPayload(response.data);
   }
 

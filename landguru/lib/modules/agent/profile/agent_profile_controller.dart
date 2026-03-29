@@ -87,6 +87,13 @@ class AgentProfileController extends GetxController {
     isLoading.value = true;
     await ApiErrorHandler.call(
       () async {
+        if (Get.isRegistered<FcmService>()) {
+          await ApiErrorHandler.call(
+            () => Get.find<FcmService>().unregisterCurrentToken(),
+            showError: false,
+          );
+        }
+
         _authService.clearSession();
         _token.clear();
 

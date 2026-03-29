@@ -3,9 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
+import '../services/fcm_service.dart';
 import '../services/token_service.dart';
 import '../services/upload_service.dart';
 import '../services/user_type_service.dart';
+import '../../modules/shared/notifications/services/notifications_service.dart';
 import '../../modules/shared/controllers/user_profile_store.dart';
 import '../../modules/shared/controllers/agent_profile_store.dart';
 import '../../modules/user/properties/create_sell_post/services/sell_post_service.dart';
@@ -18,10 +20,12 @@ import '../../modules/user/properties/wanted_and_needs/services/buy_post_offer_s
 import '../../modules/user/properties/my_posts/buy_posts/services/my_buy_posts_service.dart';
 import '../../modules/user/properties/my_posts/offered_posts/services/my_offered_posts_service.dart';
 import '../../modules/user/my_deals/services/my_deals_service.dart';
+import '../../modules/user/services/payment_services.dart';
 import 'package:landguru/modules/shared/services/user_profile_services.dart';
 import 'package:landguru/modules/user/appointments/services/appointment_services.dart';
 import 'package:landguru/modules/shared/services/agent_profile_services.dart';
 import 'package:landguru/modules/agent/appointments/agent_appointments_services.dart';
+import 'package:landguru/modules/agent/dashboard/services/agent_dashboard_service.dart';
 import 'package:landguru/modules/agent/my_tasks/agent_task_actions_service.dart';
 
 class InitialBindings extends Bindings {
@@ -76,6 +80,10 @@ class InitialBindings extends Bindings {
       AgentTaskActionsService(Get.find<ApiClient>()),
       permanent: true,
     );
+    Get.put<AgentDashboardService>(
+      AgentDashboardService(Get.find<ApiClient>()),
+      permanent: true,
+    );
     Get.put<SellPostService>(
       SellPostService(Get.find<ApiClient>()),
       permanent: true,
@@ -114,6 +122,22 @@ class InitialBindings extends Bindings {
     );
     Get.put<MyDealsService>(
       MyDealsService(Get.find<ApiClient>()),
+      permanent: true,
+    );
+    Get.put<PaymentServices>(
+      PaymentServices(Get.find<ApiClient>()),
+      permanent: true,
+    );
+    Get.put<NotificationsService>(
+      NotificationsService(Get.find<ApiClient>()),
+      permanent: true,
+    );
+    Get.put<FcmService>(
+      FcmService(
+        Get.find<AuthService>(),
+        Get.find<UserTypeService>(),
+        Get.find<NotificationsService>(),
+      ),
       permanent: true,
     );
   }

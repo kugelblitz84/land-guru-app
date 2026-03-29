@@ -4,6 +4,7 @@ import '../../../core/models/models.dart';
 import '../../../core/services/api_error_handler.dart';
 import '../../shared/controllers/agent_profile_store.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/fcm_service.dart';
 import '../../shared/controllers/user_profile_store.dart';
 import '../../../core/services/user_type_service.dart';
 import '../../../routes/app_routes.dart';
@@ -55,6 +56,11 @@ class LoginController extends GetxController {
     if (!result.isSuccess) {
       return;
     }
+
+    await ApiErrorHandler.call(
+      () => Get.find<FcmService>().syncTokenWithBackend(force: true),
+      showError: false,
+    );
 
     if (_userTypeService.isAgent) {
       _agentProfileStore.hydrateFromSession();

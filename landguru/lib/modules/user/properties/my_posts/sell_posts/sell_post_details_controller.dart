@@ -14,6 +14,7 @@ import 'widgets/quoted_popups.dart';
 class SellPostDetailsController extends GetxController {
   final SellPostDetailsService _sellPostDetailsService =
       Get.find<SellPostDetailsService>();
+  final PaymentServices _paymentService = Get.find<PaymentServices>();
 
   // State
   final RxBool isLoading = false.obs;
@@ -437,33 +438,112 @@ class SellPostDetailsController extends GetxController {
     final post = postDetails.value;
     if (post == null || post.billBreakdown == null) return;
 
+    final summaryResult = await ApiErrorHandler.call(
+      () => _sellPostDetailsService.getQuotePaymentSummary(postId: post.id),
+      errorTitle: 'Payment Summary Failed',
+    );
+
+    final summary = summaryResult.data;
+    final paymentMethods =
+        (summary?.paymentMethods ?? const <QuotePaymentMethod>[]);
+    final resolvedMethods = paymentMethods.isNotEmpty
+        ? paymentMethods
+        : const <QuotePaymentMethod>[
+            QuotePaymentMethod(
+              code: PaymentMethods.sslCommerz,
+              name: 'SSL Commerz',
+            ),
+            QuotePaymentMethod(
+              code: PaymentMethods.mobileBanking,
+              name: 'Mobile Banking',
+            ),
+          ];
+
+    final totalPayable =
+        summary?.totalPayable ?? post.billBreakdown!.totalPayable;
+    final quotationRevisions =
+        summary?.quoteRevisedCount ?? post.billBreakdown!.quotationRevisions;
+
     PayAndActivateDialog.show(
       Get.context!,
-      totalPayable: post.billBreakdown!.totalPayable,
-      quotationRevisions: post.billBreakdown!.quotationRevisions,
+      totalPayable: totalPayable,
+      quotationRevisions: quotationRevisions,
+      paymentMethods: resolvedMethods,
       onPay: (paymentMethod) async {
         Get.back();
 
-        final result = await ApiErrorHandler.call(
-          () => _sellPostDetailsService.acceptQuotedPrice(postId: post.id),
-          errorTitle: 'Payment Failed',
-        );
-
-        if (!result.isSuccess) {
+        if (paymentMethod.trim().isEmpty) {
+          Get.snackbar(
+            'Payment Failed',
+            'Please select a payment method.',
+            snackPosition: SnackPosition.BOTTOM,
+          );
           return;
         }
 
-        // Show payment confirmed dialog
+        final paymentSession = await ApiErrorHandler.call(
+          () => _paymentService.createSslCommerzSession(postId: post.id),
+          errorTitle: 'Payment Failed',
+        );
+
+        if (!paymentSession.isSuccess || paymentSession.data == null) return;
+
+        final session = paymentSession.data!;
+        final gatewayUrl = session.gatewayUrl;
+        final tranId = session.tranId;
+
+        if (tranId == null || tranId.trim().isEmpty) {
+          Get.snackbar(
+            'Payment Failed',
+            'Missing transaction ID from payment session.',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return;
+        }
+
+        final gatewayResult = await _paymentService.openPaymentGateway(
+          gatewayUrl,
+        );
+
+        if (gatewayResult.status != PaymentGatewayStatus.success) {
+          // Handle failed/cancelled - do nothing for now
+          return;
+        }
+
+        // Validate payment session before accepting quote
+        final sessionValidation = await ApiErrorHandler.call(
+          () => _paymentService.validatePaymentSession(postId: post.id),
+          errorTitle: 'Payment Validation Failed',
+        );
+
+        if (!sessionValidation.isSuccess ||
+            sessionValidation.data == null ||
+            !sessionValidation.data!.isValidated) {
+          // Payment not validated - do nothing for now
+          return;
+        }
+
+        final validatedTranId = sessionValidation.data!.tranId ?? tranId;
+
+        final activationResult = await ApiErrorHandler.call(
+          () => _sellPostDetailsService.acceptQuotedPrice(
+            postId: post.id,
+            tranId: validatedTranId,
+          ),
+          errorTitle: 'Activation Failed',
+        );
+
+        if (!activationResult.isSuccess) return;
+
         PaymentConfirmedDialog.show(
           Get.context!,
-          amount: post.billBreakdown!.totalPayable,
+          amount: totalPayable,
           propertyTitle: post.title,
           propertyPrice: post.price,
           propertyType: post.propertyType,
           imageUrl: post.imageUrl,
           onClose: () {
             Get.back();
-            // Navigate back to my posts or refresh
             loadPostDetails();
           },
         );

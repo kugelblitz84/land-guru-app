@@ -9,6 +9,13 @@ import 'models/property_details_models.dart';
 
 /// Controller for Property Details screen (Locked and Unlocked views)
 class PropertyDetailsController extends GetxController {
+  PropertyDetailsController({Map<String, dynamic>? initialArguments})
+    : _initialArguments = initialArguments == null
+          ? null
+          : Map<String, dynamic>.from(initialArguments);
+
+  final Map<String, dynamic>? _initialArguments;
+
   final SellPostDetailsService _sellPostDetailsService =
       Get.find<SellPostDetailsService>();
   final BuyPostOfferService _buyPostOfferService =
@@ -159,9 +166,10 @@ class PropertyDetailsController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // Get property data from arguments
-    if (Get.arguments != null) {
-      _loadFromArguments(Get.arguments);
+    // Accept only the minimum route data and always fetch by id.
+    final routeArguments = _initialArguments ?? Get.arguments;
+    if (routeArguments != null) {
+      _loadFromArguments(routeArguments);
     }
 
     loadPropertyDetails();
@@ -212,95 +220,59 @@ class PropertyDetailsController extends GetxController {
     }
   }
 
-  /// Load property from route arguments
-  void _loadFromArguments(Map<String, dynamic> args) {
-    isLoading.value = true;
-
-    try {
-      propertyId.value = args['id'] ?? '';
-      isLocked.value = args['isLocked'] ?? true;
-
-      // Check if coming from "Offer from Existing" flow
-      isOfferFromExisting.value = args['isOfferFromExisting'] ?? false;
-      buyPostId.value = args['buyPostId'] ?? '';
-      pageTitle.value = args['pageTitle'] ?? 'Property Details';
-
-      // Map propertyType string to display label
-      String propertyTypeLabel = 'Flat';
-      final propertyTypeValue = args['propertyType'] ?? '';
-      switch (propertyTypeValue) {
-        case 'plainLand':
-          propertyTypeLabel = 'Plain Land';
-          break;
-        case 'waterLand':
-          propertyTypeLabel = 'Water Land';
-          break;
-        case 'flat':
-          propertyTypeLabel = 'Flat';
-          break;
-        default:
-          propertyTypeLabel = propertyTypeValue;
-      }
-
-      // Map postType string to display label
-      String postTypeLabel = 'Sell Post';
-      final postTypeValue = args['postType'] ?? '';
-      switch (postTypeValue) {
-        case 'sellPost':
-          postTypeLabel = 'Sell Post';
-          break;
-        case 'buyPost':
-          postTypeLabel = 'Buy Post';
-          break;
-        default:
-          postTypeLabel = postTypeValue;
-      }
-
-      // Build photos list from imageUrl and propertyPhotos
-      List<String> photos = [];
-      if (args['propertyPhotos'] != null && args['propertyPhotos'] is List) {
-        photos = List<String>.from(args['propertyPhotos']);
-      } else if (args['imageUrl'] != null) {
-        photos = [args['imageUrl']];
-      }
-
-      property.value = PropertyDetails(
-        id: args['id'] ?? '',
-        postId: args['postId'] ?? '#POST-0000',
-        title: args['title'] ?? 'Property',
-        price: args['price'] ?? '0',
-        propertyType: propertyTypeLabel,
-        postType: postTypeLabel,
-        isVerified: args['isVerified'] ?? false,
-        isLocked: args['isLocked'] ?? true,
-        description: args['description'] ?? 'No description available.',
-        location: args['location'] ?? 'Location not specified',
-        sellableLandAmount: args['sellableLandAmount'] ?? 'N/A',
-        plotSize: args['plotSize'] ?? 'N/A',
-        distanceFromRoadMin: args['distanceFromRoadMin'] ?? 'N/A',
-        distanceFromRoadMax: args['distanceFromRoadMax'] ?? 'N/A',
-        landShapeImageUrl: null,
-        propertyPhotos: photos,
-        postedBy: args['postedBy'] ?? 'Unknown',
-        postedByAvatarUrl: args['postedByAvatarUrl']?.toString(),
-        postedByVerified: args['postedByVerified'] == true,
-        postedTime: args['postedTime'] ?? 'Unknown',
-        hasRequestedAppointment: false,
-      );
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load property details',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
+  /// Load property route metadata from arguments.
+  void _loadFromArguments(dynamic rawArgs) {
+    if (rawArgs is! Map) {
+      return;
     }
+
+    final args = Map<String, dynamic>.from(rawArgs as Map);
+    propertyId.value = _asString(args['id']);
+    if (propertyId.value.isEmpty) {
+      propertyId.value = _asString(args['sellPostId']);
+    }
+    if (propertyId.value.isEmpty) {
+      propertyId.value = _asString(args['postId']);
+    }
+
+    isLocked.value = _asBool(args['isLocked'], fallback: true);
+    isOfferFromExisting.value = _asBool(
+      args['isOfferFromExisting'],
+      fallback: false,
+    );
+    buyPostId.value = _asString(args['buyPostId']);
+    pageTitle.value = _asString(
+      args['pageTitle'],
+      fallback: 'Property Details',
+    );
   }
 
-  /// Load property details (fallback when no arguments)
+  String _asString(dynamic value, {String fallback = ''}) {
+    if (value == null) return fallback;
+    final text = value.toString().trim();
+    return text.isEmpty ? fallback : text;
+  }
+
+  bool _asBool(dynamic value, {required bool fallback}) {
+    if (value is bool) return value;
+    if (value is String) {
+      final normalized = value.toLowerCase().trim();
+      if (normalized == 'true') return true;
+      if (normalized == 'false') return false;
+    }
+    return fallback;
+  }
+
+  /// Load property details by id from API.
   Future<void> loadPropertyDetails() async {
+    property.value = null;
+
     if (propertyId.value.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Property ID is missing',
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 

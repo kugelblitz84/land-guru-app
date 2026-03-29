@@ -94,32 +94,31 @@ class UserBottomNavView extends GetView<UserBottomNavController> {
               children: [
                 _buildNavItem(
                   index: 0,
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home,
+                  assetPath: 'assets/Logos/Bottom_Navigation_Bar/User/Home.png',
                   label: 'Home',
                 ),
                 _buildNavItem(
                   index: 1,
-                  icon: Icons.apartment_outlined,
-                  activeIcon: Icons.apartment,
+                  assetPath:
+                      'assets/Logos/Bottom_Navigation_Bar/User/Properties.png',
                   label: 'Properties',
                 ),
                 _buildNavItem(
                   index: 2,
-                  icon: Icons.calendar_today_outlined,
-                  activeIcon: Icons.calendar_today,
+                  assetPath:
+                      'assets/Logos/Bottom_Navigation_Bar/User/Appointments.png',
                   label: 'Appointments',
                 ),
                 _buildNavItem(
                   index: 3,
-                  icon: Icons.handshake_outlined,
-                  activeIcon: Icons.handshake,
+                  assetPath:
+                      'assets/Logos/Bottom_Navigation_Bar/User/My_Deals.png',
                   label: 'My Deals',
                 ),
                 _buildNavItem(
                   index: 4,
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
+                  assetPath:
+                      'assets/Logos/Bottom_Navigation_Bar/User/profile.png',
                   label: 'Profile',
                 ),
               ],
@@ -132,8 +131,7 @@ class UserBottomNavView extends GetView<UserBottomNavController> {
 
   Widget _buildNavItem({
     required int index,
-    required IconData icon,
-    required IconData activeIcon,
+    required String assetPath,
     required String label,
   }) {
     final isSelected = controller.currentIndex.value == index;
@@ -156,10 +154,14 @@ class UserBottomNavView extends GetView<UserBottomNavController> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: AppColors.white,
-              size: 24.sp,
+            Opacity(
+              opacity: isSelected ? 1 : 0.85,
+              child: Image.asset(
+                assetPath,
+                width: 24.sp,
+                height: 24.sp,
+                fit: BoxFit.contain,
+              ),
             ),
             SizedBox(height: 4.h),
             Text(

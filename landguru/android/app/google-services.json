@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "406307965561",
+    "project_id": "landbuysell-b1fd9",
+    "storage_bucket": "landbuysell-b1fd9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:406307965561:android:25262912386c6ba6afe2a8",
+        "android_client_info": {
+          "package_name": "com.example.landguru"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuxMZUmzOorCpnM5nszom72RzUsUUV9Uc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

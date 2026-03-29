@@ -64,6 +64,13 @@ class ProfileController extends GetxController {
     isLoggingOut.value = true;
     final result = await ApiErrorHandler.call(
       () async {
+        if (Get.isRegistered<FcmService>()) {
+          await ApiErrorHandler.call(
+            () => Get.find<FcmService>().unregisterCurrentToken(),
+            showError: false,
+          );
+        }
+
         _authService.clearSession();
         _token.clear();
 

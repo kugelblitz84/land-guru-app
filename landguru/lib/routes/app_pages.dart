@@ -56,6 +56,7 @@ import '../modules/user/appointments/appointments_controller.dart';
 // Shared Notifications (used by both User and Agent)
 import '../modules/shared/notifications/notifications_view.dart';
 import '../modules/shared/notifications/notifications_controller.dart';
+import '../modules/shared/notifications/services/notifications_service.dart';
 
 // Create Buy Post
 import '../modules/user/properties/create_buy_post/create_buy_post_view.dart';
@@ -252,7 +253,9 @@ class AppPages {
       name: AppRoutes.NOTIFICATIONS,
       page: () => const NotificationsView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<NotificationsController>(() => NotificationsController());
+        Get.lazyPut<NotificationsController>(
+          () => NotificationsController(Get.find<NotificationsService>()),
+        );
       }),
     ),
 
@@ -261,9 +264,10 @@ class AppPages {
       name: AppRoutes.PROPERTY_DETAILS,
       page: () => const PropertyDetailsView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<PropertyDetailsController>(
-          () => PropertyDetailsController(),
-        );
+        if (Get.isRegistered<PropertyDetailsController>()) {
+          Get.delete<PropertyDetailsController>(force: true);
+        }
+        Get.put<PropertyDetailsController>(PropertyDetailsController());
       }),
     ),
     // Legacy routes - redirect to unified view
@@ -271,18 +275,20 @@ class AppPages {
       name: AppRoutes.PROPERTY_DETAILS_LOCKED,
       page: () => const PropertyDetailsView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<PropertyDetailsController>(
-          () => PropertyDetailsController(),
-        );
+        if (Get.isRegistered<PropertyDetailsController>()) {
+          Get.delete<PropertyDetailsController>(force: true);
+        }
+        Get.put<PropertyDetailsController>(PropertyDetailsController());
       }),
     ),
     GetPage(
       name: AppRoutes.PROPERTY_DETAILS_UNLOCKED,
       page: () => const PropertyDetailsView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<PropertyDetailsController>(
-          () => PropertyDetailsController(),
-        );
+        if (Get.isRegistered<PropertyDetailsController>()) {
+          Get.delete<PropertyDetailsController>(force: true);
+        }
+        Get.put<PropertyDetailsController>(PropertyDetailsController());
       }),
     ),
 
@@ -529,7 +535,9 @@ class AppPages {
       name: AppRoutes.AGENT_NOTIFICATIONS,
       page: () => const NotificationsView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<NotificationsController>(() => NotificationsController());
+        Get.lazyPut<NotificationsController>(
+          () => NotificationsController(Get.find<NotificationsService>()),
+        );
       }),
     ),
 

@@ -436,21 +436,23 @@ class PropertiesController extends GetxController {
 
   /// Navigate to property details (uses nested navigation to keep bottom nav visible)
   Future<void> goToPropertyDetails(PropertyListing property) async {
-    final detailsResult = await ApiErrorHandler.call(
-      () => _sellPostDetailsService.getSellPostById(property.id),
-    );
+    // PropertyDetailsView always fetches live data by id.
+    final args = <String, dynamic>{
+      'id': property.id,
+      'postId': property.postId,
+      'isLocked': property.isLocked,
+    };
 
-    if (!detailsResult.isSuccess || detailsResult.data == null) {
-      return;
-    }
-
-    // The unified PropertyDetailsView handles both locked and unlocked states
     NestedNavigationService.to(
       const PropertyDetailsView(),
-      arguments: property.toMap(),
+      id: 1,
+      arguments: args,
       binding: BindingsBuilder(() {
-        Get.lazyPut<PropertyDetailsController>(
-          () => PropertyDetailsController(),
+        if (Get.isRegistered<PropertyDetailsController>()) {
+          Get.delete<PropertyDetailsController>(force: true);
+        }
+        Get.put<PropertyDetailsController>(
+          PropertyDetailsController(initialArguments: args),
         );
       }),
     );

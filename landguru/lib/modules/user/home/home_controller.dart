@@ -5,6 +5,7 @@ import '../../../core/services/services.dart';
 import '../../../routes/app_routes.dart';
 import '../../shared/bottom_nav/user_bottom_nav_controller.dart';
 import 'models/featured_property.dart';
+import '../appointments/services/appointment_services.dart';
 import '../properties/my_posts/models/my_sell_posts_api_models.dart';
 import '../properties/for_sale/property_details/property_details_controller.dart';
 import '../properties/for_sale/property_details/property_details_view.dart';
@@ -14,6 +15,8 @@ class HomeController extends GetxController {
   final SellPostListingService _sellPostListingService =
       Get.find<SellPostListingService>();
   final MySellPostsService _mySellPostsService = Get.find<MySellPostsService>();
+  final AppointmentServices _appointmentServices =
+      Get.find<AppointmentServices>();
 
   static int _cachedActivePostsCount = 0;
   static int _cachedUpcomingMeetingsCount = 0;
@@ -53,6 +56,18 @@ class HomeController extends GetxController {
           tab: MySellPostTabValues.active,
         ),
       );
+      final upcomingMyRequestsResult = await ApiErrorHandler.call(
+        () => _appointmentServices.fetchUpcomingMyRequests(page: 1, limit: 1),
+        showError: false,
+      );
+      final upcomingVisitsResult = await ApiErrorHandler.call(
+        () => _appointmentServices.fetchUpcomingVisits(page: 1, limit: 1),
+        showError: false,
+      );
+      final upcomingAgentVisitsResult = await ApiErrorHandler.call(
+        () => _appointmentServices.fetchUpcomingAgentVisits(page: 1, limit: 1),
+        showError: false,
+      );
       final featuredResult = await ApiErrorHandler.call(
         () => _sellPostListingService.getSellPosts(page: 1, limit: 3),
       );
@@ -63,7 +78,15 @@ class HomeController extends GetxController {
         activePostsCount.value = 0;
       }
 
-      upcomingMeetingsCount.value = 0;
+      final upcomingResults = [
+        upcomingMyRequestsResult,
+        upcomingVisitsResult,
+        upcomingAgentVisitsResult,
+      ];
+
+      upcomingMeetingsCount.value = upcomingResults
+          .where((result) => result.isSuccess && result.data != null)
+          .fold<int>(0, (sum, result) => sum + result.data!.meta.total);
 
       if (featuredResult.isSuccess && featuredResult.data != null) {
         featuredProperties.assignAll(
@@ -129,12 +152,22 @@ class HomeController extends GetxController {
   void goToPropertyDetails(FeaturedProperty property) {
     // Navigate using nested navigation with arguments
     // The unified PropertyDetailsView handles both locked and unlocked states
+    final args = <String, dynamic>{
+      'id': property.id,
+      'postId': property.postId,
+      'isLocked': property.isLocked,
+    };
+
     NestedNavigationService.to(
       const PropertyDetailsView(),
-      arguments: property.toMap(),
+      id: 0,
+      arguments: args,
       binding: BindingsBuilder(() {
-        Get.lazyPut<PropertyDetailsController>(
-          () => PropertyDetailsController(),
+        if (Get.isRegistered<PropertyDetailsController>()) {
+          Get.delete<PropertyDetailsController>(force: true);
+        }
+        Get.put<PropertyDetailsController>(
+          PropertyDetailsController(initialArguments: args),
         );
       }),
     );

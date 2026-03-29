@@ -6,7 +6,7 @@ import '../models/sell_post_models.dart';
 
 /// Payment method constants.
 class PaymentMethods {
-  static const String sslCommerz = 'ssl_commerz';
+  static const String sslCommerz = 'sslcommerz';
   static const String mobileBanking = 'mobile_banking';
 }
 
@@ -636,12 +636,14 @@ class RequoteSubmittedDialog extends StatelessWidget {
 class PayAndActivateDialog extends StatefulWidget {
   final double totalPayable;
   final int quotationRevisions;
+  final List<QuotePaymentMethod> paymentMethods;
   final Future<void> Function(String method) onPay;
 
   const PayAndActivateDialog({
     super.key,
     required this.totalPayable,
     required this.quotationRevisions,
+    required this.paymentMethods,
     required this.onPay,
   });
 
@@ -650,6 +652,7 @@ class PayAndActivateDialog extends StatefulWidget {
     BuildContext context, {
     required double totalPayable,
     required int quotationRevisions,
+    required List<QuotePaymentMethod> paymentMethods,
     required Future<void> Function(String method) onPay,
   }) {
     return showDialog(
@@ -658,6 +661,7 @@ class PayAndActivateDialog extends StatefulWidget {
       builder: (context) => PayAndActivateDialog(
         totalPayable: totalPayable,
         quotationRevisions: quotationRevisions,
+        paymentMethods: paymentMethods,
         onPay: onPay,
       ),
     );
@@ -668,8 +672,17 @@ class PayAndActivateDialog extends StatefulWidget {
 }
 
 class _PayAndActivateDialogState extends State<PayAndActivateDialog> {
-  String _selectedMethod = PaymentMethods.sslCommerz;
+  late String _selectedMethod;
   bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final methods = _resolvedMethods;
+    _selectedMethod = methods.isNotEmpty
+        ? methods.first.code
+        : PaymentMethods.sslCommerz;
+  }
 
   Future<void> _handlePay() async {
     setState(() => _isProcessing = true);
@@ -677,6 +690,45 @@ class _PayAndActivateDialogState extends State<PayAndActivateDialog> {
     if (mounted) {
       setState(() => _isProcessing = false);
     }
+  }
+
+  List<QuotePaymentMethod> get _resolvedMethods {
+    if (widget.paymentMethods.isNotEmpty) {
+      return widget.paymentMethods;
+    }
+
+    return const [
+      QuotePaymentMethod(code: PaymentMethods.sslCommerz, name: 'SSL Commerz'),
+      QuotePaymentMethod(
+        code: PaymentMethods.mobileBanking,
+        name: 'Mobile Banking',
+      ),
+    ];
+  }
+
+  _MethodDisplay _resolveMethodDisplay(QuotePaymentMethod method) {
+    final code = method.code.toLowerCase().trim();
+    if (code == PaymentMethods.sslCommerz) {
+      return const _MethodDisplay(
+        title: 'SSL Commerz',
+        subtitle: 'All payment methods in one place',
+        icon: Icons.credit_card,
+      );
+    }
+
+    if (code == PaymentMethods.mobileBanking) {
+      return const _MethodDisplay(
+        title: 'Mobile Banking',
+        subtitle: 'Bkash, Nagad, Rocket',
+        icon: Icons.phone_android,
+      );
+    }
+
+    return _MethodDisplay(
+      title: method.name.isNotEmpty ? method.name : 'Payment Method',
+      subtitle: '',
+      icon: Icons.payment,
+    );
   }
 
   @override
@@ -763,23 +815,7 @@ class _PayAndActivateDialogState extends State<PayAndActivateDialog> {
 
               SizedBox(height: 12.h),
 
-              // SSL Commerz Option
-              _buildPaymentMethodOption(
-                PaymentMethods.sslCommerz,
-                'SSL Commerz',
-                'All payment methods in one place',
-                Icons.credit_card,
-              ),
-
-              SizedBox(height: 10.h),
-
-              // Mobile Banking Option
-              _buildPaymentMethodOption(
-                PaymentMethods.mobileBanking,
-                'Mobile Banking',
-                'Bkash, Nagad, Rocket',
-                Icons.phone_android,
-              ),
+              ..._buildPaymentMethodOptions(),
 
               SizedBox(height: 20.h),
 
@@ -956,6 +992,41 @@ class _PayAndActivateDialogState extends State<PayAndActivateDialog> {
       ),
     );
   }
+
+  List<Widget> _buildPaymentMethodOptions() {
+    final methods = _resolvedMethods;
+    final widgets = <Widget>[];
+
+    for (var index = 0; index < methods.length; index += 1) {
+      final display = _resolveMethodDisplay(methods[index]);
+      widgets.add(
+        _buildPaymentMethodOption(
+          methods[index].code,
+          display.title,
+          display.subtitle,
+          display.icon,
+        ),
+      );
+
+      if (index < methods.length - 1) {
+        widgets.add(SizedBox(height: 10.h));
+      }
+    }
+
+    return widgets;
+  }
+}
+
+class _MethodDisplay {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+
+  const _MethodDisplay({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
 }
 
 /// Payment Confirmed Dialog - Success confirmation after payment

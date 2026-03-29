@@ -27,6 +27,7 @@ class NotificationItem {
   final bool isRead;
   final bool isActionRequired;
   final String? relatedId;
+  final String rawType;
 
   NotificationItem({
     required this.id,
@@ -37,7 +38,36 @@ class NotificationItem {
     this.isRead = false,
     this.isActionRequired = false,
     this.relatedId,
+    this.rawType = NotificationTypes.general,
   });
+
+  factory NotificationItem.fromJson(Map<String, dynamic> json) {
+    final rawType = _readString(json, const ['type']).toUpperCase();
+    final createdAt = _readDateTime(json, const ['createdAt', 'updatedAt']);
+    final title = _readString(json, const ['title', 'messageTitle']);
+    final description = _readString(json, const [
+      'message',
+      'description',
+      'body',
+    ]);
+
+    return NotificationItem(
+      id: _readString(json, const ['id', '_id']),
+      title: title.isEmpty ? 'Notification' : title,
+      description: description.isEmpty ? title : description,
+      timeAgo: _formatTimeAgo(createdAt),
+      type: _mapRawTypeToUiType(rawType),
+      isRead: _readBool(json, const ['isRead', 'read']),
+      isActionRequired: _isActionRequired(rawType),
+      relatedId: _readString(json, const [
+        'referenceId',
+        'postId',
+        'assignmentId',
+        'taskId',
+      ]),
+      rawType: rawType,
+    );
+  }
 
   NotificationItem copyWith({
     String? id,
@@ -48,6 +78,7 @@ class NotificationItem {
     bool? isRead,
     bool? isActionRequired,
     String? relatedId,
+    String? rawType,
   }) {
     return NotificationItem(
       id: id ?? this.id,
@@ -58,6 +89,7 @@ class NotificationItem {
       isRead: isRead ?? this.isRead,
       isActionRequired: isActionRequired ?? this.isActionRequired,
       relatedId: relatedId ?? this.relatedId,
+      rawType: rawType ?? this.rawType,
     );
   }
 
@@ -116,5 +148,188 @@ class NotificationItem {
       default:
         return const Color(0xFF757575);
     }
+  }
+
+  static String _mapRawTypeToUiType(String rawType) {
+    if (rawType.contains('APPOINTMENT') || rawType.contains('VISIT')) {
+      return NotificationTypes.appointment;
+    }
+    if (rawType.contains('QUOTE')) {
+      return NotificationTypes.quote;
+    }
+    if (rawType.contains('ASSIGNED') || rawType.contains('TASK')) {
+      return NotificationTypes.offerPost;
+    }
+    if (rawType.contains('PROFILE') || rawType.contains('VERIFIED')) {
+      return NotificationTypes.profileVerified;
+    }
+    if (rawType.contains('POST') || rawType.contains('OFFER')) {
+      return NotificationTypes.newPost;
+    }
+    return NotificationTypes.general;
+  }
+
+  static bool _isActionRequired(String rawType) {
+    const actionTypes = <String>{
+      'POST_QUOTED',
+      'POST_REJECTED',
+      'NEW_ASSIGNMENT',
+      'TASK_ASSIGNED',
+      'ACTION_REQUIRED',
+      'PAYMENT_REQUIRED',
+    };
+
+    if (actionTypes.contains(rawType)) {
+      return true;
+    }
+
+    return rawType.contains('ASSIGNED') || rawType.contains('ACTION');
+  }
+
+  static String _readString(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final value = map[key];
+      if (value == null) {
+        continue;
+      }
+
+      final text = value.toString().trim();
+      if (text.isNotEmpty) {
+        return text;
+      }
+    }
+
+    return '';
+  }
+
+  static bool _readBool(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final value = map[key];
+      if (value is bool) {
+        return value;
+      }
+      if (value is String) {
+        final normalized = value.trim().toLowerCase();
+        if (normalized == 'true') {
+          return true;
+        }
+        if (normalized == 'false') {
+          return false;
+        }
+      }
+      if (value is num) {
+        return value != 0;
+      }
+    }
+
+    return false;
+  }
+
+  static DateTime _readDateTime(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final value = map[key];
+      if (value == null) {
+        continue;
+      }
+
+      if (value is DateTime) {
+        return value;
+      }
+
+      final parsed = DateTime.tryParse(value.toString());
+      if (parsed != null) {
+        return parsed.toLocal();
+      }
+    }
+
+    return DateTime.now();
+  }
+
+  static String _formatTimeAgo(DateTime dateTime) {
+    final diff = DateTime.now().difference(dateTime);
+    if (diff.inSeconds < 60) {
+      return 'Just now';
+    }
+    if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}m ago';
+    }
+    if (diff.inHours < 24) {
+      return '${diff.inHours}h ago';
+    }
+    if (diff.inDays < 7) {
+      return '${diff.inDays}d ago';
+    }
+    return '${(diff.inDays / 7).floor()}w ago';
+  }
+}
+
+class NotificationHistoryQuery {
+  const NotificationHistoryQuery({this.page = 1, this.limit = 20});
+
+  final int page;
+  final int limit;
+
+  Map<String, dynamic> toQueryParameters() {
+    return <String, dynamic>{'page': page, 'limit': limit};
+  }
+}
+
+class NotificationHistoryModel {
+  const NotificationHistoryModel({
+    required this.notifications,
+    required this.meta,
+  });
+
+  final List<NotificationItem> notifications;
+  final NotificationMeta meta;
+}
+
+class NotificationMeta {
+  const NotificationMeta({
+    required this.total,
+    required this.unreadCount,
+    required this.page,
+    required this.limit,
+    required this.totalPages,
+  });
+
+  factory NotificationMeta.fromJson(Map<String, dynamic> json) {
+    return NotificationMeta(
+      total: _asInt(json['total']),
+      unreadCount: _asInt(json['unreadCount']),
+      page: _asInt(json['page']),
+      limit: _asInt(json['limit']),
+      totalPages: _asInt(json['totalPages']),
+    );
+  }
+
+  final int total;
+  final int unreadCount;
+  final int page;
+  final int limit;
+  final int totalPages;
+
+  static int _asInt(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+}
+
+class RegisterFcmTokenPayload {
+  const RegisterFcmTokenPayload({
+    required this.fcmToken,
+    required this.deviceType,
+  });
+
+  final String fcmToken;
+  final String deviceType;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{'fcmToken': fcmToken, 'deviceType': deviceType};
   }
 }

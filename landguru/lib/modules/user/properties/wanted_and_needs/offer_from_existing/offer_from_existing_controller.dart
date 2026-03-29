@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../core/services/services.dart';
-import '../../../../../routes/app_routes.dart';
+import '../../for_sale/property_details/property_details_controller.dart';
+import '../../for_sale/property_details/property_details_view.dart';
 import '../models/models.dart';
 import '../../property_filter_criteria.dart';
 import '../../properties_controller.dart';
 import '../../widgets/distance_range_selector.dart';
 import '../../widgets/properties_filter_sheet.dart';
+import 'package:landguru/core/services/nested_navigation_service.dart';
 
 /// Controller for Offer from Existing Property
 /// Allows selecting from user's active listings to offer
@@ -241,14 +243,27 @@ class OfferFromExistingController extends GetxController {
   /// View property details
   /// Navigates to property details with offer flow flags
   void viewPropertyDetails(PropertyListing property) {
-    Get.toNamed(
-      AppRoutes.PROPERTY_DETAILS_UNLOCKED,
-      arguments: {
-        ...property.toMap(),
-        'pageTitle': 'Your Property Details',
-        'isOfferFromExisting': true,
-        'buyPostId': buyPostId.value,
-      },
+    final args = <String, dynamic>{
+      'id': property.id,
+      'postId': property.postId,
+      'isLocked': false,
+      'pageTitle': 'Your Property Details',
+      'isOfferFromExisting': true,
+      'buyPostId': buyPostId.value,
+    };
+
+    NestedNavigationService.to(
+      const PropertyDetailsView(),
+      id: 1,
+      arguments: args,
+      binding: BindingsBuilder(() {
+        if (Get.isRegistered<PropertyDetailsController>()) {
+          Get.delete<PropertyDetailsController>(force: true);
+        }
+        Get.put<PropertyDetailsController>(
+          PropertyDetailsController(initialArguments: args),
+        );
+      }),
     );
   }
 

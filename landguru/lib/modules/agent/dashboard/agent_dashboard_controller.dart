@@ -3,16 +3,15 @@ import '../../../core/services/api_error_handler.dart';
 import '../../../routes/app_routes.dart';
 import '../../shared/bottom_nav/agent_bottom_nav_controller.dart';
 import 'models/dashboard_models.dart';
+import 'services/agent_dashboard_service.dart';
 
 /// Controller for the Agent Dashboard/Home screen
 class AgentDashboardController extends GetxController {
+  final AgentDashboardService _dashboardService =
+      Get.find<AgentDashboardService>();
+
   static String _cachedAssignedLocation = '';
-  static DashboardStats _cachedStats = DashboardStats(
-    newRequests: 0,
-    activeJobs: 0,
-    doneThisMonth: 0,
-    currentMonth: 'Jan',
-  );
+  static DashboardStats _cachedStats = DashboardStats.empty();
   static List<SchedulingTask> _cachedRequiresScheduling = <SchedulingTask>[];
   static List<ScheduleItem> _cachedTodaySchedule = <ScheduleItem>[];
   static String _cachedTodayDateLabel = '';
@@ -25,12 +24,9 @@ class AgentDashboardController extends GetxController {
   final RxString assignedLocation = ''.obs;
 
   // Stats
-  final Rx<DashboardStats> stats = DashboardStats(
-    newRequests: 0,
-    activeJobs: 0,
-    doneThisMonth: 0,
-    currentMonth: 'Jan',
-  ).obs;
+  final Rx<DashboardStats> stats = DashboardStats.empty().obs;
+
+  final Rx<AgentDashboardData> dashboardData = AgentDashboardData.empty().obs;
 
   // Requires scheduling list
   final RxList<SchedulingTask> requiresScheduling = <SchedulingTask>[].obs;
@@ -75,9 +71,10 @@ class AgentDashboardController extends GetxController {
     }
 
     isLoading.value = true;
-    final result = await ApiErrorHandler.call(
-      () => Future<void>.delayed(const Duration(milliseconds: 500)),
-      errorTitle: 'Error',
+    final payload = const DashboardLoadPayload();
+    final result = await ApiErrorHandler.call<AgentDashboardData>(
+      () => _dashboardService.fetchDashboardData(payload: payload),
+      errorTitle: 'Dashboard',
       fallbackMessage: 'Failed to load dashboard data',
     );
     if (!result.isSuccess) {
@@ -85,81 +82,24 @@ class AgentDashboardController extends GetxController {
       return;
     }
 
-    // Mock data
-    assignedLocation.value =
-        'Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.';
-
-    stats.value = DashboardStats(
-      newRequests: 3,
-      activeJobs: 5,
-      doneThisMonth: 12,
-      currentMonth: 'Jan',
+    final data = result.data ?? AgentDashboardData.empty();
+    dashboardData.value = dashboardData.value.copyWith(
+      assignedLocation: data.assignedLocation,
+      stats: data.stats,
+      requiresScheduling: List<SchedulingTask>.from(data.requiresScheduling),
+      todaySchedule: List<ScheduleItem>.from(data.todaySchedule),
     );
 
-    // Mock requires scheduling data
-    requiresScheduling.value = [
-      SchedulingTask(
-        id: '1',
-        serviceId: '#SERV892-POST-1042',
-        serviceName: 'Pentagraph Map Verification',
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        acceptBefore: DateTime(2026, 1, 12, 12, 0),
-        assignedAt: DateTime.now().subtract(const Duration(minutes: 10)),
-      ),
-      SchedulingTask(
-        id: '2',
-        serviceId: '#SERV892-POST-1043',
-        serviceName: 'Ownership History Verification',
-        location:
-            'Block-C, Banani, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        acceptBefore: DateTime(2026, 1, 12, 14, 0),
-        assignedAt: DateTime.now().subtract(const Duration(minutes: 25)),
-      ),
-      SchedulingTask(
-        id: '3',
-        serviceId: '#SERV892-POST-1044',
-        serviceName: 'Document Verification',
-        location:
-            'Gulshan-2, Dhaka North City Corporation, Dhaka-1212, Dhaka, Bangladesh.',
-        acceptBefore: DateTime(2026, 1, 13, 10, 0),
-        assignedAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-    ];
+    assignedLocation.value = data.assignedLocation;
+    stats.value = stats.value.copyWith(
+      newRequests: data.stats.newRequests,
+      activeJobs: data.stats.activeJobs,
+      doneThisMonth: data.stats.doneThisMonth,
+      currentMonth: data.stats.currentMonth,
+    );
+    requiresScheduling.assignAll(data.requiresScheduling);
+    todaySchedule.assignAll(data.todaySchedule);
 
-    // Mock today's schedule
-    todaySchedule.value = [
-      ScheduleItem(
-        id: '1',
-        serviceId: '#SERV892-POST-1042',
-        time: '10:00 AM',
-        type: 'Client Meeting',
-        clientName: 'Farhan',
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        itemType: ScheduleItemTypes.clientMeeting,
-      ),
-      ScheduleItem(
-        id: '2',
-        serviceId: '#SERV892-POST-1042',
-        time: '12:30 PM',
-        type: 'Site Visit',
-        clientName: 'Farhan',
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        itemType: ScheduleItemTypes.siteVisit,
-      ),
-      ScheduleItem(
-        id: '3',
-        serviceId: '#SERV892-POST-1042',
-        time: '4:30 PM',
-        type: 'Site Visit',
-        clientName: 'Farhan',
-        location:
-            'Block-C, Banani, Banani Thana, Dhaka North City Corporation, Dhaka-1213, Dhaka, Bangladesh.',
-        itemType: ScheduleItemTypes.siteVisit,
-      ),
-    ];
     _syncCache();
     isLoading.value = false;
   }
@@ -221,6 +161,12 @@ class AgentDashboardController extends GetxController {
     stats.value = _cachedStats;
     requiresScheduling.assignAll(_cachedRequiresScheduling);
     todaySchedule.assignAll(_cachedTodaySchedule);
+    dashboardData.value = dashboardData.value.copyWith(
+      assignedLocation: _cachedAssignedLocation,
+      stats: _cachedStats,
+      requiresScheduling: List<SchedulingTask>.from(_cachedRequiresScheduling),
+      todaySchedule: List<ScheduleItem>.from(_cachedTodaySchedule),
+    );
     todayDateLabel.value = _cachedTodayDateLabel;
   }
 

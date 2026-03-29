@@ -158,7 +158,7 @@ class AgentDashboardContentView extends GetView<AgentDashboardController> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _SectionHeader(
-          title: 'Requires Scheduling',
+          title: 'Requires Accepting',
           actionText: 'See All',
           onActionTap: controller.viewAllRequiresScheduling,
         ),
@@ -175,7 +175,10 @@ class AgentDashboardContentView extends GetView<AgentDashboardController> {
                     separatorBuilder: (_, __) => SizedBox(width: 10.w),
                     itemBuilder: (context, index) {
                       final task = controller.requiresScheduling[index];
-                      return _SchedulingCard(task: task, onViewDetails: () {});
+                      return _SchedulingCard(
+                        task: task,
+                        onViewDetails: () => controller.goToTaskDetails(task),
+                      );
                     },
                   ),
                 ),
