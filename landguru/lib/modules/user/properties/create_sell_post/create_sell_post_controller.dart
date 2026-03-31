@@ -1124,6 +1124,7 @@ class CreateSellPostController extends GetxController {
               : '${propertyType.value?.label ?? 'Property'}',
           askingPrice: formattedAskingPrice,
           propertyType: propertyType.value,
+          imagePath: photos.isNotEmpty ? photos.first.path : null,
         ),
         onClose: () {
           Get.back(); // Close dialog

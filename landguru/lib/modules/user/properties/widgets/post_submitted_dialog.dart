@@ -211,29 +211,7 @@ class SellPostSubmittedDialog extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // Property image placeholder
-                  Container(
-                    width: 64.w,
-                    height: 64.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8.r),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.primary.withAlpha(80),
-                          AppColors.primaryDark.withAlpha(120),
-                        ],
-                      ),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.home,
-                        color: AppColors.white.withAlpha(200),
-                        size: 32.sp,
-                      ),
-                    ),
-                  ),
+                  _buildPropertyPreview(),
                   SizedBox(width: 12.w),
 
                   // Property info
@@ -326,6 +304,51 @@ class SellPostSubmittedDialog extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPropertyPreview() {
+    final imagePath = summary.imagePath?.trim();
+    final hasImage = imagePath != null && imagePath.isNotEmpty;
+
+    if (hasImage) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8.r),
+        child: Image.network(
+          imagePath,
+          width: 64.w,
+          height: 64.h,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildPropertyPlaceholder(),
+        ),
+      );
+    }
+
+    return _buildPropertyPlaceholder();
+  }
+
+  Widget _buildPropertyPlaceholder() {
+    return Container(
+      width: 64.w,
+      height: 64.h,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8.r),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withAlpha(80),
+            AppColors.primaryDark.withAlpha(120),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.home,
+          color: AppColors.white.withAlpha(200),
+          size: 32.sp,
         ),
       ),
     );

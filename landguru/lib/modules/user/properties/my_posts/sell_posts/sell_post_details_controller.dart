@@ -12,6 +12,13 @@ import 'widgets/quoted_popups.dart';
 /// Controller for Sell Post Details screen
 /// Handles all 4 states: Pending, Quoted, Active, Draft
 class SellPostDetailsController extends GetxController {
+  SellPostDetailsController({Map<String, dynamic>? initialArguments})
+    : _initialArguments = initialArguments == null
+          ? null
+          : Map<String, dynamic>.from(initialArguments);
+
+  final Map<String, dynamic>? _initialArguments;
+
   final SellPostDetailsService _sellPostDetailsService =
       Get.find<SellPostDetailsService>();
   final PaymentServices _paymentService = Get.find<PaymentServices>();
@@ -40,9 +47,15 @@ class SellPostDetailsController extends GetxController {
   }
 
   void _parseArguments() {
-    final args = Get.arguments;
-    if (args != null && args is Map<String, dynamic>) {
-      postId.value = args['postId'] ?? '';
+    final routeArgs = Get.arguments;
+    final args =
+        _initialArguments ??
+        (routeArgs is Map<String, dynamic>
+            ? Map<String, dynamic>.from(routeArgs)
+            : null);
+
+    if (args != null) {
+      postId.value = (args['postId'] ?? args['id'] ?? '').toString().trim();
 
       // Parse status
       final statusStr = args['status'] as String?;

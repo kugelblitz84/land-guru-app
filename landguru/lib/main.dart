@@ -30,6 +30,18 @@ Future<void> main() async {
       FirebaseMessaging.onBackgroundMessage(
         _firebaseMessagingBackgroundHandler,
       );
+      FirebaseMessaging.onMessage.listen((RemoteMessage remoteMessage) {
+        final String title =
+            remoteMessage.data['title'] ??
+            remoteMessage.notification?.title ??
+            'New Notification';
+        final String body =
+            remoteMessage.data['body'] ??
+            remoteMessage.notification?.body ??
+            'You have a new notification.';
+        // Handle foreground messages
+        Get.snackbar(title, body);
+      });
     }
   }
 

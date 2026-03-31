@@ -419,12 +419,22 @@ class MyPostsController extends GetxController {
         return;
       }
 
+      final args = <String, dynamic>{
+        'postId': post.id,
+        'id': post.id,
+        'status': post.status.name,
+      };
+
       NestedNavigationService.to(
         const SellPostDetailsView(),
-        arguments: {'postId': post.id, 'status': post.status.name},
+        id: 1,
+        arguments: args,
         binding: BindingsBuilder(() {
-          Get.lazyPut<SellPostDetailsController>(
-            () => SellPostDetailsController(),
+          if (Get.isRegistered<SellPostDetailsController>()) {
+            Get.delete<SellPostDetailsController>(force: true);
+          }
+          Get.put<SellPostDetailsController>(
+            SellPostDetailsController(initialArguments: args),
           );
         }),
       );

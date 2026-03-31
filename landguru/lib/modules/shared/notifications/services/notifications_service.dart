@@ -53,11 +53,11 @@ class NotificationsService extends GetxService {
   }
 
   Future<void> markAllAsRead() async {
-    await _apiClient.get('/notifications/read-all');
+    await _apiClient.patch('/notifications/read-all');
   }
 
   Future<void> markAsRead({required String notificationId}) async {
-    await _apiClient.get('/notifications/$notificationId/read');
+    await _apiClient.patch('/notifications/$notificationId/read');
   }
 
   Future<void> registerDeviceToken({

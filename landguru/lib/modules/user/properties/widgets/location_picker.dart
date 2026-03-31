@@ -42,7 +42,8 @@ class LocationData {
       wardNo: wardNo ?? this.wardNo,
       postalCode: postalCode ?? this.postalCode,
       fullAddress: fullAddress ?? this.fullAddress,
-      isFullAddressCustomized: isFullAddressCustomized ?? this.isFullAddressCustomized,
+      isFullAddressCustomized:
+          isFullAddressCustomized ?? this.isFullAddressCustomized,
     );
   }
 
@@ -205,7 +206,7 @@ class _LocationPickerState extends State<LocationPicker> {
     // Auto-update full address if location fields changed and user hasn't customized
     if (!_isUserEditing && widget.location.isFullAddressCustomized != true) {
       final newGeneratedAddress = widget.location.generatedAddress;
-      if (newGeneratedAddress.isNotEmpty && 
+      if (newGeneratedAddress.isNotEmpty &&
           _fullAddressController.text != newGeneratedAddress &&
           _fullAddressController.text == oldWidget.location.generatedAddress) {
         _fullAddressController.text = newGeneratedAddress;
@@ -223,15 +224,15 @@ class _LocationPickerState extends State<LocationPicker> {
   void _updateLocationAndAddress(LocationData newLocation) {
     // Generate address from location components
     final generatedAddress = newLocation.generatedAddress;
-    
+
     // If user hasn't customized the address, auto-populate
     if (widget.location.isFullAddressCustomized != true) {
       _fullAddressController.text = generatedAddress;
     }
-    
-    widget.onChanged(newLocation.copyWith(
-      fullAddress: _fullAddressController.text,
-    ));
+
+    widget.onChanged(
+      newLocation.copyWith(fullAddress: _fullAddressController.text),
+    );
   }
 
   @override
@@ -281,7 +282,11 @@ class _LocationPickerState extends State<LocationPicker> {
           hint: 'Select your upazila',
           onChanged: (value) {
             _updateLocationAndAddress(
-              widget.location.copyWith(upazila: value, pouroshova: null, wardNo: null),
+              widget.location.copyWith(
+                upazila: value,
+                pouroshova: null,
+                wardNo: null,
+              ),
             );
           },
         ),
@@ -295,7 +300,9 @@ class _LocationPickerState extends State<LocationPicker> {
           items: pouroshovas,
           hint: 'Select your Pouroshova/City Corp',
           onChanged: (value) {
-            _updateLocationAndAddress(widget.location.copyWith(pouroshova: value, wardNo: null));
+            _updateLocationAndAddress(
+              widget.location.copyWith(pouroshova: value, wardNo: null),
+            );
           },
         ),
         SizedBox(height: 16.h),
@@ -303,7 +310,7 @@ class _LocationPickerState extends State<LocationPicker> {
         // Ward No
         _buildDropdown(
           label: 'Ward No',
-          isRequired: false,
+          isRequired: true,
           value: widget.location.wardNo,
           items: wardNos,
           hint: 'Select Ward No',
@@ -330,20 +337,36 @@ class _LocationPickerState extends State<LocationPicker> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Postal Code',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-            color: AppColors.black,
-          ),
+        Row(
+          children: [
+            Text(
+              'Postal Code',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+                color: AppColors.black,
+              ),
+            ),
+            Text(
+              ' *',
+              style: TextStyle(fontSize: 14.sp, color: AppColors.error),
+            ),
+          ],
         ),
         SizedBox(height: 8.h),
         TextFormField(
           controller: _postalCodeController,
           keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Postal Code is required';
+            }
+            return null;
+          },
           onChanged: (value) {
-            _updateLocationAndAddress(widget.location.copyWith(postalCode: value));
+            _updateLocationAndAddress(
+              widget.location.copyWith(postalCode: value),
+            );
           },
           style: TextStyle(fontSize: 16.sp, color: AppColors.grey900),
           decoration: InputDecoration(
@@ -393,10 +416,12 @@ class _LocationPickerState extends State<LocationPicker> {
             _isUserEditing = true;
           },
           onChanged: (value) {
-            widget.onChanged(widget.location.copyWith(
-              fullAddress: value,
-              isFullAddressCustomized: true,
-            ));
+            widget.onChanged(
+              widget.location.copyWith(
+                fullAddress: value,
+                isFullAddressCustomized: true,
+              ),
+            );
           },
           style: TextStyle(fontSize: 16.sp, color: AppColors.grey900),
           decoration: InputDecoration(
@@ -474,5 +499,4 @@ class _LocationPickerState extends State<LocationPicker> {
       ],
     );
   }
-
 }
