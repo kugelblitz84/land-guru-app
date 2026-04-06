@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../core/services/nested_navigation_service.dart';
 import '../../../../../core/services/services.dart';
+import '../../../model/payment_models.dart';
+import '../../../model/unlock_features_models.dart';
+import '../../services/models/sell_post_details_payload.dart';
 import '../../services/models/sell_post_request_payloads.dart';
 import '../../wanted_and_needs/models/models.dart';
 import '../../widgets/metrics_conversion_row.dart';
@@ -20,6 +23,9 @@ class PropertyDetailsController extends GetxController {
       Get.find<SellPostDetailsService>();
   final BuyPostOfferService _buyPostOfferService =
       Get.find<BuyPostOfferService>();
+  final PaymentServices _paymentServices = Get.find<PaymentServices>();
+  final UnlockFeaturesService _unlockFeaturesService =
+      Get.find<UnlockFeaturesService>();
   final UserProfileStore? _userProfileStore =
       Get.isRegistered<UserProfileStore>()
       ? Get.find<UserProfileStore>()
@@ -30,6 +36,7 @@ class PropertyDetailsController extends GetxController {
   final RxBool isLocked = true.obs;
   final RxBool hasRequestedAppointment = false.obs;
   final RxBool isDescriptionExpanded = false.obs;
+  final RxBool isUnlocking = false.obs;
 
   // Offer from Existing flow state
   final RxBool isOfferFromExisting = false.obs;
@@ -39,6 +46,9 @@ class PropertyDetailsController extends GetxController {
   // Property data
   final Rxn<PropertyDetails> property = Rxn<PropertyDetails>();
   final RxString propertyId = ''.obs;
+  final Rxn<UnlockFeaturesSummary> unlockSummary = Rxn<UnlockFeaturesSummary>();
+  final RxnString propertyVideoUrl = RxnString();
+  final RxnString pentagraphMapUrl = RxnString();
 
   // Metrics/Land Unit state
   final Rx<LandUnit> selectedLandUnit = LandUnit.katha.obs;
@@ -87,75 +97,16 @@ class PropertyDetailsController extends GetxController {
   ];
 
   // Ownership history data (mock)
-  final List<OwnershipHistoryEntry> ownershipHistory = [
-    const OwnershipHistoryEntry(
-      name: 'Farhan',
-      period: '2022 - Present',
-      role: 'Current',
-      isCurrent: true,
-    ),
-    const OwnershipHistoryEntry(
-      name: 'Mihtab Azhar',
-      period: '2019 - 2022',
-      role: '',
-    ),
-    const OwnershipHistoryEntry(
-      name: 'Trusted Developer',
-      period: '',
-      role: '',
-    ),
-  ];
+  final List<OwnershipHistoryEntry> ownershipHistory = [];
 
-  // Legal documents (mock)
-  final List<String> legalDocuments = [
-    'Deed documents',
-    'Khatian documents',
-    'Tax documents',
-    'Ownership history documents',
-  ];
+  // Legal documents
+  final List<LegalDocumentItem> legalDocuments = [];
 
   // Service verifications (mock)
-  final List<ServiceVerification> serviceVerifications = [
-    const ServiceVerification(
-      serviceName: 'Ownership History Validation',
-      assignedAgent: 'Rahman',
-      agentRole: 'Lawyer',
-      isVerified: true,
-    ),
-    const ServiceVerification(
-      serviceName: 'Pentagraph Map Validation',
-      assignedAgent: 'Abrar',
-      agentRole: 'Land Assistant',
-      isVerified: true,
-    ),
-    const ServiceVerification(
-      serviceName: 'Deed Writing Service',
-      assignedAgent: 'Sohel',
-      agentRole: '',
-      isVerified: true,
-    ),
-    const ServiceVerification(
-      serviceName: 'Document Organization',
-      assignedAgent: 'Janangir',
-      agentRole: '',
-      isVerified: true,
-    ),
-    const ServiceVerification(
-      serviceName: 'Namjari/DCR Record',
-      assignedAgent: 'Forhad',
-      agentRole: 'Lawyer',
-      isVerified: true,
-    ),
-  ];
+  final List<ServiceVerification> serviceVerifications = [];
 
   // Due diligence checklist items (mock)
-  final List<String> dueDiligenceItems = [
-    'Fraud Detection Passed',
-    'Inheritance dispute analysis checked',
-    '4A digital ownership checked',
-    'Duplicate sale acquisition fail checked',
-    'Court case verification passed',
-  ];
+  final List<String> dueDiligenceItems = [];
 
   // User data for appointment form
   final RxString userName = ''.obs;
@@ -173,6 +124,17 @@ class PropertyDetailsController extends GetxController {
     }
 
     loadPropertyDetails();
+    loadUnlockFeaturesSummary();
+  }
+
+  String get unlockAmountDisplay {
+    final amount = unlockSummary.value?.unlockFeaturesAmount;
+    if (amount == null || amount <= 0) {
+      return '4000';
+    }
+
+    final isWhole = amount == amount.roundToDouble();
+    return isWhole ? amount.toInt().toString() : amount.toStringAsFixed(2);
   }
 
   @override
@@ -220,13 +182,33 @@ class PropertyDetailsController extends GetxController {
     }
   }
 
+  Future<void> loadUnlockFeaturesSummary({bool showError = false}) async {
+    final result = await ApiErrorHandler.call(
+      _unlockFeaturesService.getUnlockFeaturesSummary,
+      showError: showError,
+      errorTitle: 'Unlock Features',
+    );
+
+    if (!result.isSuccess || result.data == null) {
+      return;
+    }
+
+    unlockSummary.value = result.data;
+    isLocked.value = result.data!.isLimited;
+
+    final currentProperty = property.value;
+    if (currentProperty != null && currentProperty.isLocked != isLocked.value) {
+      property.value = currentProperty.copyWith(isLocked: isLocked.value);
+    }
+  }
+
   /// Load property route metadata from arguments.
   void _loadFromArguments(dynamic rawArgs) {
     if (rawArgs is! Map) {
       return;
     }
 
-    final args = Map<String, dynamic>.from(rawArgs as Map);
+    final args = Map<String, dynamic>.from(rawArgs);
     propertyId.value = _asString(args['id']);
     if (propertyId.value.isEmpty) {
       propertyId.value = _asString(args['sellPostId']);
@@ -266,6 +248,8 @@ class PropertyDetailsController extends GetxController {
   /// Load property details by id from API.
   Future<void> loadPropertyDetails() async {
     property.value = null;
+    propertyVideoUrl.value = null;
+    pentagraphMapUrl.value = null;
 
     if (propertyId.value.isEmpty) {
       Get.snackbar(
@@ -288,6 +272,12 @@ class PropertyDetailsController extends GetxController {
 
       final payload = result.data!;
       final photos = payload.photos;
+      propertyVideoUrl.value = payload.videoUrl;
+      pentagraphMapUrl.value = payload.pentagraphMapFiles.isNotEmpty
+          ? payload.pentagraphMapFiles.first
+          : null;
+
+      _hydrateUnlockedFeatureData(payload);
 
       property.value = PropertyDetails(
         id: payload.id,
@@ -305,7 +295,9 @@ class PropertyDetailsController extends GetxController {
         shareUnit: payload.shareUnit,
         distanceFromRoadMin: payload.distanceFromRoadMin,
         distanceFromRoadMax: payload.distanceFromRoadMax,
-        landShapeImageUrl: null,
+        landShapeImageUrl: payload.otherFiles.isNotEmpty
+            ? payload.otherFiles.first
+            : null,
         propertyPhotos: photos,
         postedBy: payload.sellerName,
         postedByAvatarUrl: payload.sellerAvatarUrl,
@@ -333,10 +325,187 @@ class PropertyDetailsController extends GetxController {
       case 'waterland':
       case 'water':
         return 'Water Land';
+      case 'commercial':
+        return 'Commercial';
+      case 'residential':
+        return 'Residential';
       case 'flat':
-      default:
         return 'Flat';
+      default:
+        return _toTitleCase(rawType);
     }
+  }
+
+  void _hydrateUnlockedFeatureData(SellPostDetailsPayload payload) {
+    dueDiligenceItems
+      ..clear()
+      ..addAll(
+        payload.riskChecklistItems
+            .map((item) {
+              final label = (item['label'] ?? '').toString().trim();
+              if (label.isEmpty) {
+                return '';
+              }
+              final isChecked = item['isChecked'] == true;
+              return isChecked ? label : '$label (Pending)';
+            })
+            .where((item) => item.isNotEmpty),
+      );
+
+    ownershipHistory
+      ..clear()
+      ..addAll(
+        payload.ownershipHistoryItems
+            .map((item) {
+              final name = (item['ownerName'] ?? item['name'] ?? '')
+                  .toString()
+                  .trim();
+              final period = (item['duration'] ?? item['period'] ?? '')
+                  .toString()
+                  .trim();
+              final isCurrent = item['isCurrent'] == true;
+
+              if (name.isEmpty) {
+                return const OwnershipHistoryEntry(
+                  name: '',
+                  period: '',
+                  role: '',
+                );
+              }
+
+              return OwnershipHistoryEntry(
+                name: name,
+                period: period,
+                role: isCurrent ? 'Current' : '',
+                isCurrent: isCurrent,
+              );
+            })
+            .where((entry) => entry.name.isNotEmpty),
+      );
+
+    serviceVerifications
+      ..clear()
+      ..addAll(
+        payload.selectedServiceItems
+            .map((item) {
+              final key = (item['serviceKey'] ?? '').toString().trim();
+              if (key.isEmpty) {
+                return const ServiceVerification(
+                  serviceName: '',
+                  assignedAgent: '',
+                  agentRole: '',
+                );
+              }
+
+              return ServiceVerification(
+                serviceName: _humanizeServiceKey(key),
+                assignedAgent: 'Assigned Agent',
+                agentRole: '',
+                isVerified: item['isVerified'] == true,
+              );
+            })
+            .where((item) => item.serviceName.isNotEmpty),
+      );
+
+    legalDocuments
+      ..clear()
+      ..addAll(_buildLegalDocumentItems(payload));
+  }
+
+  List<LegalDocumentItem> _buildLegalDocumentItems(
+    SellPostDetailsPayload payload,
+  ) {
+    final fromDocuments = payload.legalDocumentItems
+        .where(
+          (item) =>
+              item['category'] != 'VIDEO' &&
+              item['category'] != 'PENTAGRAPH_MAP',
+        )
+        .map((item) {
+          final category = item['category'] ?? 'OTHER';
+          final url = item['url'] ?? '';
+          if (url.isEmpty) {
+            return null;
+          }
+          return LegalDocumentItem(
+            title: '${_documentCategoryTitle(category)}: ${_fileName(url)}',
+            url: url,
+            category: category,
+          );
+        })
+        .whereType<LegalDocumentItem>()
+        .toList();
+
+    if (fromDocuments.isNotEmpty) {
+      return fromDocuments;
+    }
+
+    return [
+      ...payload.deedFiles.map(
+        (file) => LegalDocumentItem(
+          title: 'Deed: ${_fileName(file)}',
+          url: file,
+          category: 'DEED',
+        ),
+      ),
+      ...payload.khatianFiles.map(
+        (file) => LegalDocumentItem(
+          title: 'Khatian: ${_fileName(file)}',
+          url: file,
+          category: 'KHATIAN',
+        ),
+      ),
+      ...payload.otherFiles.map(
+        (file) => LegalDocumentItem(
+          title: 'Other: ${_fileName(file)}',
+          url: file,
+          category: 'OTHER',
+        ),
+      ),
+    ];
+  }
+
+  String _documentCategoryTitle(String category) {
+    switch (category.toUpperCase()) {
+      case 'DEED':
+        return 'Deed';
+      case 'KHATIAN':
+        return 'Khatian';
+      case 'PENTAGRAPH_MAP':
+        return 'Pentagraph Map';
+      case 'OTHER':
+        return 'Other';
+      default:
+        return _toTitleCase(category);
+    }
+  }
+
+  String _humanizeServiceKey(String key) {
+    return key
+        .split('_')
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
+
+  String _toTitleCase(String text) {
+    final normalized = text.trim();
+    if (normalized.isEmpty) {
+      return 'Property';
+    }
+
+    return normalized
+        .split(RegExp(r'[\s_]+'))
+        .where((word) => word.isNotEmpty)
+        .map((word) => '${word[0].toUpperCase()}${word.substring(1)}')
+        .join(' ');
+  }
+
+  String _fileName(String path) {
+    final normalized = path.replaceAll('\\', '/');
+    final parts = normalized.split('/');
+    final value = parts.isNotEmpty ? parts.last.trim() : '';
+    return value.isEmpty ? path : value;
   }
 
   /// Toggle description expanded
@@ -357,39 +526,119 @@ class PropertyDetailsController extends GetxController {
 
   /// Unlock property (pay to see owner details)
   Future<void> unlockProperty() async {
-    // TODO: Implement actual payment flow
-    // For now, simulate unlock by changing the locked state
+    if (isUnlocking.value || property.value == null) {
+      return;
+    }
 
-    if (property.value == null) return;
+    isUnlocking.value = true;
+    try {
+      final summaryResult = await ApiErrorHandler.call(
+        _unlockFeaturesService.getUnlockFeaturesSummary,
+        errorTitle: 'Unlock Features',
+      );
 
-    // Simply change the locked state - the view will react automatically
+      final summary = summaryResult.data;
+      if (!summaryResult.isSuccess || summary == null) {
+        return;
+      }
+
+      unlockSummary.value = summary;
+
+      if (!summary.isLimited) {
+        _applyUnlockedState();
+        return;
+      }
+
+      final sessionResult = await ApiErrorHandler.call(
+        _unlockFeaturesService.createUnlockFeaturesSession,
+        errorTitle: 'Payment Failed',
+      );
+
+      final session = sessionResult.data;
+      if (!sessionResult.isSuccess || session == null) {
+        return;
+      }
+
+      final sessionTranId = session.tranId?.trim() ?? '';
+      if (sessionTranId.isEmpty) {
+        Get.snackbar(
+          'Payment Failed',
+          'Missing transaction ID from payment session.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
+      final gatewayResult = await _paymentServices.openPaymentGateway(
+        session.gatewayUrl,
+      );
+
+      if (gatewayResult.status != PaymentGatewayStatus.success) {
+        return;
+      }
+
+      final statusResult = await ApiErrorHandler.call(
+        () => _unlockFeaturesService.getPaymentStatus(tranId: sessionTranId),
+        errorTitle: 'Payment Validation Failed',
+      );
+
+      final paymentStatus = statusResult.data;
+      if (!statusResult.isSuccess ||
+          paymentStatus == null ||
+          !paymentStatus.isValidated) {
+        Get.snackbar(
+          'Payment Pending',
+          'Payment is not validated yet. Please try again shortly.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
+      final confirmedTranId = (paymentStatus.tranId?.trim().isNotEmpty ?? false)
+          ? paymentStatus.tranId!.trim()
+          : sessionTranId;
+
+      final confirmResult = await ApiErrorHandler.call(
+        () => _unlockFeaturesService.confirmUnlockFeatures(
+          tranId: confirmedTranId,
+        ),
+        errorTitle: 'Unlock Confirmation Failed',
+      );
+
+      final access = confirmResult.data;
+      if (!confirmResult.isSuccess || access == null) {
+        return;
+      }
+
+      if (access.isLimited) {
+        Get.snackbar(
+          'Unlock Failed',
+          'Your account is still limited after confirmation.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
+      await loadUnlockFeaturesSummary(showError: false);
+      _applyUnlockedState();
+
+      Get.snackbar(
+        'Features Unlocked',
+        'All premium property features are now available.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isUnlocking.value = false;
+    }
+  }
+
+  void _applyUnlockedState() {
     isLocked.value = false;
-
-    // Update the property object as well
-    final updatedProperty = PropertyDetails(
-      id: property.value!.id,
-      postId: property.value!.postId,
-      title: property.value!.title,
-      price: property.value!.price,
-      propertyType: property.value!.propertyType,
-      postType: property.value!.postType,
-      isVerified: property.value!.isVerified,
-      isLocked: false,
-      description: property.value!.description,
-      location: property.value!.location,
-      sellableLandAmount: property.value!.sellableLandAmount,
-      plotSize: property.value!.plotSize,
-      distanceFromRoadMin: property.value!.distanceFromRoadMin,
-      distanceFromRoadMax: property.value!.distanceFromRoadMax,
-      landShapeImageUrl: property.value!.landShapeImageUrl,
-      propertyPhotos: property.value!.propertyPhotos,
-      postedBy: property.value!.postedBy,
-      postedByAvatarUrl: property.value!.postedByAvatarUrl,
-      postedByVerified: property.value!.postedByVerified,
-      postedTime: property.value!.postedTime,
-      hasRequestedAppointment: property.value!.hasRequestedAppointment,
-    );
-    property.value = updatedProperty;
+    final current = property.value;
+    if (current == null) {
+      return;
+    }
+    property.value = current.copyWith(isLocked: false);
   }
 
   /// Submit appointment request

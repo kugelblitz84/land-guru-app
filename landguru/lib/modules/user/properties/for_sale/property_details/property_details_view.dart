@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../widgets/info_banner.dart';
 import '../../widgets/metrics_conversion_row.dart';
@@ -197,11 +198,14 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
               SizedBox(height: 16.h),
 
               // Land Shape
-              const LandShapeSection(),
+              LandShapeSection(imageUrl: property.landShapeImageUrl),
               SizedBox(height: 12.h),
 
               // Property Photos
-              PropertyPhotosSection(photos: property.propertyPhotos),
+              PropertyPhotosSection(
+                photos: property.propertyPhotos,
+                onPhotoTap: (index) => _openPhotoViewer(property, index),
+              ),
               SizedBox(height: 12.h),
 
               // Features Section (Locked or Unlocked based on state)
@@ -261,22 +265,39 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
         ? property.propertyPhotos.first
         : null;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(24.r),
-        topRight: Radius.circular(24.r),
+    return GestureDetector(
+      onTap: property.propertyPhotos.isNotEmpty
+          ? () => _openPhotoViewer(property, 0)
+          : null,
+      child: ClipRRect(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24.r),
+          topRight: Radius.circular(24.r),
+        ),
+        child: SizedBox(
+          height: 220.h,
+          width: double.infinity,
+          child: imagePath != null
+              ? Image.network(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      _buildImagePlaceholder(),
+                )
+              : _buildImagePlaceholder(),
+        ),
       ),
-      child: SizedBox(
-        height: 220.h,
-        width: double.infinity,
-        child: imagePath != null
-            ? Image.network(
-                imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildImagePlaceholder(),
-              )
-            : _buildImagePlaceholder(),
+    );
+  }
+
+  void _openPhotoViewer(PropertyDetails property, int initialIndex) {
+    if (property.propertyPhotos.isEmpty) {
+      return;
+    }
+    Get.to(
+      () => FullscreenImageViewerPage(
+        photos: property.propertyPhotos,
+        initialIndex: initialIndex,
       ),
     );
   }
@@ -344,7 +365,9 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: controller.unlockProperty,
+              onPressed: controller.isUnlocking.value
+                  ? null
+                  : controller.unlockProperty,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.white,
@@ -360,7 +383,9 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
                   Icon(Icons.lock, size: 18.sp),
                   SizedBox(width: 8.w),
                   Text(
-                    'Unlock All Features at ৳4000',
+                    controller.isUnlocking.value
+                        ? 'Processing payment...'
+                        : 'Unlock All Features at ৳${controller.unlockAmountDisplay}',
                     style: TextStyle(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w600,
@@ -662,37 +687,90 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
   }
 
   Widget _buildVideoContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Divider(color: AppColors.grey200),
-        SizedBox(height: 8.h),
-        Container(
-          height: 180.h,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withAlpha(20),
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.primary.withAlpha(40)),
-          ),
-          child: Center(
+    return Obx(() {
+      final rawUrl = controller.propertyVideoUrl.value?.trim();
+      final hasVideo = rawUrl != null && rawUrl.isNotEmpty;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Divider(color: AppColors.grey200),
+          SizedBox(height: 8.h),
+          GestureDetector(
+            onTap: hasVideo ? () => _playVideo(rawUrl) : null,
             child: Container(
-              width: 64.w,
-              height: 64.h,
+              height: 180.h,
+              width: double.infinity,
               decoration: BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
+                color: hasVideo
+                    ? AppColors.primary.withAlpha(20)
+                    : AppColors.grey200,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(
+                  color: hasVideo
+                      ? AppColors.primary.withAlpha(40)
+                      : AppColors.grey300,
+                ),
               ),
-              child: Icon(
-                Icons.play_arrow_rounded,
-                color: AppColors.white,
-                size: 40.sp,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64.w,
+                      height: 64.h,
+                      decoration: BoxDecoration(
+                        color: hasVideo ? AppColors.primary : AppColors.grey500,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.play_arrow_rounded,
+                        color: AppColors.white,
+                        size: 40.sp,
+                      ),
+                    ),
+                    SizedBox(height: 10.h),
+                    Text(
+                      hasVideo ? 'Tap to play video' : 'No video available',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: hasVideo ? AppColors.primary : AppColors.grey600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
+  }
+
+  Future<void> _playVideo(String? rawUrl) async {
+    if (rawUrl == null || rawUrl.isEmpty) {
+      return;
+    }
+
+    Uri? uri = Uri.tryParse(rawUrl);
+    if (uri == null) {
+      Get.snackbar('Video', 'Invalid video URL');
+      return;
+    }
+
+    if (!uri.hasScheme) {
+      uri = Uri.tryParse('https://$rawUrl');
+    }
+    if (uri == null) {
+      Get.snackbar('Video', 'Invalid video URL');
+      return;
+    }
+
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched) {
+      Get.snackbar('Video', 'Unable to open video');
+    }
   }
 
   Widget _buildOwnershipHistoryContent() {
@@ -828,12 +906,17 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
-                  child: Text(
-                    doc,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
+                  child: GestureDetector(
+                    onTap: () => _openDocument(doc),
+                    child: Text(
+                      doc.title,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -854,51 +937,105 @@ class PropertyDetailsView extends GetView<PropertyDetailsController> {
     );
   }
 
+  Future<void> _openDocument(LegalDocumentItem doc) async {
+    final value = doc.url.trim();
+    if (value.isEmpty) {
+      return;
+    }
+
+    final category = doc.category.toUpperCase();
+    if (category == 'DEED' || category == 'KHATIAN') {
+      Get.to(() => FullscreenImageViewerPage(photos: [value], initialIndex: 0));
+      return;
+    }
+
+    Uri? uri = Uri.tryParse(value);
+    if (uri == null) {
+      Get.snackbar('Document', 'Invalid document URL');
+      return;
+    }
+
+    if (!uri.hasScheme) {
+      uri = Uri.tryParse('https://$value');
+    }
+
+    if (uri == null) {
+      Get.snackbar('Document', 'Invalid document URL');
+      return;
+    }
+
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched) {
+      Get.snackbar('Document', 'Unable to open document link');
+    }
+  }
+
   Widget _buildPentagraphMapContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Divider(color: AppColors.grey200),
-        SizedBox(height: 12.h),
-        Container(
-          height: 200.h,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppColors.primary.withAlpha(40)),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(11.r),
-            child: Image.asset(
-              'assets/images/Maps/PentaGraphMap.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.map_outlined,
-                        size: 48.sp,
-                        color: AppColors.grey400,
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        'Pentagraph Map',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: AppColors.grey500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+    return Obx(() {
+      final mapUrl = controller.pentagraphMapUrl.value?.trim();
+      final hasMapUrl = mapUrl != null && mapUrl.isNotEmpty;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Divider(color: AppColors.grey200),
+          SizedBox(height: 12.h),
+          GestureDetector(
+            onTap: hasMapUrl
+                ? () => _openDocument(
+                    LegalDocumentItem(
+                      title: 'Pentagraph Map',
+                      url: mapUrl,
+                      category: 'PENTAGRAPH_MAP',
+                    ),
+                  )
+                : null,
+            child: Container(
+              height: 200.h,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.primary.withAlpha(40)),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(11.r),
+                child: hasMapUrl
+                    ? Image.network(
+                        mapUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildPentagraphMapFallback();
+                        },
+                      )
+                    : _buildPentagraphMapFallback(),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      );
+    });
+  }
+
+  Widget _buildPentagraphMapFallback() {
+    return Image.asset(
+      'assets/images/Maps/PentaGraphMap.png',
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.map_outlined, size: 48.sp, color: AppColors.grey400),
+              SizedBox(height: 8.h),
+              Text(
+                'Pentagraph Map',
+                style: TextStyle(fontSize: 14.sp, color: AppColors.grey500),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

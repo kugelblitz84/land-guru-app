@@ -11,6 +11,7 @@ export '../../modules/user/properties/services/sell_post_listing_service.dart';
 export '../../modules/user/properties/services/buy_post_listing_service.dart';
 export '../../modules/user/properties/wanted_and_needs/services/buy_post_offer_service.dart';
 export '../../modules/user/services/payment_services.dart';
+export '../../modules/user/services/unlock_features_service.dart';
 export 'upload_service.dart';
 export '../../modules/shared/controllers/user_profile_store.dart';
 export 'user_type_service.dart';

@@ -428,7 +428,9 @@ class PropertyDetailRowWithAction extends StatelessWidget {
 
 /// Land Shape Section with Map image
 class LandShapeSection extends StatelessWidget {
-  const LandShapeSection({super.key});
+  final String? imageUrl;
+
+  const LandShapeSection({super.key, this.imageUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -462,36 +464,48 @@ class LandShapeSection extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(11.r),
-              child: Image.asset(
-                'assets/images/Maps/LandShape.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.map_outlined,
-                          size: 48.sp,
-                          color: AppColors.grey400,
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'Land Shape Map',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: AppColors.grey500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+              child: _buildLandShapeImage(),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLandShapeImage() {
+    final value = imageUrl?.trim() ?? '';
+    if (value.isEmpty) {
+      return _buildLandShapeFallback();
+    }
+
+    return Image.network(
+      value,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return _buildLandShapeFallback();
+      },
+    );
+  }
+
+  Widget _buildLandShapeFallback() {
+    return Image.asset(
+      'assets/images/Maps/LandShape.png',
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.map_outlined, size: 48.sp, color: AppColors.grey400),
+              SizedBox(height: 8.h),
+              Text(
+                'Land Shape Map',
+                style: TextStyle(fontSize: 14.sp, color: AppColors.grey500),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -499,8 +513,13 @@ class LandShapeSection extends StatelessWidget {
 /// Property Photos Section
 class PropertyPhotosSection extends StatelessWidget {
   final List<String> photos;
+  final ValueChanged<int>? onPhotoTap;
 
-  const PropertyPhotosSection({super.key, required this.photos});
+  const PropertyPhotosSection({
+    super.key,
+    required this.photos,
+    this.onPhotoTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -536,41 +555,47 @@ class PropertyPhotosSection extends StatelessWidget {
               itemBuilder: (context, index) {
                 if (index == photos.length) {
                   // More indicator
-                  return Container(
-                    width: 80.w,
-                    margin: EdgeInsets.only(right: 8.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(20),
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: AppColors.primaryLight),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '+8',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.grey600,
+                  return GestureDetector(
+                    onTap: photos.isNotEmpty ? () => onPhotoTap?.call(0) : null,
+                    child: Container(
+                      width: 80.w,
+                      margin: EdgeInsets.only(right: 8.w),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(color: AppColors.primaryLight),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '+${photos.length}',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.grey600,
+                          ),
                         ),
                       ),
                     ),
                   );
                 }
 
-                return Container(
-                  width: 80.w,
-                  margin: EdgeInsets.only(right: 8.w),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.r),
-                    child: Image.network(
-                      photos[index],
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.grey200,
-                          child: Icon(Icons.image, color: AppColors.grey400),
-                        );
-                      },
+                return GestureDetector(
+                  onTap: () => onPhotoTap?.call(index),
+                  child: Container(
+                    width: 80.w,
+                    margin: EdgeInsets.only(right: 8.w),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: Image.network(
+                        photos[index],
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppColors.grey200,
+                            child: Icon(Icons.image, color: AppColors.grey400),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 );
@@ -578,6 +603,100 @@ class PropertyPhotosSection extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class FullscreenImageViewerPage extends StatefulWidget {
+  final List<String> photos;
+  final int initialIndex;
+
+  const FullscreenImageViewerPage({
+    super.key,
+    required this.photos,
+    this.initialIndex = 0,
+  });
+
+  @override
+  State<FullscreenImageViewerPage> createState() =>
+      _FullscreenImageViewerPageState();
+}
+
+class _FullscreenImageViewerPageState extends State<FullscreenImageViewerPage> {
+  late final PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.photos.isEmpty) {
+      _currentIndex = 0;
+      _pageController = PageController(initialPage: 0);
+      return;
+    }
+    _currentIndex = widget.initialIndex.clamp(0, widget.photos.length - 1);
+    _pageController = PageController(initialPage: _currentIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.photos.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+        ),
+        body: Center(
+          child: Text(
+            'No photos available',
+            style: TextStyle(color: Colors.white, fontSize: 14.sp),
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text('${_currentIndex + 1}/${widget.photos.length}'),
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.photos.length,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        itemBuilder: (context, index) {
+          return InteractiveViewer(
+            minScale: 1,
+            maxScale: 4,
+            child: Center(
+              child: Image.network(
+                widget.photos[index],
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.broken_image,
+                    size: 64.sp,
+                    color: Colors.white54,
+                  );
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }

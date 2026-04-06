@@ -6,5 +6,6 @@ export '../../../models/property_details.dart';
 
 // Feature-specific models
 export 'locked_feature.dart';
+export 'legal_document_item.dart';
 export 'ownership_history_entry.dart';
 export 'service_verification.dart';

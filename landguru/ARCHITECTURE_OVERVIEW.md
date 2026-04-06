@@ -247,3 +247,51 @@ Text('login_title'.tr)
 | **Responsive** | flutter_screenutil |
 
 This architecture is highly scalable, supports multiple user roles (Brand, Influencer, Agency), and maintains clear separation of concerns.
+
+
+
+
+<!-- // -->
+
+
+
+I/flutter (27450): ║    {
+I/flutter (27450): ║         "id": "d8a483fa-b99e-4463-a33a-82dfd98b0e4d",
+I/flutter (27450): ║         "sellerId": "b55a76f7-58a1-4b41-ad92-d5e24db34aff",
+I/flutter (27450): ║         "seller": {
+I/flutter (27450): ║             "name": "Mr Masum",
+I/flutter (27450): ║             "avatar": "https://landbuyself-mediafiles.s3.ap-south-1.amazonaws.com/public/users/demo-user/1774350343487-scaled_1000
+I/flutter (27450): ║              000037.jpg"
+I/flutter (27450): ║             "isVerified": false
+I/flutter (27450): ║        }
+I/flutter (27450): ║         "status": "QUOTED",
+I/flutter (27450): ║         "title": "testing for notification 1",
+I/flutter (27450): ║         "description": "notification testing post 1",
+I/flutter (27450): ║         "propertyType": "Agro Land",
+I/flutter (27450): ║         "roadDistanceMin": null,
+I/flutter (27450): ║         "roadDistanceMax": null,
+I/flutter (27450): ║         "sellableAmount": 2,
+I/flutter (27450): ║         "sellableUnit": "Katha",
+I/flutter (27450): ║         "plotSize": 2,
+I/flutter (27450): ║         "plotUnit": "Katha",
+I/flutter (27450): ║         "isPropertyShareable": false,
+I/flutter (27450): ║         "shareAmount": null,
+I/flutter (27450): ║         "shareUnit": null,
+I/flutter (27450): ║         "askingPricePerUnit": 2000,
+I/flutter (27450): ║         "askingPrice": 4000,
+I/flutter (27450): ║         "validatedPrice": 45000000,
+I/flutter (27450): ║         "validatedPricePerUnit": 9000000,
+I/flutter (27450): ║         "mandatoryServiceFee": null,
+I/flutter (27450): ║         "optionalServiceFee": null,
+I/flutter (27450): ║         "rejectionReason": null,
+I/flutter (27450): ║         "photos": [
+I/flutter (27450): ║                 https://landbuyself-mediafiles.s3.ap-south-1.amazonaws.com/public/users/demo-user/1774930271236-IMG_20260331_091150.jpg
+I/flutter (27450): ║         ],
+I/flutter (27450): ║         "lastCompletedStep": 3,
+I/flutter (27450): ║         "isResell": false,
+I/flutter (27450): ║         "previousTransactionId": null,
+I/flutter (27450): ║         "createdAt": "2026-03-31T04:11:08.293Z",
+I/flutter (27450): ║         "updatedAt": "2026-03-31T04:15:40.949Z"
+I/flutter (27450): ║    }
+
+<!--  -->

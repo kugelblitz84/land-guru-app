@@ -22,6 +22,8 @@ class SellPostDetailsPayload {
 
   String get location =>
       raw['fullAddress']?.toString() ??
+      _addressMap?['fullAddress']?.toString() ??
+      _addressMap?['address']?.toString() ??
       raw['address']?.toString() ??
       'Location not specified';
 
@@ -60,7 +62,9 @@ class SellPostDetailsPayload {
   }
 
   String? get videoUrl {
-    final value = raw['videoUrl']?.toString().trim();
+    final value =
+        raw['videoUrl']?.toString().trim() ??
+        _firstDocumentByCategory('VIDEO')?.toString().trim();
     if (value == null || value.isEmpty) return null;
     return value;
   }
@@ -76,41 +80,100 @@ class SellPostDetailsPayload {
   }
 
   List<String> get deedFiles {
-    final list = raw['deedFiles'];
-    if (list is! List) return const [];
-    return list
-        .whereType<String>()
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList();
+    return _readStringList(
+      raw['deedFiles'],
+      fallback: _documentsByCategory('DEED'),
+    );
   }
 
   List<String> get khatianFiles {
-    final list = raw['khatianFiles'];
-    if (list is! List) return const [];
-    return list
-        .whereType<String>()
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList();
+    return _readStringList(
+      raw['khatianFiles'],
+      fallback: _documentsByCategory('KHATIAN'),
+    );
   }
 
   List<String> get otherFiles {
-    final list = raw['otherFiles'];
-    if (list is! List) return const [];
+    return _readStringList(
+      raw['otherFiles'],
+      fallback: _documentsByCategory('OTHER'),
+    );
+  }
+
+  List<String> get pentagraphMapFiles {
+    return _documentsByCategory('PENTAGRAPH_MAP');
+  }
+
+  List<String> get selectedServices {
+    final fromLegacy = _readStringList(raw['selectedServices']);
+    if (fromLegacy.isNotEmpty) {
+      return fromLegacy;
+    }
+
+    final list = raw['selectedServiceslist'];
+    if (list is! List) {
+      return const [];
+    }
+
     return list
-        .whereType<String>()
-        .map((item) => item.trim())
+        .whereType<Map>()
+        .map((item) => item['serviceKey']?.toString().trim() ?? '')
         .where((item) => item.isNotEmpty)
         .toList();
   }
 
-  List<String> get selectedServices {
-    final list = raw['selectedServices'];
-    if (list is! List) return const [];
+  List<Map<String, dynamic>> get selectedServiceItems {
+    final list = raw['selectedServiceslist'];
+    if (list is! List) {
+      return const [];
+    }
     return list
-        .whereType<String>()
-        .map((item) => item.trim())
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
+  List<Map<String, dynamic>> get riskChecklistItems {
+    final list = raw['riskChecklist'];
+    if (list is! List) {
+      return const [];
+    }
+    return list
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
+  List<Map<String, dynamic>> get ownershipHistoryItems {
+    final list = raw['ownershipHistory'];
+    if (list is! List) {
+      return const [];
+    }
+    return list
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
+  List<Map<String, String>> get legalDocumentItems {
+    final docs = raw['documents'];
+    if (docs is! List) {
+      return const [];
+    }
+
+    return docs
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .map((item) {
+          final category =
+              (item['category']?.toString().trim().toUpperCase() ?? 'OTHER');
+          final fileUrl = item['fileUrl']?.toString().trim() ?? '';
+          if (fileUrl.isEmpty) {
+            return const <String, String>{};
+          }
+
+          return <String, String>{'category': category, 'url': fileUrl};
+        })
         .where((item) => item.isNotEmpty)
         .toList();
   }
@@ -154,6 +217,56 @@ class SellPostDetailsPayload {
     if (value is Map<String, dynamic>) return value;
     if (value is Map) return Map<String, dynamic>.from(value);
     return null;
+  }
+
+  Map<String, dynamic>? get _addressMap {
+    final value = raw['address'];
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  List<String> _readStringList(dynamic rawList, {List<String>? fallback}) {
+    if (rawList is! List) {
+      return fallback ?? const [];
+    }
+
+    final values = rawList
+        .whereType<String>()
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+
+    if (values.isNotEmpty) {
+      return values;
+    }
+    return fallback ?? const [];
+  }
+
+  List<String> _documentsByCategory(String category) {
+    final docs = raw['documents'];
+    if (docs is! List) {
+      return const [];
+    }
+
+    return docs
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .where(
+          (item) =>
+              item['category']?.toString().trim().toUpperCase() == category,
+        )
+        .map((item) => item['fileUrl']?.toString().trim() ?? '')
+        .where((url) => url.isNotEmpty)
+        .toList();
+  }
+
+  String? _firstDocumentByCategory(String category) {
+    final docs = _documentsByCategory(category);
+    if (docs.isEmpty) {
+      return null;
+    }
+    return docs.first;
   }
 
   static String _fallbackPostId(String id) {
