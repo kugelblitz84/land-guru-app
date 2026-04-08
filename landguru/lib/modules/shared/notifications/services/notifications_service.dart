@@ -39,6 +39,13 @@ class NotificationsService extends GetxService {
     );
   }
 
+  Future<int> fetchUnreadNotificationCount() async {
+    final history = await fetchNotificationHistory(
+      query: const NotificationHistoryQuery(page: 1, limit: 1),
+    );
+    return history.meta.unreadCount;
+  }
+
   Future<NotificationItem?> fetchNotificationById({
     required String notificationId,
   }) async {

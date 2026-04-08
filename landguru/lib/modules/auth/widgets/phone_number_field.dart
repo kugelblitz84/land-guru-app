@@ -67,33 +67,14 @@ class PhoneNumberField extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Bangladesh flag
-                    Container(
-                      width: 24.w,
-                      height: 16.h,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(2.r),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(2.r),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Container(color: const Color(0xFF006A4E)),
-                            ),
-                            Container(
-                              width: 8.w,
-                              height: 8.w,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF42A41),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(color: const Color(0xFF006A4E)),
-                            ),
-                          ],
-                        ),
+                    // Bangladesh flag from assets
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2.r),
+                      child: Image.asset(
+                        'assets/Logos/Bangladesh.png',
+                        width: 24.w,
+                        height: 16.h,
+                        fit: BoxFit.cover,
                       ),
                     ),
                     SizedBox(width: 8.w),

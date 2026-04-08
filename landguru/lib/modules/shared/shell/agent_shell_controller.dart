@@ -2,11 +2,13 @@ import 'package:get/get.dart';
 import '../models/agent_system_model.dart';
 import '../../../core/services/api_error_handler.dart';
 import '../controllers/agent_profile_store.dart';
+import '../notifications/services/notifications_service.dart';
 
 /// Controller for the agent shell - manages shared state across bottom nav tabs
 /// This controller persists across all tabs and provides shared functionality
 class AgentShellController extends GetxController {
   final _profileStore = Get.find<AgentProfileStore>();
+  final _notificationsService = Get.find<NotificationsService>();
 
   Rx<AgentProfileStateModel> get profileModel => _profileStore.profileModel;
   RxBool get isLoading => _profileStore.isLoading;
@@ -25,10 +27,7 @@ class AgentShellController extends GetxController {
   void onReady() {
     super.onReady();
     _profileStore.hydrateFromSession();
-    ApiErrorHandler.call(
-      () => _profileStore.refreshProfile(showError: false),
-      showError: false,
-    );
+    loadAgentData();
   }
 
   /// Load agent data from API/storage
@@ -37,6 +36,8 @@ class AgentShellController extends GetxController {
       () => _profileStore.refreshProfile(showError: false),
       showError: false,
     );
+
+    await _syncUnreadNotificationCount();
   }
 
   /// Refresh agent data
@@ -45,6 +46,8 @@ class AgentShellController extends GetxController {
       () => _profileStore.refreshProfile(forceRefresh: true, showError: false),
       showError: false,
     );
+
+    await _syncUnreadNotificationCount();
   }
 
   /// Update agent name
@@ -67,5 +70,16 @@ class AgentShellController extends GetxController {
   /// Clear notification badge
   void clearNotificationBadge() {
     _profileStore.clearUnreadCount();
+  }
+
+  Future<void> _syncUnreadNotificationCount() async {
+    final unreadResult = await ApiErrorHandler.call<int>(
+      () => _notificationsService.fetchUnreadNotificationCount(),
+      showError: false,
+    );
+
+    if (unreadResult.isSuccess && unreadResult.data != null) {
+      _profileStore.updateUnreadCount(unreadResult.data!);
+    }
   }
 }

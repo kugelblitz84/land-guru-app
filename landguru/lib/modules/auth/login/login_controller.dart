@@ -41,12 +41,15 @@ class LoginController extends GetxController {
   Future<void> login() async {
     if (!formKey.currentState!.validate()) return;
 
+    final normalizedPhone = _normalizeBdPhone(phoneController.text);
+    phoneController.text = normalizedPhone;
+
     isLoading.value = true;
 
     final result = await ApiErrorHandler.call(
       () => _authService.login(
         payload: LoginPayload(
-          phone: phoneController.text.trim(),
+          phone: normalizedPhone,
           password: passwordController.text,
         ),
       ),
@@ -81,6 +84,17 @@ class LoginController extends GetxController {
   /// Navigate to signup
   void goToSignup() {
     Get.toNamed(AppRoutes.SIGNUP_PHONE);
+  }
+
+  String _normalizeBdPhone(String input) {
+    final digits = input.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      return '';
+    }
+    if (digits.startsWith('0')) {
+      return digits;
+    }
+    return '0$digits';
   }
 
   @override

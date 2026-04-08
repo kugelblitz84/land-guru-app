@@ -7,7 +7,10 @@ import 'package:get/get.dart';
 import '../../modules/shared/notifications/models/notification_model.dart';
 import '../../modules/shared/notifications/notifications_controller.dart';
 import '../../modules/shared/notifications/services/notifications_service.dart';
+import '../../modules/shared/controllers/user_profile_store.dart';
+import '../../modules/shared/controllers/agent_profile_store.dart';
 import '../../routes/app_routes.dart';
+import 'api_error_handler.dart';
 import 'auth_service.dart';
 import 'user_type_service.dart';
 
@@ -127,6 +130,7 @@ class FcmService extends GetxService {
     if (Get.isRegistered<NotificationsController>()) {
       unawaited(Get.find<NotificationsController>().refresh());
     }
+    unawaited(_syncUnreadCountFromBackend());
 
     final title =
         message.notification?.title ?? message.data['title']?.toString();
@@ -142,6 +146,43 @@ class FcmService extends GetxService {
       snackPosition: SnackPosition.TOP,
       duration: const Duration(seconds: 3),
     );
+  }
+
+  Future<void> _syncUnreadCountFromBackend() async {
+    if (!_authService.isLoggedIn) {
+      return;
+    }
+
+    final unreadResult = await ApiErrorHandler.call<int>(
+      () => _notificationsService.fetchUnreadNotificationCount(),
+      showError: false,
+    );
+
+    if (!unreadResult.isSuccess || unreadResult.data == null) {
+      return;
+    }
+
+    final count = unreadResult.data!;
+    if (_userTypeService.isAgent) {
+      if (Get.isRegistered<AgentProfileStore>()) {
+        Get.find<AgentProfileStore>().updateUnreadCount(count);
+      }
+      return;
+    }
+
+    if (_userTypeService.isUser) {
+      if (Get.isRegistered<UserProfileStore>()) {
+        Get.find<UserProfileStore>().updateUnreadCount(count);
+      }
+      return;
+    }
+
+    if (Get.isRegistered<UserProfileStore>()) {
+      Get.find<UserProfileStore>().updateUnreadCount(count);
+    }
+    if (Get.isRegistered<AgentProfileStore>()) {
+      Get.find<AgentProfileStore>().updateUnreadCount(count);
+    }
   }
 
   void _handleNotificationTap(RemoteMessage message) {
