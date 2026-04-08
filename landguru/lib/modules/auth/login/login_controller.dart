@@ -42,7 +42,6 @@ class LoginController extends GetxController {
     if (!formKey.currentState!.validate()) return;
 
     final normalizedPhone = _normalizeBdPhone(phoneController.text);
-    phoneController.text = normalizedPhone;
 
     isLoading.value = true;
 
