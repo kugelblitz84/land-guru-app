@@ -11,6 +11,7 @@
 - Shared logic across modules should go into a shared module/submodule.
 - Cross-cutting services/models/controllers go in Core.
 
+
 ## Code Quality Rules
 
 - Avoid redundant wrapper methods.
@@ -21,4 +22,9 @@
 - If a method only forwards parameters without modification, it should be removed.
 - Redundant abstraction is not allowed.
 - Wrapper methods must only exist if they introduce transformation or domain logic.
+- use the direct values from the backend response.
+refer to the postman sollection json for the variable names.
+- Do not use list of keys/guesses to read from the json, only use the documented variable names from the postman collection json.
+- Only use backend data to hydrate existing UI models, do not create new models or UI elements based on the backend response. 
+- IMPORTANT: if the json does not contain the proper variable names implement a single variable name and place comment stating ("Postman does not contain the proper variable name") and IMMEDIATELY add comments and report back such empty states to the user.
 - Direct delegation without logic is considered a violation.

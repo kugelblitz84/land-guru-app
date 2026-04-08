@@ -37,19 +37,16 @@ class AgentDashboardService extends GetxService {
     final root = _extractRootMap(response.data);
     final dataMap = _extractMap(root['data']);
 
-    return _readString(dataMap, ['assignedLocation', 'location']) ?? '';
+    return _readString(dataMap, 'assignedLocation') ?? '';
   }
 
   Future<DashboardStats> fetchDashboardStats() async {
     final response = await _apiClient.get('/agents/stats');
     final root = _extractRootMap(response.data);
 
-    final dataMap = _extractMap(root['data']);
-    final statsMap = _extractMap(dataMap['stats']);
+    final statsMap = _extractMap(root['stats']);
 
-    final parsed = DashboardStats.fromJson(
-      statsMap.isNotEmpty ? statsMap : dataMap,
-    );
+    final parsed = DashboardStats.fromJson(statsMap);
 
     final fallbackMonth = parsed.currentMonth.trim().isEmpty
         ? _monthLabel(DateTime.now())
@@ -67,13 +64,7 @@ class AgentDashboardService extends GetxService {
     );
 
     final root = _extractRootMap(response.data);
-    final list = _extractList(root, [
-      'data',
-      'tasks',
-      'items',
-      'list',
-      'assignments',
-    ]);
+    final list = _extractList(root, 'data');
 
     return list
         .whereType<Map>()
@@ -85,7 +76,7 @@ class AgentDashboardService extends GetxService {
     final response = await _apiClient.get('/agents/dashboard/today-schedule');
     final root = _extractRootMap(response.data);
 
-    final list = _extractList(root, ['data', 'schedule', 'items']);
+    final list = _extractList(root, 'data');
 
     return list
         .whereType<Map>()
@@ -124,18 +115,16 @@ class AgentDashboardService extends GetxService {
     return <String, dynamic>{};
   }
 
-  List<dynamic> _extractList(Map<String, dynamic> root, List<String> keys) {
-    for (final key in keys) {
-      final value = root[key];
-      if (value is List) {
-        return value;
-      }
-      if (value is Map) {
-        final nested = _extractMap(value);
-        final nestedData = nested['data'];
-        if (nestedData is List) {
-          return nestedData;
-        }
+  List<dynamic> _extractList(Map<String, dynamic> root, String key) {
+    final value = root[key];
+    if (value is List) {
+      return value;
+    }
+    if (value is Map) {
+      final nested = _extractMap(value);
+      final nestedData = nested['data'];
+      if (nestedData is List) {
+        return nestedData;
       }
     }
 
@@ -147,12 +136,9 @@ class AgentDashboardService extends GetxService {
     return const <dynamic>[];
   }
 
-  String? _readString(Map<String, dynamic> map, List<String> keys) {
-    for (final key in keys) {
-      final value = map[key];
-      if (value == null) {
-        continue;
-      }
+  String? _readString(Map<String, dynamic> map, String key) {
+    final value = map[key];
+    if (value != null) {
       final text = value.toString().trim();
       if (text.isNotEmpty) {
         return text;

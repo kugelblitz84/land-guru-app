@@ -45,6 +45,7 @@ dependencies:
   webview_flutter: ^4.10.0
   firebase_core: ^4.6.0
   firebase_messaging: ^16.0.3
+  video_player: ^2.10.0
 
 dev_dependencies:
   flutter_test:
@@ -80,6 +81,7 @@ flutter:
     - assets/Logos/Bottom_Navigation_Bar/
     - assets/Logos/Bottom_Navigation_Bar/User/
     - assets/Logos/Bottom_Navigation_Bar/Agent/
+    - assets/Logos/My Deals/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

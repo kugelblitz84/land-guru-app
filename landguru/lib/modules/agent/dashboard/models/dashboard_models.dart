@@ -25,9 +25,9 @@ class DashboardLoadPayload {
 
   factory DashboardLoadPayload.fromJson(Map<String, dynamic> json) {
     return DashboardLoadPayload(
-      tasksTab: _readString(json, ['tasksTab', 'tab']) ?? 'NEW',
-      tasksPage: _readInt(json, ['tasksPage', 'page']) ?? 1,
-      tasksLimit: _readInt(json, ['tasksLimit', 'limit']) ?? 5,
+      tasksTab: _readString(json, 'tasksTab') ?? 'NEW',
+      tasksPage: _readInt(json, 'tasksPage') ?? 1,
+      tasksLimit: _readInt(json, 'tasksLimit') ?? 5,
     );
   }
 
@@ -86,12 +86,12 @@ class AgentDashboardData {
 
   factory AgentDashboardData.fromJson(Map<String, dynamic> json) {
     return AgentDashboardData(
-      assignedLocation: _readString(json, ['assignedLocation']) ?? '',
+      assignedLocation: _readString(json, 'assignedLocation') ?? '',
       stats: DashboardStats.fromJson(
-        _readMap(json, ['stats']) ?? const <String, dynamic>{},
+        _readMap(json, 'stats') ?? const <String, dynamic>{},
       ),
       requiresScheduling:
-          _readList(json, ['requiresScheduling'])
+          _readList(json, 'requiresScheduling')
               ?.whereType<Map>()
               .map(
                 (entry) =>
@@ -100,7 +100,7 @@ class AgentDashboardData {
               .toList(growable: false) ??
           const <SchedulingTask>[],
       todaySchedule:
-          _readList(json, ['todaySchedule'])
+          _readList(json, 'todaySchedule')
               ?.whereType<Map>()
               .map(
                 (entry) =>
@@ -163,32 +163,29 @@ class SchedulingTask {
 
   factory SchedulingTask.fromJson(Map<String, dynamic> json) {
     final assignedAt =
-        _readDateTime(json, ['assignedAt', 'createdAt', 'created_at']) ??
-        _tryParseRelativeTime(_readString(json, ['assignedAt', 'createdAt'])) ??
+        _readDateTime(json, 'assignedAt') ??
+        _readDateTime(json, 'createdAt') ??
+        _tryParseRelativeTime(_readString(json, 'assignedAt')) ??
         DateTime.now();
 
     final acceptBefore =
-        _readDateTime(json, [
-          'acceptBefore',
-          'acceptDeadline',
-          'accept_before',
-        ]) ??
+        _readDateTime(json, 'acceptBefore') ??
+        _readDateTime(json, 'acceptDeadline') ??
         DateTime.now().add(const Duration(hours: 2));
 
     return SchedulingTask(
-      id: _readString(json, ['id', 'assignmentId', 'assignment_id']) ?? '',
-      serviceId: _readString(json, ['serviceId', 'displayId']) ?? '',
+      id: _readString(json, 'assignmentId') ?? '',
+      // NOTE: Requires-accepting sample does not include serviceId/displayId.
+      // Keep empty until backend provides canonical service id field.
+        serviceId: _readString(json, 'serviceId') ?? '',
       serviceName:
-          _readString(json, ['serviceName', 'title']) ??
-          _readString(
-            _readMap(json, ['service']) ?? const <String, dynamic>{},
-            ['name'],
-          ) ??
+          _readString(json, 'serviceName') ??
           '',
-      location: _readString(json, ['location']) ?? '',
+        location: _readString(json, 'location') ?? '',
       acceptBefore: acceptBefore,
       assignedAt: assignedAt,
-      isNewRequest: _readBool(json, ['isNewRequest']) ?? true,
+      // NOTE: No explicit isNewRequest in Postman sample for /agents/agent-task.
+      isNewRequest: _readBool(json, 'isNewRequest') ?? true,
     );
   }
 
@@ -291,14 +288,14 @@ class ScheduleItem {
   }
 
   factory ScheduleItem.fromJson(Map<String, dynamic> json) {
-    final title = _readString(json, ['type', 'title']) ?? 'Schedule';
+    final title = _readString(json, 'title') ?? 'Schedule';
     return ScheduleItem(
-      id: _readString(json, ['id', 'assignmentId', 'assignment_id']) ?? '',
-      serviceId: _readString(json, ['serviceId']) ?? '',
-      time: _readString(json, ['time']) ?? '',
+      id: _readString(json, 'assignmentId') ?? '',
+      serviceId: _readString(json, 'serviceId') ?? '',
+      time: _readString(json, 'time') ?? '',
       type: title,
-      clientName: _readString(json, ['clientName']) ?? 'Unknown',
-      location: _readString(json, ['location']) ?? '',
+      clientName: _readString(json, 'clientName') ?? 'Unknown',
+      location: _readString(json, 'location') ?? '',
       itemType: _detectItemType(title),
     );
   }
@@ -377,12 +374,12 @@ class DashboardStats {
 
   factory DashboardStats.fromJson(Map<String, dynamic> json) {
     return DashboardStats(
-      newRequests:
-          _readInt(json, ['newRequests', 'newRequest', 'pendingRequests']) ?? 0,
-      activeJobs: _readInt(json, ['activeJobs', 'inProgress', 'active']) ?? 0,
-      doneThisMonth:
-          _readInt(json, ['doneThisMonth', 'completedThisMonth', 'done']) ?? 0,
-      currentMonth: _readString(json, ['currentMonth', 'month']) ?? 'Jan',
+      // NOTE: /agents/stats sample only contains totalTaskCompleted/totalEarned.
+      // Keep dashboard-only counters empty (0) until backend documents fields.
+      newRequests: _readInt(json, 'newRequests') ?? 0,
+      activeJobs: _readInt(json, 'activeJobs') ?? 0,
+      doneThisMonth: _readInt(json, 'doneThisMonth') ?? 0,
+      currentMonth: _readString(json, 'currentMonth') ?? 'Jan',
     );
   }
 
@@ -410,12 +407,9 @@ String _detectItemType(String title) {
   return ScheduleItemTypes.other;
 }
 
-String? _readString(Map<String, dynamic> map, List<String> keys) {
-  for (final key in keys) {
-    final value = map[key];
-    if (value == null) {
-      continue;
-    }
+String? _readString(Map<String, dynamic> map, String key) {
+  final value = map[key];
+  if (value != null) {
     final text = value.toString().trim();
     if (text.isNotEmpty) {
       return text;
@@ -424,58 +418,52 @@ String? _readString(Map<String, dynamic> map, List<String> keys) {
   return null;
 }
 
-int? _readInt(Map<String, dynamic> map, List<String> keys) {
-  for (final key in keys) {
-    final value = map[key];
-    if (value is int) {
-      return value;
-    }
-    if (value is num) {
-      return value.toInt();
-    }
-    if (value != null) {
-      final parsed = int.tryParse(value.toString());
-      if (parsed != null) {
-        return parsed;
-      }
+int? _readInt(Map<String, dynamic> map, String key) {
+  final value = map[key];
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value != null) {
+    final parsed = int.tryParse(value.toString());
+    if (parsed != null) {
+      return parsed;
     }
   }
   return null;
 }
 
-bool? _readBool(Map<String, dynamic> map, List<String> keys) {
-  for (final key in keys) {
-    final value = map[key];
-    if (value is bool) {
-      return value;
+bool? _readBool(Map<String, dynamic> map, String key) {
+  final value = map[key];
+  if (value is bool) {
+    return value;
+  }
+  if (value is String) {
+    final normalized = value.toLowerCase();
+    if (normalized == 'true') {
+      return true;
     }
-    if (value is String) {
-      final normalized = value.toLowerCase();
-      if (normalized == 'true') {
-        return true;
-      }
-      if (normalized == 'false') {
-        return false;
-      }
+    if (normalized == 'false') {
+      return false;
     }
-    if (value is num) {
-      return value != 0;
-    }
+  }
+  if (value is num) {
+    return value != 0;
   }
   return null;
 }
 
-DateTime? _readDateTime(Map<String, dynamic> map, List<String> keys) {
-  for (final key in keys) {
-    final value = map[key];
-    if (value is DateTime) {
-      return value;
-    }
-    if (value is String) {
-      final parsed = DateTime.tryParse(value);
-      if (parsed != null) {
-        return parsed;
-      }
+DateTime? _readDateTime(Map<String, dynamic> map, String key) {
+  final value = map[key];
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    final parsed = DateTime.tryParse(value);
+    if (parsed != null) {
+      return parsed;
     }
   }
   return null;
@@ -509,25 +497,21 @@ DateTime? _tryParseRelativeTime(String? value) {
   return null;
 }
 
-Map<String, dynamic>? _readMap(Map<String, dynamic> map, List<String> keys) {
-  for (final key in keys) {
-    final value = map[key];
-    if (value is Map<String, dynamic>) {
-      return value;
-    }
-    if (value is Map) {
-      return Map<String, dynamic>.from(value);
-    }
+Map<String, dynamic>? _readMap(Map<String, dynamic> map, String key) {
+  final value = map[key];
+  if (value is Map<String, dynamic>) {
+    return value;
+  }
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
   }
   return null;
 }
 
-List<dynamic>? _readList(Map<String, dynamic> map, List<String> keys) {
-  for (final key in keys) {
-    final value = map[key];
-    if (value is List) {
-      return value;
-    }
+List<dynamic>? _readList(Map<String, dynamic> map, String key) {
+  final value = map[key];
+  if (value is List) {
+    return value;
   }
   return null;
 }

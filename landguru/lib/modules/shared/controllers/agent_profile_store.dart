@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../models/agent_system_model.dart';
+import '../../../core/models/models.dart';
 import '../services/agent_profile_services.dart';
 import '../../../core/services/api_error_handler.dart';
 import '../../../core/services/auth_service.dart';
@@ -25,44 +26,46 @@ class AgentProfileStore extends GetxService {
 
     var nextState = profileModel.value;
 
-    final fullName = _readString(user, const ['fullName', 'name']);
+    final fullName = user.fullName.trim();
     if (fullName.isNotEmpty) {
       nextState = nextState.copyWith(agentName: fullName);
     }
 
-    final title = _readString(user, const ['title', 'agentTitle']);
+    final title = user.agentTitle.trim();
     if (title.isNotEmpty) {
       nextState = nextState.copyWith(agentTitle: title);
     }
 
-    final id = _readString(user, const ['agentIdDisplay', 'agentId', 'id']);
+    final id = user.agentIdDisplay.trim().isNotEmpty
+        ? user.agentIdDisplay.trim()
+        : user.agentId.trim().isNotEmpty
+            ? user.agentId.trim()
+            : user.id.trim();
     if (id.isNotEmpty) {
       nextState = nextState.copyWith(agentId: id);
     }
 
-    final roleType = _readString(user, const ['agentType']);
+    final roleType = user.agentType.trim();
     if (roleType.isNotEmpty) {
       nextState = nextState.copyWith(agentType: _formatAgentType(roleType));
     }
 
-    final avatar = _readString(user, const ['photoUrl', 'image']);
+    final avatar = user.photoUrl.trim();
     if (avatar.isNotEmpty) {
       nextState = nextState.copyWith(profileImage: avatar);
     }
 
-    final userEmail = _readString(user, const ['email']);
+    final userEmail = user.email.trim();
     if (userEmail.isNotEmpty) {
       nextState = nextState.copyWith(email: userEmail);
     }
 
-    final userPhone = _readString(user, const ['phone']);
+    final userPhone = user.phone.trim();
     if (userPhone.isNotEmpty) {
       nextState = nextState.copyWith(phone: userPhone);
     }
 
-    profileModel.value = nextState.copyWith(
-      isVerified: _readBool(user, const ['isVerified']),
-    );
+    profileModel.value = nextState.copyWith(isVerified: user.isVerified);
   }
 
   Future<void> refreshProfile({
@@ -164,16 +167,18 @@ class AgentProfileStore extends GetxService {
       totalEarned: profile.stats.totalEarned,
     );
 
-    _authService.updateUserFields({
-      'fullName': profile.fullName,
-      'email': profile.email,
-      'phone': profile.phone,
-      'photoUrl': profile.photoUrl,
-      'agentType': profile.agentType,
-      'agentId': profile.agentId,
-      'agentIdDisplay': profile.agentIdDisplay,
-      'isVerified': profile.isVerified,
-    });
+    final updatedSessionUser = (_authService.user ?? const AuthUserModel())
+        .copyWith(
+          fullName: profile.fullName,
+          email: profile.email,
+          phone: profile.phone,
+          photoUrl: profile.photoUrl,
+          agentType: profile.agentType,
+          agentId: profile.agentId,
+          agentIdDisplay: profile.agentIdDisplay,
+          isVerified: profile.isVerified,
+        );
+    _authService.updateUser(updatedSessionUser);
   }
 
   void _applyStats(AgentStats stats) {
@@ -230,35 +235,4 @@ class AgentProfileStore extends GetxService {
         .join(' ');
   }
 
-  String _readString(Map<String, dynamic> map, List<String> keys) {
-    for (final key in keys) {
-      final value = map[key];
-      if (value != null) {
-        final text = value.toString().trim();
-        if (text.isNotEmpty) {
-          return text;
-        }
-      }
-    }
-    return '';
-  }
-
-  bool _readBool(Map<String, dynamic> map, List<String> keys) {
-    for (final key in keys) {
-      final value = map[key];
-      if (value is bool) {
-        return value;
-      }
-      if (value is String) {
-        final normalized = value.trim().toLowerCase();
-        if (normalized == 'true') {
-          return true;
-        }
-        if (normalized == 'false') {
-          return false;
-        }
-      }
-    }
-    return false;
-  }
 }

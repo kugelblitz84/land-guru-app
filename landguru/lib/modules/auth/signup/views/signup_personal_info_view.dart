@@ -124,31 +124,11 @@ class SignupPersonalInfoView extends GetView<SignupController> {
                                       ),
                                     )
                                   else
-                                    Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.camera_alt_outlined,
-                                          size: 36.sp,
-                                          color: AppColors.primary,
-                                        ),
-                                        Positioned(
-                                          right: 0,
-                                          bottom: 0,
-                                          child: Container(
-                                            padding: EdgeInsets.all(4.w),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primary,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Icon(
-                                              Icons.add,
-                                              size: 16.sp,
-                                              color: AppColors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    Image.asset(
+                                      'assets/Logos/Camera.png',
+                                      width: 42.w,
+                                      height: 42.h,
+                                      fit: BoxFit.contain,
                                     ),
                                   if (controller.isProfileImageUploading.value)
                                     Container(
@@ -370,18 +350,19 @@ class SignupPersonalInfoView extends GetView<SignupController> {
             hintText: hint,
             hintStyle: TextStyle(fontSize: 14.sp, color: AppColors.grey400),
             filled: true,
-            fillColor: fillColor ?? AppColors.grey100,
+            fillColor: fillColor ?? const Color.fromARGB(255, 255, 255, 255),
             contentPadding: EdgeInsets.symmetric(
               horizontal: 16.w,
               vertical: 16.h,
             ),
+            
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(color: AppColors.grey300),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(color: AppColors.grey300),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
@@ -476,8 +457,9 @@ class SignupPersonalInfoView extends GetView<SignupController> {
           () => Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             decoration: BoxDecoration(
-              color: enabled ? AppColors.grey100 : AppColors.grey200,
+              color: enabled ? AppColors.white : AppColors.grey200,
               borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: AppColors.grey300),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(

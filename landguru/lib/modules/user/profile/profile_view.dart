@@ -93,10 +93,10 @@ class ProfileView extends GetView<ProfileController> {
                       SizedBox(height: 16.h),
 
                       // Account summary
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: _buildSummaryCard(),
-                      ),
+                      // Padding(
+                      //   padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      //   child: _buildSummaryCard(),
+                      // ),
 
                       SizedBox(height: 32.h),
 
@@ -258,66 +258,66 @@ class ProfileView extends GetView<ProfileController> {
     );
   }
 
-  Widget _buildSummaryCard() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.grey300),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.grey200.withAlpha(50),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Obx(
-        () => Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildSummaryItem(
-              'Member Since',
-              controller.profileModel.value.memberSince,
-            ),
-            _buildSummaryItem(
-              'Active Deals',
-              '${controller.profileModel.value.activeDeals}',
-            ),
-            _buildSummaryItem(
-              'Listed',
-              '${controller.profileModel.value.propertiesListed}',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildSummaryCard() {
+  //   return Container(
+  //     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+  //     decoration: BoxDecoration(
+  //       color: AppColors.white,
+  //       borderRadius: BorderRadius.circular(16.r),
+  //       border: Border.all(color: AppColors.grey300),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: AppColors.grey200.withAlpha(50),
+  //           blurRadius: 10,
+  //           offset: const Offset(0, 4),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Obx(
+  //       () => Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           _buildSummaryItem(
+  //             'Member Since',
+  //             controller.profileModel.value.memberSince,
+  //           ),
+  //           _buildSummaryItem(
+  //             'Active Deals',
+  //             '${controller.profileModel.value.activeDeals}',
+  //           ),
+  //           _buildSummaryItem(
+  //             'Listed',
+  //             '${controller.profileModel.value.propertiesListed}',
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Widget _buildSummaryItem(String label, String value) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w700,
-              color: AppColors.grey900,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            label,
-            style: TextStyle(fontSize: 11.sp, color: AppColors.grey600),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildSummaryItem(String label, String value) {
+  //   return Expanded(
+  //     child: Column(
+  //       children: [
+  //         Text(
+  //           value,
+  //           style: TextStyle(
+  //             fontSize: 14.sp,
+  //             fontWeight: FontWeight.w700,
+  //             color: AppColors.grey900,
+  //           ),
+  //           textAlign: TextAlign.center,
+  //         ),
+  //         SizedBox(height: 4.h),
+  //         Text(
+  //           label,
+  //           style: TextStyle(fontSize: 11.sp, color: AppColors.grey600),
+  //           textAlign: TextAlign.center,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildLogoutButton() {
     return Obx(

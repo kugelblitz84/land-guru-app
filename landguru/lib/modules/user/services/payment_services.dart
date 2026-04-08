@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'dart:convert';
 import 'dart:async';
 import '../../../core/services/api_client.dart';
 import '../model/payment_models.dart';
@@ -102,6 +103,7 @@ class _PaymentGatewayWebViewPageState extends State<PaymentGatewayWebViewPage> {
             setState(() {
               _isLoading = false;
             });
+            unawaited(_detectCompletionFromRenderedPage());
           },
           onWebResourceError: (error) {
             final isMainFrame = error.isForMainFrame ?? true;
@@ -151,19 +153,135 @@ class _PaymentGatewayWebViewPageState extends State<PaymentGatewayWebViewPage> {
   }
 
   PaymentGatewayStatus? _resolveStatusFromUrl(String url) {
-    final normalized = url.toLowerCase();
+    final uri = Uri.tryParse(url);
+    if (uri == null) return null;
 
-    if (normalized.contains('success')) {
+    final segments = uri.pathSegments
+        .map((segment) => segment.toLowerCase())
+        .toList();
+    if (segments.isEmpty) return null;
+
+    final last = segments.last;
+    final secondLast = segments.length > 1
+        ? segments[segments.length - 2]
+        : '';
+    final thirdLast = segments.length > 2
+        ? segments[segments.length - 3]
+        : '';
+
+    // Accept only backend callback paths like /payments/sslcommerz/success|fail|cancel.
+    final isSslCallbackPath =
+        thirdLast == 'payments' && secondLast == 'sslcommerz';
+
+    if (!isSslCallbackPath) {
+      return null;
+    }
+
+    if (last == 'success') {
       return PaymentGatewayStatus.success;
     }
-    if (normalized.contains('fail') || normalized.contains('failed')) {
+    if (last == 'fail' || last == 'failed') {
       return PaymentGatewayStatus.failed;
     }
-    if (normalized.contains('cancel') || normalized.contains('cancelled')) {
+    if (last == 'cancel' || last == 'cancelled') {
       return PaymentGatewayStatus.cancelled;
     }
 
     return null;
+  }
+
+  Future<void> _detectCompletionFromRenderedPage() async {
+    if (_isHandled) return;
+
+    final currentUrl = await _controller.currentUrl();
+    final statusFromUrl = _resolveStatusFromUrl(currentUrl ?? '');
+    if (statusFromUrl != null) {
+      _complete(statusFromUrl, currentUrl ?? widget.gatewayUrl);
+      return;
+    }
+
+    final bodyText = await _readPageBodyText();
+    final statusFromBody = _resolveStatusFromPageBody(bodyText);
+    if (statusFromBody != null) {
+      _complete(statusFromBody, currentUrl ?? widget.gatewayUrl);
+    }
+  }
+
+  Future<String> _readPageBodyText() async {
+    try {
+      final value = await _controller.runJavaScriptReturningResult(
+        'document.body ? document.body.innerText : "";',
+      );
+      return _normalizeJavaScriptResult(value).trim();
+    } catch (_) {
+      return '';
+    }
+  }
+
+  String _normalizeJavaScriptResult(Object? value) {
+    if (value == null) return '';
+
+    if (value is String) {
+      final raw = value.trim();
+      if (raw.startsWith('"') && raw.endsWith('"')) {
+        try {
+          final decoded = jsonDecode(raw);
+          if (decoded is String) {
+            return decoded;
+          }
+        } catch (_) {
+          // Keep raw string when the returned value is not JSON escaped.
+        }
+      }
+      return raw;
+    }
+
+    return value.toString();
+  }
+
+  PaymentGatewayStatus? _resolveStatusFromPageBody(String bodyText) {
+    if (bodyText.isEmpty) return null;
+
+    final decoded = _decodeBodyJson(bodyText);
+    if (decoded != null) {
+      final status = decoded['status']?.toString().toLowerCase() ?? '';
+      final gatewayStatus =
+          decoded['gatewayStatus']?.toString().toLowerCase() ?? '';
+
+      if (status == 'validated' ||
+          status == 'valid' ||
+          status == 'success' ||
+          status == 'completed' ||
+          gatewayStatus == 'validated' ||
+          gatewayStatus == 'valid') {
+        return PaymentGatewayStatus.success;
+      }
+
+      if (status == 'failed' || status == 'fail') {
+        return PaymentGatewayStatus.failed;
+      }
+
+      if (status == 'cancelled' || status == 'canceled' || status == 'cancel') {
+        return PaymentGatewayStatus.cancelled;
+      }
+    }
+
+    return null;
+  }
+
+  Map<String, dynamic>? _decodeBodyJson(String bodyText) {
+    try {
+      final dynamic decoded = jsonDecode(bodyText);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   void _complete(PaymentGatewayStatus status, String url) {

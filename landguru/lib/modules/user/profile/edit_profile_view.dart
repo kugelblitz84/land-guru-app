@@ -327,7 +327,13 @@ class EditProfileView extends GetView<EditProfileController> {
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.white, width: 2),
                 ),
-                child: Icon(Icons.edit, color: AppColors.white, size: 16.sp),
+                child: Padding(
+                  padding: EdgeInsets.all(6.w),
+                  child: Image.asset(
+                    'assets/Logos/Camera.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
             ),
           ],

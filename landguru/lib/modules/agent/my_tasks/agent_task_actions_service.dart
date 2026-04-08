@@ -129,8 +129,8 @@ class AgentTaskActionsService extends GetxService {
     final root = _extractResponseMap(response.data);
 
     final listPayload =
-        _readList(root, ['data', 'workLog', 'workLogs', 'logs']) ??
-        _readList(root, ['items', 'list']);
+      _readListAny(root, 'data', 'workLog', 'workLogs', 'logs') ??
+      _readListAny(root, 'items', 'list');
 
     if (listPayload == null) {
       return const <WorkLogEntry>[];
@@ -189,92 +189,87 @@ class AgentTaskActionsService extends GetxService {
   }
 
   AgentTask _mapTask(Map<String, dynamic> json) {
-    final client = _readMap(json, ['client', 'customer', 'user']);
-    final property = _readMap(json, ['property', 'post', 'sellPost']);
-    final appointmentMap = _readMap(json, ['appointment', 'meeting']);
+    final client = _readMapAny(json, 'client', 'customer', 'user');
+    final property = _readMapAny(json, 'property', 'post', 'sellPost');
+    final appointmentMap = _readMapAny(json, 'appointment', 'meeting');
 
     return AgentTask(
       id:
-          _readString(json, [
-            'id',
-            'assignmentId',
-            'assignment_id',
-            'taskId',
-          ]) ??
+          _readStringAny(json, 'id', 'assignmentId', 'assignment_id', 'taskId') ??
           '',
       serviceId:
-          _readString(json, ['serviceId', 'service_id', 'postId', 'post_id']) ??
-          '#${_readString(json, ['id', 'assignmentId']) ?? ''}',
+          _readStringAny(json, 'serviceId', 'service_id', 'postId', 'post_id') ??
+          '#${_readStringAny(json, 'id', 'assignmentId') ?? ''}',
       serviceType: _parseServiceType(
-        _readString(json, ['serviceType', 'serviceName']) ??
-            _readString(_readMap(json, ['service']), ['name', 'serviceName']) ??
+        _readStringAny(json, 'serviceType', 'serviceName') ??
+            _readStringAny(_readMapAny(json, 'service'), 'name', 'serviceName') ??
             '',
       ),
-      status: _parseTaskStatus(_readString(json, ['status', 'tab']) ?? ''),
+      status: _parseTaskStatus(_readStringAny(json, 'status', 'tab') ?? ''),
       acceptanceStatus: _parseAcceptanceStatus(
-        _readString(json, ['acceptanceStatus', 'acceptStatus']) ?? '',
+        _readStringAny(json, 'acceptanceStatus', 'acceptStatus') ?? '',
       ),
       processingStatus: _parseProcessingStatus(
-        _readString(json, ['processingStatus', 'workflowStatus']) ?? '',
+        _readStringAny(json, 'processingStatus', 'workflowStatus') ?? '',
       ),
       clientName:
-          _readString(client, ['name', 'fullName']) ??
-          _readString(json, ['clientName', 'customerName']) ??
+          _readStringAny(client, 'name', 'fullName') ??
+          _readStringAny(json, 'clientName', 'customerName') ??
           'Unknown',
       clientImageUrl:
-          _readString(client, ['photoUrl', 'avatar', 'profileImage']) ??
-          _readString(json, ['clientImageUrl']),
+          _readStringAny(client, 'photoUrl', 'avatar', 'profileImage') ??
+          _readStringAny(json, 'clientImageUrl'),
       isClientVerified:
-          _readBool(client, ['isVerified']) ??
-          _readBool(json, ['isClientVerified']) ??
+          _readBoolAny(client, 'isVerified') ??
+          _readBoolAny(json, 'isClientVerified') ??
           true,
       location:
-          _readString(json, ['location', 'address']) ??
-          _readString(property, ['location', 'address']) ??
+          _readStringAny(json, 'location', 'address') ??
+          _readStringAny(property, 'location', 'address') ??
           '',
-      acceptBefore: _readDateTime(json, ['acceptBefore', 'accept_before']),
+      acceptBefore: _readDateTimeAny(json, 'acceptBefore', 'accept_before'),
       assignedAt:
-          _readDateTime(json, ['assignedAt', 'assigned_at', 'createdAt']) ??
+          _readDateTimeAny(json, 'assignedAt', 'assigned_at', 'createdAt') ??
           DateTime.now(),
-      completedAt: _readDateTime(json, ['completedAt', 'completed_at']),
-      postId: _readString(json, ['postId', 'post_id']),
-      lastUpdate: _readString(json, ['lastUpdate', 'latestUpdate']),
-      lastUpdateAt: _readDateTime(json, ['lastUpdateAt', 'latestUpdateAt']),
+      completedAt: _readDateTimeAny(json, 'completedAt', 'completed_at'),
+      postId: _readStringAny(json, 'postId', 'post_id'),
+      lastUpdate: _readStringAny(json, 'lastUpdate', 'latestUpdate'),
+      lastUpdateAt: _readDateTimeAny(json, 'lastUpdateAt', 'latestUpdateAt'),
       propertyType: _parsePropertyType(
-        _readString(property, ['propertyType', 'type']) ??
-            _readString(json, ['propertyType']) ??
+        _readStringAny(property, 'propertyType', 'type') ??
+            _readStringAny(json, 'propertyType') ??
             '',
       ),
-      sellableLandAmount: _readDouble(property, [
+      sellableLandAmount: _readDoubleAny(property,
         'sellableLandAmount',
         'sellableLand',
         'landAmount',
-      ]),
+      ),
       sellableLandUnit:
-          _readString(property, ['sellableLandUnit', 'landUnit']) ??
-          _readString(json, ['sellableLandUnit']),
+          _readStringAny(property, 'sellableLandUnit', 'landUnit') ??
+          _readStringAny(json, 'sellableLandUnit'),
       plotSize:
-          _readDouble(property, ['plotSize', 'plot_size']) ??
-          _readDouble(json, ['plotSize']),
+          _readDoubleAny(property, 'plotSize', 'plot_size') ??
+          _readDoubleAny(json, 'plotSize'),
       plotSizeUnit:
-          _readString(property, ['plotSizeUnit', 'plotUnit']) ??
-          _readString(json, ['plotSizeUnit']),
+          _readStringAny(property, 'plotSizeUnit', 'plotUnit') ??
+          _readStringAny(json, 'plotSizeUnit'),
       distanceFromRoad:
-          _readString(property, ['distanceFromRoad']) ??
-          _readString(json, ['distanceFromRoad']),
-      propertyPhotos: _readStringList(property, [
+          _readStringAny(property, 'distanceFromRoad') ??
+          _readStringAny(json, 'distanceFromRoad'),
+      propertyPhotos: _readStringListAny(property,
         'propertyPhotos',
         'photos',
         'images',
         'photoUrls',
-      ]),
+      ),
       rawDocuments: _parseDocuments(
-        _readList(property, ['rawDocuments', 'documents', 'files']) ??
-            _readList(json, ['rawDocuments', 'documents', 'files']) ??
+        _readListAny(property, 'rawDocuments', 'documents', 'files') ??
+            _readListAny(json, 'rawDocuments', 'documents', 'files') ??
             const <dynamic>[],
       ),
       serviceFee:
-          _readDouble(json, ['serviceFee', 'fee', 'service_fee']) ?? 0.0,
+          _readDoubleAny(json, 'serviceFee', 'fee', 'service_fee') ?? 0.0,
       appointment: appointmentMap == null
           ? null
           : _parseAppointment(appointmentMap),
@@ -284,23 +279,23 @@ class AgentTaskActionsService extends GetxService {
 
   List<WorkLogEntry> _parseWorkLogsFromMap(Map<String, dynamic> json) {
     return _parseWorkLogs(
-      _readList(json, ['workLog', 'workLogs', 'logs']) ?? const <dynamic>[],
+      _readListAny(json, 'workLog', 'workLogs', 'logs') ?? const <dynamic>[],
     );
   }
 
   TaskAppointment _parseAppointment(Map<String, dynamic> json) {
     return TaskAppointment(
       id:
-          _readString(json, ['id', 'appointmentId', 'appointment_id']) ??
+          _readStringAny(json, 'id', 'appointmentId', 'appointment_id') ??
           'apt_unknown',
       type:
-          _readString(json, ['type', 'title', 'appointmentType']) ??
+          _readStringAny(json, 'type', 'title', 'appointmentType') ??
           'Site Visit',
       dateTime:
-          _readDateTime(json, ['dateTime', 'datetime', 'scheduledAt']) ??
+          _readDateTimeAny(json, 'dateTime', 'datetime', 'scheduledAt') ??
           _buildDateTimeFromDateAndTime(json) ??
           DateTime.now(),
-      status: _parseAppointmentStatus(_readString(json, ['status']) ?? ''),
+        status: _parseAppointmentStatus(_readStringAny(json, 'status') ?? ''),
     );
   }
 
@@ -309,35 +304,35 @@ class AgentTaskActionsService extends GetxService {
         .whereType<Map>()
         .map((entry) {
           final map = Map<String, dynamic>.from(entry);
-          final fileUrls = _readStringList(map, [
+          final fileUrls = _readStringListAny(map,
             'fileUrls',
             'files',
             'attachments',
-          ]);
+          );
 
           TaskDocument? attachment;
           if (fileUrls.isNotEmpty) {
             final fileUrl = fileUrls.first;
             attachment = TaskDocument(
-              id: _readString(map, ['id']) ?? fileUrl,
+              id: _readStringAny(map, 'id') ?? fileUrl,
               name: _fileNameFromUrl(fileUrl),
-              size: _readString(map, ['fileSize', 'size']) ?? '-',
+              size: _readStringAny(map, 'fileSize', 'size') ?? '-',
               url: fileUrl,
               uploadedAt:
-                  _readDateTime(map, ['createdAt', 'uploadedAt']) ??
+                  _readDateTimeAny(map, 'createdAt', 'uploadedAt') ??
                   DateTime.now(),
             );
           }
 
           return WorkLogEntry(
-            id: _readString(map, ['id', 'logId']) ?? 'wl_unknown',
+            id: _readStringAny(map, 'id', 'logId') ?? 'wl_unknown',
             description:
-                _readString(map, ['remark', 'description', 'message']) ?? '',
+                _readStringAny(map, 'remark', 'description', 'message') ?? '',
             timestamp:
-                _readDateTime(map, ['createdAt', 'timestamp']) ??
+                _readDateTimeAny(map, 'createdAt', 'timestamp') ??
                 DateTime.now(),
             attachment: attachment,
-            type: _parseWorkLogType(_readString(map, ['type', 'action']) ?? ''),
+            type: _parseWorkLogType(_readStringAny(map, 'type', 'action') ?? ''),
           );
         })
         .toList(growable: false);
@@ -348,15 +343,15 @@ class AgentTaskActionsService extends GetxService {
         .whereType<Map>()
         .map((entry) {
           final map = Map<String, dynamic>.from(entry);
-          final url = _readString(map, ['url', 'fileUrl']);
+          final url = _readStringAny(map, 'url', 'fileUrl');
           return TaskDocument(
-            id: _readString(map, ['id', 'fileId']) ?? (url ?? 'doc_unknown'),
+            id: _readStringAny(map, 'id', 'fileId') ?? (url ?? 'doc_unknown'),
             name:
-                _readString(map, ['name', 'fileName']) ??
+                _readStringAny(map, 'name', 'fileName') ??
                 (url != null ? _fileNameFromUrl(url) : 'Document'),
-            size: _readString(map, ['size', 'fileSize']) ?? '-',
+            size: _readStringAny(map, 'size', 'fileSize') ?? '-',
             url: url,
-            uploadedAt: _readDateTime(map, ['uploadedAt', 'createdAt']),
+            uploadedAt: _readDateTimeAny(map, 'uploadedAt', 'createdAt'),
           );
         })
         .toList(growable: false);
@@ -372,8 +367,8 @@ class AgentTaskActionsService extends GetxService {
   }
 
   DateTime? _buildDateTimeFromDateAndTime(Map<String, dynamic> json) {
-    final dateText = _readString(json, ['date']);
-    final timeText = _readString(json, ['time']);
+    final dateText = _readStringAny(json, 'date');
+    final timeText = _readStringAny(json, 'time');
     if (dateText == null || timeText == null) {
       return null;
     }
@@ -472,132 +467,219 @@ class AgentTaskActionsService extends GetxService {
     return TaskPropertyType.flat;
   }
 
-  Map<String, dynamic>? _readMap(Map<String, dynamic>? map, List<String> keys) {
+  Map<String, dynamic>? _readMap(Map<String, dynamic>? map, String key) {
     if (map == null) return null;
 
-    for (final key in keys) {
-      final value = map[key];
-      if (value is Map<String, dynamic>) {
-        return value;
-      }
-      if (value is Map) {
-        return Map<String, dynamic>.from(value);
+    final value = map[key];
+    if (value is Map<String, dynamic>) {
+      return value;
+    }
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+
+    return null;
+  }
+
+  List<dynamic>? _readList(Map<String, dynamic>? map, String key) {
+    if (map == null) return null;
+
+    final value = map[key];
+    if (value is List) {
+      return value;
+    }
+
+    return null;
+  }
+
+  String? _readString(Map<String, dynamic>? map, String key) {
+    if (map == null) return null;
+
+    final value = map[key];
+    if (value is String && value.trim().isNotEmpty) {
+      return value.trim();
+    }
+
+    return null;
+  }
+
+  double? _readDouble(Map<String, dynamic>? map, String key) {
+    if (map == null) return null;
+
+    final value = map[key];
+    if (value is num) {
+      return value.toDouble();
+    }
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      if (parsed != null) {
+        return parsed;
       }
     }
 
     return null;
   }
 
-  List<dynamic>? _readList(Map<String, dynamic>? map, List<String> keys) {
+  bool? _readBool(Map<String, dynamic>? map, String key) {
     if (map == null) return null;
 
-    for (final key in keys) {
-      final value = map[key];
-      if (value is List) {
-        return value;
-      }
+    final value = map[key];
+    if (value is bool) {
+      return value;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true') return true;
+      if (normalized == 'false') return false;
+    }
+    if (value is num) {
+      if (value == 1) return true;
+      if (value == 0) return false;
     }
 
     return null;
   }
 
-  String? _readString(Map<String, dynamic>? map, List<String> keys) {
+  DateTime? _readDateTime(Map<String, dynamic>? map, String key) {
     if (map == null) return null;
 
-    for (final key in keys) {
-      final value = map[key];
-      if (value is String && value.trim().isNotEmpty) {
-        return value.trim();
+    final value = map[key];
+    if (value is String && value.trim().isNotEmpty) {
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) {
+        return parsed;
       }
+    }
+    if (value is int) {
+      final dateTime = DateTime.fromMillisecondsSinceEpoch(value);
+      return dateTime;
     }
 
     return null;
   }
 
-  double? _readDouble(Map<String, dynamic>? map, List<String> keys) {
-    if (map == null) return null;
-
-    for (final key in keys) {
-      final value = map[key];
-      if (value is num) {
-        return value.toDouble();
-      }
-      if (value is String) {
-        final parsed = double.tryParse(value);
-        if (parsed != null) {
-          return parsed;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  bool? _readBool(Map<String, dynamic>? map, List<String> keys) {
-    if (map == null) return null;
-
-    for (final key in keys) {
-      final value = map[key];
-      if (value is bool) {
-        return value;
-      }
-      if (value is String) {
-        final normalized = value.trim().toLowerCase();
-        if (normalized == 'true') return true;
-        if (normalized == 'false') return false;
-      }
-      if (value is num) {
-        if (value == 1) return true;
-        if (value == 0) return false;
-      }
-    }
-
-    return null;
-  }
-
-  DateTime? _readDateTime(Map<String, dynamic>? map, List<String> keys) {
-    if (map == null) return null;
-
-    for (final key in keys) {
-      final value = map[key];
-      if (value is String && value.trim().isNotEmpty) {
-        final parsed = DateTime.tryParse(value);
-        if (parsed != null) {
-          return parsed;
-        }
-      }
-      if (value is int) {
-        final dateTime = DateTime.fromMillisecondsSinceEpoch(value);
-        return dateTime;
-      }
-    }
-
-    return null;
-  }
-
-  List<String> _readStringList(Map<String, dynamic>? map, List<String> keys) {
+  List<String> _readStringList(Map<String, dynamic>? map, String key) {
     if (map == null) return const <String>[];
 
-    for (final key in keys) {
-      final value = map[key];
-      if (value is List) {
-        return value
-            .map((entry) {
-              if (entry is String) {
-                return entry;
-              }
-              if (entry is Map) {
-                final entryMap = Map<String, dynamic>.from(entry);
-                return _readString(entryMap, ['url', 'fileUrl', 'photoUrl']) ??
-                    '';
-              }
-              return '';
-            })
-            .where((entry) => entry.trim().isNotEmpty)
-            .toList(growable: false);
-      }
+    final value = map[key];
+    if (value is! List) {
+      return const <String>[];
     }
 
+    return value
+        .map((entry) {
+          if (entry is String) {
+            return entry;
+          }
+          if (entry is Map) {
+            final entryMap = Map<String, dynamic>.from(entry);
+            return _readStringAny(entryMap, 'url', 'fileUrl', 'photoUrl') ?? '';
+          }
+          return '';
+        })
+        .where((entry) => entry.trim().isNotEmpty)
+        .toList(growable: false);
+  }
+
+  Map<String, dynamic>? _readMapAny(
+    Map<String, dynamic>? map,
+    String key1, [
+    String? key2,
+    String? key3,
+    String? key4,
+  ]) {
+    return _readMap(map, key1) ??
+        (key2 == null ? null : _readMap(map, key2)) ??
+        (key3 == null ? null : _readMap(map, key3)) ??
+        (key4 == null ? null : _readMap(map, key4));
+  }
+
+  List<dynamic>? _readListAny(
+    Map<String, dynamic>? map,
+    String key1, [
+    String? key2,
+    String? key3,
+    String? key4,
+  ]) {
+    return _readList(map, key1) ??
+        (key2 == null ? null : _readList(map, key2)) ??
+        (key3 == null ? null : _readList(map, key3)) ??
+        (key4 == null ? null : _readList(map, key4));
+  }
+
+  String? _readStringAny(
+    Map<String, dynamic>? map,
+    String key1, [
+    String? key2,
+    String? key3,
+    String? key4,
+  ]) {
+    return _readString(map, key1) ??
+        (key2 == null ? null : _readString(map, key2)) ??
+        (key3 == null ? null : _readString(map, key3)) ??
+        (key4 == null ? null : _readString(map, key4));
+  }
+
+  double? _readDoubleAny(
+    Map<String, dynamic>? map,
+    String key1, [
+    String? key2,
+    String? key3,
+    String? key4,
+  ]) {
+    return _readDouble(map, key1) ??
+        (key2 == null ? null : _readDouble(map, key2)) ??
+        (key3 == null ? null : _readDouble(map, key3)) ??
+        (key4 == null ? null : _readDouble(map, key4));
+  }
+
+  bool? _readBoolAny(
+    Map<String, dynamic>? map,
+    String key1, [
+    String? key2,
+    String? key3,
+    String? key4,
+  ]) {
+    return _readBool(map, key1) ??
+        (key2 == null ? null : _readBool(map, key2)) ??
+        (key3 == null ? null : _readBool(map, key3)) ??
+        (key4 == null ? null : _readBool(map, key4));
+  }
+
+  DateTime? _readDateTimeAny(
+    Map<String, dynamic>? map,
+    String key1, [
+    String? key2,
+    String? key3,
+    String? key4,
+  ]) {
+    return _readDateTime(map, key1) ??
+        (key2 == null ? null : _readDateTime(map, key2)) ??
+        (key3 == null ? null : _readDateTime(map, key3)) ??
+        (key4 == null ? null : _readDateTime(map, key4));
+  }
+
+  List<String> _readStringListAny(
+    Map<String, dynamic>? map,
+    String key1, [
+    String? key2,
+    String? key3,
+    String? key4,
+  ]) {
+    final first = _readStringList(map, key1);
+    if (first.isNotEmpty) return first;
+    if (key2 != null) {
+      final second = _readStringList(map, key2);
+      if (second.isNotEmpty) return second;
+    }
+    if (key3 != null) {
+      final third = _readStringList(map, key3);
+      if (third.isNotEmpty) return third;
+    }
+    if (key4 != null) {
+      final fourth = _readStringList(map, key4);
+      if (fourth.isNotEmpty) return fourth;
+    }
     return const <String>[];
   }
 }

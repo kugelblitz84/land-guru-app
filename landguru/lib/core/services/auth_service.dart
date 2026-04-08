@@ -16,10 +16,10 @@ class AuthService extends GetxService {
   final TokenService _tokenService;
   final ApiClient _apiClient;
 
-  final Rxn<Map<String, dynamic>> _user = Rxn<Map<String, dynamic>>();
+  final Rxn<AuthUserModel> _user = Rxn<AuthUserModel>();
 
   String? get token => _tokenService.token;
-  Map<String, dynamic>? get user => _user.value;
+  AuthUserModel? get user => _user.value;
 
   bool get isLoggedIn => token != null && token!.isNotEmpty;
 
@@ -29,8 +29,8 @@ class AuthService extends GetxService {
     final userJson = _prefs.getString(AppConstants.userDataKey);
     if (userJson != null && userJson.isNotEmpty) {
       final decoded = jsonDecode(userJson);
-      if (decoded is Map<String, dynamic>) {
-        _user.value = decoded;
+      if (decoded is Map) {
+        _user.value = AuthUserModel.fromJson(Map<String, dynamic>.from(decoded));
       }
     }
 
@@ -123,24 +123,22 @@ class AuthService extends GetxService {
     Get.find<UserTypeService>().clear();
   }
 
-  void updateUserFields(Map<String, dynamic> updates) {
-    final current = Map<String, dynamic>.from(_user.value ?? {});
-    current.addAll(updates);
-    _setUser(current);
+  void updateUser(AuthUserModel user) {
+    _setUser(user);
   }
 
   void _setToken(String token) {
     _tokenService.setToken(token);
   }
 
-  void _setUser(Map<String, dynamic> user) {
+  void _setUser(AuthUserModel user) {
     _user.value = user;
-    _prefs.setString(AppConstants.userDataKey, jsonEncode(user));
+    _prefs.setString(AppConstants.userDataKey, jsonEncode(user.toJson()));
     _syncUserType();
   }
 
   void _syncUserType() {
-    final role = _user.value?['role']?.toString().toLowerCase();
+    final role = _user.value?.role.toLowerCase();
     if (role == UserTypeService.roleAgent) {
       Get.find<UserTypeService>().setUserType(UserTypeService.roleAgent);
     } else if (role == UserTypeService.roleUser) {

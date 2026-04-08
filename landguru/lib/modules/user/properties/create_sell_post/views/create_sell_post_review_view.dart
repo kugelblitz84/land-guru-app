@@ -341,29 +341,44 @@ class CreateSellPostReviewView extends GetView<CreateSellPostController> {
       ),
       child: Row(
         children: [
-          // Property Image Placeholder
-          Container(
-            width: 80.w,
-            height: 80.h,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12.r),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.primary.withAlpha(100),
-                  AppColors.primaryDark.withAlpha(150),
-                ],
+          Obx(() {
+            final firstPhoto = controller.photos.isNotEmpty
+                ? controller.photos.first
+                : null;
+            if (firstPhoto != null) {
+              return SizedBox(
+                width: 80.w,
+                height: 80.h,
+                child: PhotoPreviewTile(
+                  photo: firstPhoto,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+              );
+            }
+
+            return Container(
+              width: 80.w,
+              height: 80.h,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12.r),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary.withAlpha(100),
+                    AppColors.primaryDark.withAlpha(150),
+                  ],
+                ),
               ),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.home,
-                color: AppColors.white.withAlpha(200),
-                size: 36.sp,
+              child: Center(
+                child: Icon(
+                  Icons.home,
+                  color: AppColors.white.withAlpha(200),
+                  size: 36.sp,
+                ),
               ),
-            ),
-          ),
+            );
+          }),
           SizedBox(width: 16.w),
 
           // Details

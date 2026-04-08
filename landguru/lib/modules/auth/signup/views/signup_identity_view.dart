@@ -229,11 +229,19 @@ class SignupIdentityView extends GetView<SignupController> {
                     : AppColors.primary.withAlpha(26),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                isUploaded ? Icons.check : Icons.cloud_upload_outlined,
-                color: isUploaded ? AppColors.success : AppColors.primary,
-                size: 24.sp,
-              ),
+              child: isUploaded
+                  ? Icon(
+                      Icons.check,
+                      color: AppColors.success,
+                      size: 24.sp,
+                    )
+                  : Padding(
+                      padding: EdgeInsets.all(10.w),
+                      child: Image.asset(
+                        'assets/Logos/Camera.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
             ),
             SizedBox(height: 12.h),
             Text(
@@ -285,11 +293,19 @@ class SignupIdentityView extends GetView<SignupController> {
                     : AppColors.primary.withAlpha(26),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                isUploaded ? Icons.check : Icons.cloud_upload_outlined,
-                color: isUploaded ? AppColors.success : AppColors.primary,
-                size: 22.sp,
-              ),
+              child: isUploaded
+                  ? Icon(
+                      Icons.check,
+                      color: AppColors.success,
+                      size: 22.sp,
+                    )
+                  : Padding(
+                      padding: EdgeInsets.all(9.w),
+                      child: Image.asset(
+                        'assets/Logos/Camera.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
             ),
             SizedBox(width: 16.w),
             Expanded(

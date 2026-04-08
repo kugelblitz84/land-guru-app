@@ -31,94 +31,79 @@ class AgentProfileModel {
   });
 
   factory AgentProfileModel.fromJson(Map<String, dynamic> json) {
-    final statsMap = _readMap(json, ['stats']) ?? const <String, dynamic>{};
+    final statsMap = _readMap(json, 'stats') ?? const <String, dynamic>{};
     final detailsMap =
-        _readMap(json, ['personalDetails']) ?? const <String, dynamic>{};
+        _readMap(json, 'personalDetails') ?? const <String, dynamic>{};
     final verificationMap =
-        _readMap(json, ['verificationDocs', 'verification']) ??
-        const <String, dynamic>{};
+      _readMap(json, 'verificationDocs') ?? const <String, dynamic>{};
     final bankInfoMap =
-        _readMap(json, ['bankInfo']) ?? const <String, dynamic>{};
+        _readMap(json, 'bankInfo') ?? const <String, dynamic>{};
 
     return AgentProfileModel(
-      agentId: _readString(json, ['agentId', 'id']) ?? '',
-      fullName: _readString(json, ['fullName', 'name']) ?? '',
-      phone: _readString(json, ['phone']) ?? '',
-      email: _readString(json, ['email']) ?? '',
-      photoUrl: _readString(json, ['photoUrl', 'image']) ?? '',
-      agentType: _readString(json, ['agentType']) ?? '',
-      isVerified: _readBool(json, ['isVerified']) ?? false,
-      agentIdDisplay: _readString(json, ['agentIdDisplay']) ?? '',
+      agentId: _readString(json, 'agentId') ?? '',
+      fullName: _readString(json, 'fullName') ?? '',
+      phone: _readString(json, 'phone') ?? '',
+      email: _readString(json, 'email') ?? '',
+      photoUrl: _readString(json, 'photoUrl') ?? '',
+      agentType: _readString(json, 'agentType') ?? '',
+      isVerified: _readBool(json, 'isVerified') ?? false,
+      agentIdDisplay: _readString(json, 'agentIdDisplay') ?? '',
       stats: AgentStats.fromJson(statsMap),
-      assignedLocation: _readString(json, ['assignedLocation']) ?? '',
-      services: _readStringList(json, ['services']),
+      assignedLocation: _readString(json, 'assignedLocation') ?? '',
+      services: _readStringList(json, 'services'),
       personalDetails: AgentPersonalDetails.fromJson(detailsMap),
       verificationDocs: AgentVerificationDocs.fromJson(verificationMap),
       bankInfo: AgentBankInfo.fromJson(bankInfoMap),
     );
   }
 
-  static String? _readString(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value != null) {
-        final text = value.toString().trim();
-        if (text.isNotEmpty) {
-          return text;
-        }
+  static String? _readString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value != null) {
+      final text = value.toString().trim();
+      if (text.isNotEmpty) {
+        return text;
       }
     }
     return null;
   }
 
-  static bool? _readBool(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value is bool) {
-        return value;
-      }
+  static bool? _readBool(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value is bool) {
+      return value;
+    }
 
-      if (value is String) {
-        final normalized = value.trim().toLowerCase();
-        if (normalized == 'true') {
-          return true;
-        }
-        if (normalized == 'false') {
-          return false;
-        }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true') {
+        return true;
+      }
+      if (normalized == 'false') {
+        return false;
       }
     }
     return null;
   }
 
-  static Map<String, dynamic>? _readMap(
-    Map<String, dynamic> json,
-    List<String> keys,
-  ) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value is Map<String, dynamic>) {
-        return value;
-      }
-      if (value is Map) {
-        return Map<String, dynamic>.from(value);
-      }
+  static Map<String, dynamic>? _readMap(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value is Map<String, dynamic>) {
+      return value;
+    }
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
     }
     return null;
   }
 
-  static List<String> _readStringList(
-    Map<String, dynamic> json,
-    List<String> keys,
-  ) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value is List) {
-        return value
-            .map((item) => item?.toString().trim() ?? '')
-            .where((item) => item.isNotEmpty)
-            .toList();
-      }
+  static List<String> _readStringList(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value is List) {
+      return value
+          .map((item) => item?.toString().trim() ?? '')
+          .where((item) => item.isNotEmpty)
+          .toList();
     }
     return <String>[];
   }
@@ -132,39 +117,35 @@ class AgentStats {
 
   factory AgentStats.fromJson(Map<String, dynamic> json) {
     return AgentStats(
-      totalTaskCompleted: _readInt(json, ['totalTaskCompleted']) ?? 0,
-      totalEarned: _readDouble(json, ['totalEarned']) ?? 0,
+      totalTaskCompleted: _readInt(json, 'totalTaskCompleted') ?? 0,
+      totalEarned: _readDouble(json, 'totalEarned') ?? 0,
     );
   }
 
-  static int? _readInt(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value is int) {
-        return value;
-      }
-      if (value is num) {
-        return value.toInt();
-      }
-      if (value is String) {
-        return int.tryParse(value.trim());
-      }
+  static int? _readInt(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value.trim());
     }
     return null;
   }
 
-  static double? _readDouble(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value is double) {
-        return value;
-      }
-      if (value is num) {
-        return value.toDouble();
-      }
-      if (value is String) {
-        return double.tryParse(value.trim());
-      }
+  static double? _readDouble(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value is double) {
+      return value;
+    }
+    if (value is num) {
+      return value.toDouble();
+    }
+    if (value is String) {
+      return double.tryParse(value.trim());
     }
     return null;
   }
@@ -191,24 +172,22 @@ class AgentPersonalDetails {
 
   factory AgentPersonalDetails.fromJson(Map<String, dynamic> json) {
     return AgentPersonalDetails(
-      division: _readString(json, ['division']) ?? '',
-      district: _readString(json, ['district']) ?? '',
-      upazila: _readString(json, ['upazila', 'thana']) ?? '',
-      unionOrCityCorp: _readString(json, ['unionOrCityCorp']) ?? '',
-      wardNo: _readString(json, ['wardNo']) ?? '',
-      postalCode: _readString(json, ['postalCode']) ?? '',
-      fullAddress: _readString(json, ['fullAddress', 'address']) ?? '',
+      division: _readString(json, 'division') ?? '',
+      district: _readString(json, 'district') ?? '',
+      upazila: _readString(json, 'upazila') ?? '',
+      unionOrCityCorp: _readString(json, 'unionOrCityCorp') ?? '',
+      wardNo: _readString(json, 'wardNo') ?? '',
+      postalCode: _readString(json, 'postalCode') ?? '',
+      fullAddress: _readString(json, 'fullAddress') ?? '',
     );
   }
 
-  static String? _readString(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value != null) {
-        final text = value.toString().trim();
-        if (text.isNotEmpty) {
-          return text;
-        }
+  static String? _readString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value != null) {
+      final text = value.toString().trim();
+      if (text.isNotEmpty) {
+        return text;
       }
     }
     return null;
@@ -236,14 +215,16 @@ class AgentVerificationDocs {
 
   factory AgentVerificationDocs.fromJson(Map<String, dynamic> json) {
     return AgentVerificationDocs(
-      nidNumber:
-          _readString(json, ['nidNumber', 'nidNo', 'nationalIdNumber']) ?? '',
-      nidFrontUrl: _readString(json, ['nidFrontUrl']) ?? '',
-      nidBackUrl: _readString(json, ['nidBackUrl']) ?? '',
-      isNIDVerified: _readBool(json, ['isNIDVerified']) ?? false,
-      tinNumber: _readString(json, ['tinNumber', 'tinNo']) ?? '',
-      tinCertificateUrl: _readString(json, ['tinCertificateUrl']) ?? '',
-      isTINVerified: _readBool(json, ['isTINVerified']) ?? false,
+      // NOTE: /agents/profile sample exposes verificationDocs.nidFrontUrl,
+      // nidBackUrl, isNIDVerified, tinCertificateUrl, isTINVerified only.
+      // Keep number fields empty until backend defines canonical names.
+      nidNumber: _readString(json, 'nidNumber') ?? '',
+      nidFrontUrl: _readString(json, 'nidFrontUrl') ?? '',
+      nidBackUrl: _readString(json, 'nidBackUrl') ?? '',
+      isNIDVerified: _readBool(json, 'isNIDVerified') ?? false,
+      tinNumber: _readString(json, 'tinNumber') ?? '',
+      tinCertificateUrl: _readString(json, 'tinCertificateUrl') ?? '',
+      isTINVerified: _readBool(json, 'isTINVerified') ?? false,
     );
   }
 
@@ -253,34 +234,30 @@ class AgentVerificationDocs {
       nidFrontUrl.trim().isNotEmpty || nidBackUrl.trim().isNotEmpty;
   bool get hasTinDocument => tinCertificateUrl.trim().isNotEmpty;
 
-  static String? _readString(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value != null) {
-        final text = value.toString().trim();
-        if (text.isNotEmpty) {
-          return text;
-        }
+  static String? _readString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value != null) {
+      final text = value.toString().trim();
+      if (text.isNotEmpty) {
+        return text;
       }
     }
     return null;
   }
 
-  static bool? _readBool(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value is bool) {
-        return value;
-      }
+  static bool? _readBool(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value is bool) {
+      return value;
+    }
 
-      if (value is String) {
-        final normalized = value.trim().toLowerCase();
-        if (normalized == 'true') {
-          return true;
-        }
-        if (normalized == 'false') {
-          return false;
-        }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true') {
+        return true;
+      }
+      if (normalized == 'false') {
+        return false;
       }
     }
     return null;
@@ -302,21 +279,19 @@ class AgentBankInfo {
 
   factory AgentBankInfo.fromJson(Map<String, dynamic> json) {
     return AgentBankInfo(
-      bankName: _readString(json, ['bankName']) ?? '',
-      bankAccountNo: _readString(json, ['bankAccountNo']) ?? '',
-      bankSwiftCode: _readString(json, ['bankSwiftCode']) ?? '',
-      bankRoutingNo: _readString(json, ['bankRoutingNo']) ?? '',
+      bankName: _readString(json, 'bankName') ?? '',
+      bankAccountNo: _readString(json, 'bankAccountNo') ?? '',
+      bankSwiftCode: _readString(json, 'bankSwiftCode') ?? '',
+      bankRoutingNo: _readString(json, 'bankRoutingNo') ?? '',
     );
   }
 
-  static String? _readString(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value != null) {
-        final text = value.toString().trim();
-        if (text.isNotEmpty) {
-          return text;
-        }
+  static String? _readString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value != null) {
+      final text = value.toString().trim();
+      if (text.isNotEmpty) {
+        return text;
       }
     }
     return null;

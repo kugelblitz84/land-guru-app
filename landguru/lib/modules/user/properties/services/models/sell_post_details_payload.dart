@@ -191,19 +191,24 @@ class SellPostDetailsPayload {
   String get sellerName {
     final seller = _seller;
     if (seller != null) {
-      final name = _readString(seller, const ['name', 'fullName']);
+      final name = _readString(seller, 'name') ?? _readString(seller, 'fullName');
       if (name != null) return name;
     }
-    return _readString(raw, const ['postedBy', 'sellerName']) ??
+    return _readString(raw, 'postedBy') ??
+        _readString(raw, 'sellerName') ??
         'Unknown Seller';
   }
 
   String? get sellerAvatarUrl {
     final seller = _seller;
     if (seller != null) {
-      return _readString(seller, const ['avatar', 'image', 'photoUrl']);
+      return _readString(seller, 'avatar') ??
+          _readString(seller, 'image') ??
+          _readString(seller, 'photoUrl');
     }
-    return _readString(raw, const ['sellerAvatar', 'sellerImage', 'avatar']);
+    return _readString(raw, 'sellerAvatar') ??
+        _readString(raw, 'sellerImage') ??
+        _readString(raw, 'avatar');
   }
 
   bool get sellerVerified {
@@ -330,13 +335,11 @@ class SellPostDetailsPayload {
     return '${years}y ago';
   }
 
-  static String? _readString(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value == null) continue;
-      final text = value.toString().trim();
-      if (text.isNotEmpty) return text;
-    }
+  static String? _readString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value == null) return null;
+    final text = value.toString().trim();
+    if (text.isNotEmpty) return text;
     return null;
   }
 }

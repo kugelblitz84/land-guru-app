@@ -238,27 +238,25 @@ class SellPostSubmittedDialog extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        if (summary.propertyType != null) ...[
-                          SizedBox(height: 6.h),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.w,
-                              vertical: 3.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(4.r),
-                            ),
-                            child: Text(
-                              summary.propertyType!.label,
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.white,
-                              ),
+                        SizedBox(height: 6.h),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 3.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            summary.propertyType?.label ?? 'Not specified',
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.white,
                             ),
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ),
@@ -464,12 +462,11 @@ class BuyPostSubmittedDialog extends StatelessWidget {
                     ),
 
                     // Property Type
-                    if (summary.propertyType != null)
-                      _buildDetailRow(
-                        Icons.home_outlined,
-                        'Property Type',
-                        summary.propertyType!.label,
-                      ),
+                    _buildDetailRow(
+                      Icons.home_outlined,
+                      'Property Type',
+                      summary.propertyType?.label ?? 'Not specified',
+                    ),
 
                     // Required Land Size
                     _buildDetailRow(

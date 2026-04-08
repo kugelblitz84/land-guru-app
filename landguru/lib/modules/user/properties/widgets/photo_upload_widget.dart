@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -80,10 +82,12 @@ class PhotoUploadWidget extends StatelessWidget {
                     color: AppColors.primary.withAlpha(20),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.add_a_photo_outlined,
-                    color: AppColors.primary,
-                    size: 28.sp,
+                    child: Padding(
+                      padding: EdgeInsets.all(12.w),
+                      child: Image.asset(
+                        'assets/Logos/Camera.png',
+                        fit: BoxFit.contain,
+                      ),
                   ),
                 ),
                 SizedBox(height: 12.h),
@@ -134,25 +138,10 @@ class PhotoUploadWidget extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Placeholder gradient
-          Container(
-            decoration: BoxDecoration(
+          Positioned.fill(
+            child: PhotoPreviewTile(
+              photo: photo,
               borderRadius: BorderRadius.circular(8.r),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.primary.withAlpha(100),
-                  AppColors.primaryDark.withAlpha(150),
-                ],
-              ),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.image,
-                color: AppColors.white.withAlpha(150),
-                size: 32.sp,
-              ),
             ),
           ),
 
@@ -174,6 +163,77 @@ class PhotoUploadWidget extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class PhotoPreviewTile extends StatelessWidget {
+  final PhotoItem photo;
+  final BorderRadius borderRadius;
+  final BoxFit fit;
+
+  const PhotoPreviewTile({
+    super.key,
+    required this.photo,
+    required this.borderRadius,
+    this.fit = BoxFit.cover,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final imageWidget = photo.isLocal
+        ? Image.file(
+            File(photo.path),
+            fit: fit,
+            errorBuilder: (_, __, ___) => _buildFallback(),
+          )
+        : Image.network(
+            photo.path,
+            fit: fit,
+            errorBuilder: (_, __, ___) => _buildFallback(),
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) {
+                return child;
+              }
+              return Container(
+                color: AppColors.grey100,
+                child: Center(
+                  child: SizedBox(
+                    width: 16.w,
+                    height: 16.h,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+
+    return ClipRRect(borderRadius: borderRadius, child: imageWidget);
+  }
+
+  Widget _buildFallback() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withAlpha(100),
+            AppColors.primaryDark.withAlpha(150),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.image,
+          color: AppColors.white.withAlpha(150),
+          size: 24.sp,
+        ),
       ),
     );
   }
@@ -204,23 +264,9 @@ class PhotoGridPreview extends StatelessWidget {
             width: 60.w,
             height: 60.h,
             margin: EdgeInsets.only(right: 8.w),
-            decoration: BoxDecoration(
+            child: PhotoPreviewTile(
+              photo: entry.value,
               borderRadius: BorderRadius.circular(8.r),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.primary.withAlpha(100),
-                  AppColors.primaryDark.withAlpha(150),
-                ],
-              ),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.image,
-                color: AppColors.white.withAlpha(150),
-                size: 24.sp,
-              ),
             ),
           );
         }),

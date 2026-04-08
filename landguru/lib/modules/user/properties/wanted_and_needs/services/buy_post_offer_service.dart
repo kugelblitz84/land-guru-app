@@ -124,12 +124,13 @@ class BuyPostOfferService extends GetxService {
         json['roadDistanceMin'],
         json['roadDistanceMax'],
       ),
-      postedBy: _readString(seller, const ['name', 'fullName']),
-      postedByAvatarUrl: _readString(seller, const [
-        'avatar',
-        'image',
-        'photoUrl',
-      ]),
+      postedBy:
+          _readString(seller, 'name') ??
+          _readString(seller, 'fullName'),
+      postedByAvatarUrl:
+          _readString(seller, 'avatar') ??
+          _readString(seller, 'image') ??
+          _readString(seller, 'photoUrl'),
       postedByVerified: seller['isVerified'] == true,
       postedTime: _formatTimeAgo(
         json['updatedAt']?.toString() ?? json['createdAt']?.toString(),
@@ -207,13 +208,11 @@ class BuyPostOfferService extends GetxService {
     return '${(months / 12).floor()}y ago';
   }
 
-  String? _readString(Map<String, dynamic> json, List<String> keys) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value == null) continue;
-      final text = value.toString().trim();
-      if (text.isNotEmpty) return text;
-    }
+  String? _readString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value == null) return null;
+    final text = value.toString().trim();
+    if (text.isNotEmpty) return text;
     return null;
   }
 }

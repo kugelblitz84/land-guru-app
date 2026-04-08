@@ -22,25 +22,22 @@ class UploadService extends GetxService {
       throw Exception('Invalid presign response');
     }
 
-    final uploadUrl = _readFirstString(presignData, [
-      'uploadUrl',
-      'presignedUrl',
-      'signedUrl',
-      'url',
-      'putUrl',
-    ]);
+    final uploadUrl =
+        _readFirstString(presignData, 'uploadUrl') ??
+        _readFirstString(presignData, 'presignedUrl') ??
+        _readFirstString(presignData, 'signedUrl') ??
+        _readFirstString(presignData, 'url') ??
+        _readFirstString(presignData, 'putUrl');
     if (uploadUrl == null || uploadUrl.isEmpty) {
       throw Exception('Missing upload URL');
     }
 
     final fileUrl =
-        _readFirstString(presignData, [
-          'fileUrl',
-          'publicUrl',
-          'location',
-          'key',
-          'url',
-        ]) ??
+        _readFirstString(presignData, 'fileUrl') ??
+        _readFirstString(presignData, 'publicUrl') ??
+        _readFirstString(presignData, 'location') ??
+        _readFirstString(presignData, 'key') ??
+        _readFirstString(presignData, 'url') ??
         _stripQuery(uploadUrl);
 
     return UploadResultPayload(uploadUrl: uploadUrl, fileUrl: fileUrl);
@@ -86,12 +83,10 @@ class UploadService extends GetxService {
     return null;
   }
 
-  String? _readFirstString(Map<String, dynamic> data, List<String> keys) {
-    for (final key in keys) {
-      final value = data[key];
-      if (value != null && value.toString().isNotEmpty) {
-        return value.toString();
-      }
+  String? _readFirstString(Map<String, dynamic> data, String key) {
+    final value = data[key];
+    if (value != null && value.toString().isNotEmpty) {
+      return value.toString();
     }
     return null;
   }

@@ -92,12 +92,13 @@ class PropertyListing {
     final sellerMap = json['seller'] is Map
         ? Map<String, dynamic>.from(json['seller'] as Map)
         : const <String, dynamic>{};
-    final postedBy = _readFirstString(sellerMap, const ['name', 'fullName']);
-    final postedByAvatarUrl = _readFirstString(sellerMap, const [
-      'avatar',
-      'image',
-      'photoUrl',
-    ]);
+    final postedBy =
+      _readFirstString(sellerMap, 'name') ??
+      _readFirstString(sellerMap, 'fullName');
+    final postedByAvatarUrl =
+      _readFirstString(sellerMap, 'avatar') ??
+      _readFirstString(sellerMap, 'image') ??
+      _readFirstString(sellerMap, 'photoUrl');
     final postedByVerified = sellerMap['isVerified'] == true;
 
     return PropertyListing(
@@ -226,16 +227,11 @@ class PropertyListing {
     return '${years}y ago';
   }
 
-  static String? _readFirstString(
-    Map<String, dynamic> json,
-    List<String> keys,
-  ) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value == null) continue;
-      final text = value.toString().trim();
-      if (text.isNotEmpty) return text;
-    }
+  static String? _readFirstString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value == null) return null;
+    final text = value.toString().trim();
+    if (text.isNotEmpty) return text;
     return null;
   }
 }

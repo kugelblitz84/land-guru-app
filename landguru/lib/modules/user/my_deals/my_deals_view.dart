@@ -122,11 +122,18 @@ class MyDealsContentView extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Icon(
-                      isSold ? Icons.sell : Icons.shopping_bag,
-                      color: AppColors.primary,
-                      size: 24.sp,
-                    ),
+                    isSold
+                        ? Image.asset(
+                            'assets/Logos/My Deals/Property Sold.png',
+                            width: 24.w,
+                            height: 24.h,
+                            fit: BoxFit.contain,
+                          )
+                        : Icon(
+                            Icons.shopping_bag,
+                            color: AppColors.primary,
+                            size: 24.sp,
+                          ),
                     SizedBox(height: 8.h),
                     Text(
                       isSold ? 'Property Sold' : 'Property Bought',
@@ -161,11 +168,18 @@ class MyDealsContentView extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.account_balance_wallet,
-                      color: AppColors.success,
-                      size: 24.sp,
-                    ),
+                    isSold
+                        ? Image.asset(
+                            'assets/Logos/My Deals/Earned.png',
+                            width: 24.w,
+                            height: 24.h,
+                            fit: BoxFit.contain,
+                          )
+                        : Icon(
+                            Icons.account_balance_wallet,
+                            color: AppColors.success,
+                            size: 24.sp,
+                          ),
                     SizedBox(height: 8.h),
                     Text(
                       isSold ? 'Earned' : 'Spent',

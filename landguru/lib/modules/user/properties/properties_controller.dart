@@ -23,6 +23,7 @@ export 'wanted_and_needs/models/land_wanted_post.dart';
 /// Controller for the Properties listing screen
 /// Handles: For Sale, Land Wanted/Needs, My Posts tabs
 class PropertiesController extends GetxController {
+  static const String _noFilterAppliedText = 'No filter applied';
   final SellPostListingService _sellPostListingService =
       Get.find<SellPostListingService>();
   final BuyPostListingService _buyPostListingService =
@@ -52,9 +53,7 @@ class PropertiesController extends GetxController {
   final RxString searchQuery = ''.obs;
 
   // Display state
-  final RxString selectedLocation =
-      'Banasree, Ward No. 25, Dhaka South City Corporation, Khilgaon Thana, Dhaka - 1219, Dhaka Division.'
-          .obs;
+  final RxString selectedLocation = _noFilterAppliedText.obs;
   final RxString sortBy = 'High to Low'.obs;
   final RxInt totalProperties = 120.obs;
 
@@ -411,6 +410,7 @@ class PropertiesController extends GetxController {
     filterWardNo.value = '';
 
     isFilterApplied.value = false;
+    _updateSelectedLocationFromFilters();
     filterApplyVersion.value++;
     _applyForSaleFiltersAndSort();
     _applyWantedFiltersAndSort();
@@ -419,9 +419,24 @@ class PropertiesController extends GetxController {
   /// Apply filters and reload properties
   void applyFilters() {
     isFilterApplied.value = true;
+    _updateSelectedLocationFromFilters();
     filterApplyVersion.value++;
     _applyForSaleFiltersAndSort();
     _applyWantedFiltersAndSort();
+  }
+
+  void _updateSelectedLocationFromFilters() {
+    final selectedParts = [
+      filterWardNo.value,
+      filterPouroshova.value,
+      filterUpazilla.value,
+      filterDistrict.value,
+      filterDivision.value,
+    ].map((value) => value.trim()).where((value) => value.isNotEmpty).toList();
+
+    selectedLocation.value = selectedParts.isEmpty
+        ? _noFilterAppliedText
+        : selectedParts.join(', ');
   }
 
   /// Open location picker

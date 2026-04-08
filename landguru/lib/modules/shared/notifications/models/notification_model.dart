@@ -42,29 +42,20 @@ class NotificationItem {
   });
 
   factory NotificationItem.fromJson(Map<String, dynamic> json) {
-    final rawType = _readString(json, const ['type']).toUpperCase();
-    final createdAt = _readDateTime(json, const ['createdAt', 'updatedAt']);
-    final title = _readString(json, const ['title', 'messageTitle']);
-    final description = _readString(json, const [
-      'message',
-      'description',
-      'body',
-    ]);
+    final rawType = _readString(json, 'type').toUpperCase();
+    final createdAt = _readDateTime(json, 'createdAt');
+    final title = _readString(json, 'title');
+    final description = _readString(json, 'message');
 
     return NotificationItem(
-      id: _readString(json, const ['id', '_id']),
+      id: _readString(json, 'id'),
       title: title.isEmpty ? 'Notification' : title,
       description: description.isEmpty ? title : description,
       timeAgo: _formatTimeAgo(createdAt),
       type: _mapRawTypeToUiType(rawType),
-      isRead: _readBool(json, const ['isRead', 'read']),
+      isRead: _readBool(json, 'isRead'),
       isActionRequired: _isActionRequired(rawType),
-      relatedId: _readString(json, const [
-        'referenceId',
-        'postId',
-        'assignmentId',
-        'taskId',
-      ]),
+      relatedId: _readString(json, 'referenceId'),
       rawType: rawType,
     );
   }
@@ -186,13 +177,9 @@ class NotificationItem {
     return rawType.contains('ASSIGNED') || rawType.contains('ACTION');
   }
 
-  static String _readString(Map<String, dynamic> map, List<String> keys) {
-    for (final key in keys) {
-      final value = map[key];
-      if (value == null) {
-        continue;
-      }
-
+  static String _readString(Map<String, dynamic> map, String key) {
+    final value = map[key];
+    if (value != null) {
       final text = value.toString().trim();
       if (text.isNotEmpty) {
         return text;
@@ -202,40 +189,34 @@ class NotificationItem {
     return '';
   }
 
-  static bool _readBool(Map<String, dynamic> map, List<String> keys) {
-    for (final key in keys) {
-      final value = map[key];
-      if (value is bool) {
-        return value;
+  static bool _readBool(Map<String, dynamic> map, String key) {
+    final value = map[key];
+    if (value is bool) {
+      return value;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true') {
+        return true;
       }
-      if (value is String) {
-        final normalized = value.trim().toLowerCase();
-        if (normalized == 'true') {
-          return true;
-        }
-        if (normalized == 'false') {
-          return false;
-        }
+      if (normalized == 'false') {
+        return false;
       }
-      if (value is num) {
-        return value != 0;
-      }
+    }
+    if (value is num) {
+      return value != 0;
     }
 
     return false;
   }
 
-  static DateTime _readDateTime(Map<String, dynamic> map, List<String> keys) {
-    for (final key in keys) {
-      final value = map[key];
-      if (value == null) {
-        continue;
-      }
+  static DateTime _readDateTime(Map<String, dynamic> map, String key) {
+    final value = map[key];
+    if (value is DateTime) {
+      return value;
+    }
 
-      if (value is DateTime) {
-        return value;
-      }
-
+    if (value != null) {
       final parsed = DateTime.tryParse(value.toString());
       if (parsed != null) {
         return parsed.toLocal();

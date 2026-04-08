@@ -133,10 +133,10 @@ class AgentAppointmentsMeta {
 
   factory AgentAppointmentsMeta.fromJson(Map<String, dynamic> json) {
     return AgentAppointmentsMeta(
-      total: _readInt(json, ['total']) ?? 0,
-      page: _readInt(json, ['page']) ?? 1,
-      limit: _readInt(json, ['limit']) ?? 10,
-      totalPages: _readInt(json, ['totalPages']) ?? 1,
+      total: _readInt(json, 'total') ?? 0,
+      page: _readInt(json, 'page') ?? 1,
+      limit: _readInt(json, 'limit') ?? 10,
+      totalPages: _readInt(json, 'totalPages') ?? 1,
     );
   }
 }
@@ -163,64 +163,33 @@ class AgentAppointmentApiModel {
   });
 
   factory AgentAppointmentApiModel.fromJson(Map<String, dynamic> json) {
-    final appointment = _readMap(json, ['appointment']);
-    final post = _readMap(json, ['post', 'property']);
-    final service = _readMap(json, ['service']);
+    // NOTE: Postman does not include concrete response samples for
+    // /agents/appointments and /agents/appointments/{assignmentId}.
+    // We map only documented keys from appointment schedule examples and keep
+    // unknown fields empty instead of guessing aliases.
+    final property = _readMap(json, 'property');
+    final serviceType = _readMap(json, 'serviceType');
 
     return AgentAppointmentApiModel(
-      id:
-          _readString(appointment, ['id', 'appointmentId']) ??
-          _readString(json, ['id', 'assignmentId', 'appointmentId']) ??
-          '',
-      postId:
-          _readString(post, ['id', 'postId']) ??
-          _readString(json, ['postId', 'post_id', 'taskId']) ??
-          '',
+      id: _readString(json, 'id') ?? '',
+      postId: _readString(property, 'id') ?? '',
       propertyTitle:
-          _readString(post, ['title', 'propertyTitle']) ??
-          _readString(json, ['propertyTitle', 'title', 'postTitle']) ??
+        _readString(property, 'title') ??
+        _readString(json, 'propertyTitle') ??
           'Untitled Property',
       propertyType:
-          _readString(post, ['propertyType', 'type']) ??
-          _readString(json, ['propertyType', 'type', 'postType']) ??
+        _readString(property, 'propertyType') ??
+        _readString(json, 'propertyType') ??
           'flat',
       location:
-          _readString(appointment, ['location', 'address']) ??
-          _readString(post, ['location', 'address', 'fullAddress']) ??
-          _readString(json, [
-            'location',
-            'address',
-            'fullAddress',
-            'assignedLocation',
-          ]) ??
+        _readString(property, 'location') ??
+        _readString(json, 'location') ??
           '',
-      status:
-          _readString(appointment, ['status', 'appointmentStatus']) ??
-          _readString(json, ['status', 'appointmentStatus']) ??
-          '',
-      appointmentDate:
-          _readDateTime(json, [
-            'appointmentDateTime',
-            'appointmentDate',
-            'date',
-            'scheduleDate',
-            'scheduledAt',
-            'appointmentAt',
-            'visitDate',
-            'createdAt',
-          ]) ??
-          _readDateTime(appointment, [
-            'appointmentDateTime',
-            'appointmentDate',
-            'date',
-            'scheduleDate',
-            'scheduledAt',
-            'appointmentAt',
-            'visitDate',
-          ]),
+      status: _readString(json, 'status') ?? '',
+      appointmentDate: _readDateTime(json, 'timeAndDate'),
       serviceType:
-          _readString(service, ['serviceName', 'name', 'serviceType']) ??
-          _readString(json, ['serviceType', 'serviceName', 'service']) ??
+        _readString(serviceType, 'name') ??
+        _readString(json, 'serviceName') ??
           'N/A',
     );
   }
@@ -234,22 +203,7 @@ class AgentAppointmentsListResponse {
 
   factory AgentAppointmentsListResponse.fromJson(Map<String, dynamic> json) {
     final rootData = json['data'];
-    final dataMap = rootData is Map<String, dynamic>
-        ? rootData
-        : (rootData is Map ? Map<String, dynamic>.from(rootData) : null);
-
-    final list =
-        (rootData is List ? rootData : null) ??
-        json['items'] ??
-        json['rows'] ??
-        json['appointments'] ??
-        json['assignments'] ??
-        json['tasks'] ??
-        dataMap?['items'] ??
-        dataMap?['rows'] ??
-        dataMap?['appointments'] ??
-        dataMap?['assignments'] ??
-        dataMap?['tasks'];
+    final list = rootData is List ? rootData : null;
 
     final rawItems = list is List ? list : <dynamic>[];
     final items = rawItems
@@ -261,25 +215,10 @@ class AgentAppointmentsListResponse {
         )
         .toList();
 
-    final rawMeta = json['meta'] ?? dataMap?['meta'] ?? json['pagination'];
+    final rawMeta = json['meta'];
     final metaMap = rawMeta is Map
         ? Map<String, dynamic>.from(rawMeta)
         : <String, dynamic>{};
-
-    if (metaMap.isEmpty) {
-      metaMap.addAll(
-        {
-          'total':
-              _readInt(json, ['total']) ?? _readInt(dataMap ?? {}, ['total']),
-          'page': _readInt(json, ['page']) ?? _readInt(dataMap ?? {}, ['page']),
-          'limit':
-              _readInt(json, ['limit']) ?? _readInt(dataMap ?? {}, ['limit']),
-          'totalPages':
-              _readInt(json, ['totalPages']) ??
-              _readInt(dataMap ?? {}, ['totalPages']),
-        }..removeWhere((key, value) => value == null),
-      );
-    }
 
     return AgentAppointmentsListResponse(
       data: items,
@@ -308,117 +247,75 @@ class AgentAppointmentDetails {
   });
 
   factory AgentAppointmentDetails.fromJson(Map<String, dynamic> json) {
-    final appointment = _readMap(json, ['appointment']);
-    final post = _readMap(json, ['post', 'property']);
-    final service = _readMap(json, ['service']);
+    final property = _readMap(json, 'property');
+    final serviceType = _readMap(json, 'serviceType');
 
     return AgentAppointmentDetails(
-      id:
-          _readString(appointment, ['id', 'appointmentId']) ??
-          _readString(json, ['id', 'assignmentId', 'appointmentId']) ??
-          '',
-      postId:
-          _readString(post, ['id', 'postId']) ??
-          _readString(json, ['postId', 'post_id', 'taskId']) ??
-          '',
+      id: _readString(json, 'id') ?? '',
+      postId: _readString(property, 'id') ?? '',
       propertyTitle:
-          _readString(post, ['title', 'propertyTitle']) ??
-          _readString(json, ['propertyTitle', 'title', 'postTitle']) ??
+          _readString(property, 'title') ??
+          _readString(json, 'propertyTitle') ??
           'Untitled Property',
       serviceType:
-          _readString(service, ['serviceName', 'name', 'serviceType']) ??
-          _readString(json, ['serviceType', 'serviceName', 'service']) ??
+          _readString(serviceType, 'name') ??
+          _readString(json, 'serviceName') ??
           'N/A',
       location:
-          _readString(appointment, ['location', 'address']) ??
-          _readString(post, ['location', 'address', 'fullAddress']) ??
-          _readString(json, [
-            'location',
-            'address',
-            'fullAddress',
-            'assignedLocation',
-          ]) ??
+          _readString(property, 'location') ??
+          _readString(json, 'location') ??
           '',
-      status:
-          _readString(appointment, ['status', 'appointmentStatus']) ??
-          _readString(json, ['status', 'appointmentStatus']) ??
-          '',
-      appointmentDate:
-          _readDateTime(json, [
-            'appointmentDateTime',
-            'appointmentDate',
-            'date',
-            'scheduleDate',
-            'scheduledAt',
-            'appointmentAt',
-            'visitDate',
-          ]) ??
-          _readDateTime(appointment, [
-            'appointmentDateTime',
-            'appointmentDate',
-            'date',
-            'scheduleDate',
-            'scheduledAt',
-            'appointmentAt',
-            'visitDate',
-          ]),
+      status: _readString(json, 'status') ?? '',
+      appointmentDate: _readDateTime(json, 'timeAndDate'),
     );
   }
 }
 
-Map<String, dynamic> _readMap(Map<String, dynamic> json, List<String> keys) {
-  for (final key in keys) {
-    final value = json[key];
-    if (value is Map<String, dynamic>) {
-      return value;
-    }
-    if (value is Map) {
-      return Map<String, dynamic>.from(value);
-    }
+Map<String, dynamic> _readMap(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is Map<String, dynamic>) {
+    return value;
+  }
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
   }
   return const <String, dynamic>{};
 }
 
-String? _readString(Map<String, dynamic> json, List<String> keys) {
-  for (final key in keys) {
-    final value = json[key];
-    if (value != null) {
-      final text = value.toString().trim();
-      if (text.isNotEmpty) {
-        return text;
-      }
+String? _readString(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value != null) {
+    final text = value.toString().trim();
+    if (text.isNotEmpty) {
+      return text;
     }
   }
   return null;
 }
 
-int? _readInt(Map<String, dynamic> json, List<String> keys) {
-  for (final key in keys) {
-    final value = json[key];
-    if (value is int) {
-      return value;
-    }
-    if (value is num) {
-      return value.toInt();
-    }
-    if (value is String) {
-      final parsed = int.tryParse(value.trim());
-      if (parsed != null) {
-        return parsed;
-      }
+int? _readInt(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value is String) {
+    final parsed = int.tryParse(value.trim());
+    if (parsed != null) {
+      return parsed;
     }
   }
   return null;
 }
 
-DateTime? _readDateTime(Map<String, dynamic> json, List<String> keys) {
-  for (final key in keys) {
-    final value = json[key];
-    if (value is String) {
-      final parsed = DateTime.tryParse(value.trim());
-      if (parsed != null) {
-        return parsed;
-      }
+DateTime? _readDateTime(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is String) {
+    final parsed = DateTime.tryParse(value.trim());
+    if (parsed != null) {
+      return parsed;
     }
   }
   return null;

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:video_player/video_player.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Video data model
@@ -130,37 +133,40 @@ class VideoUploadWidget extends StatelessWidget {
         Container(
           width: double.infinity,
           height: 200.h,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12.r),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primary.withAlpha(150), AppColors.primaryDark],
-            ),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.r)),
+          clipBehavior: Clip.antiAlias,
           child: Center(
-            child: GestureDetector(
-              onTap: onPlayVideo,
-              child: Container(
-                width: 64.w,
-                height: 64.h,
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withAlpha(40),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _VideoFramePreview(video: video!),
+                Container(color: AppColors.black.withAlpha(70)),
+                GestureDetector(
+                  onTap: onPlayVideo,
+                  child: Center(
+                    child: Container(
+                      width: 64.w,
+                      height: 64.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.black.withAlpha(40),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.play_arrow,
+                        color: AppColors.primary,
+                        size: 36.sp,
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-                child: Icon(
-                  Icons.play_arrow,
-                  color: AppColors.primary,
-                  size: 36.sp,
-                ),
-              ),
+              ],
             ),
           ),
         ),
@@ -202,28 +208,152 @@ class VideoPreviewCompact extends StatelessWidget {
       child: Container(
         width: double.infinity,
         height: 160.h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.r),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.primary.withAlpha(150), AppColors.primaryDark],
-          ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.r)),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _VideoFramePreview(video: video),
+            Container(color: AppColors.black.withAlpha(70)),
+            Center(
+              child: Container(
+                width: 56.w,
+                height: 56.h,
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.play_arrow,
+                  color: AppColors.primary,
+                  size: 32.sp,
+                ),
+              ),
+            ),
+          ],
         ),
-        child: Center(
-          child: Container(
-            width: 56.w,
-            height: 56.h,
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.play_arrow,
-              color: AppColors.primary,
-              size: 32.sp,
-            ),
-          ),
+      ),
+    );
+  }
+}
+
+class _VideoFramePreview extends StatefulWidget {
+  final VideoItem video;
+
+  const _VideoFramePreview({required this.video});
+
+  @override
+  State<_VideoFramePreview> createState() => _VideoFramePreviewState();
+}
+
+class _VideoFramePreviewState extends State<_VideoFramePreview> {
+  VideoPlayerController? _controller;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeController();
+  }
+
+  @override
+  void didUpdateWidget(covariant _VideoFramePreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.video.path != widget.video.path ||
+        oldWidget.video.isLocal != widget.video.isLocal) {
+      _disposeController();
+      _initializeController();
+    }
+  }
+
+  Future<void> _initializeController() async {
+    final videoPath = widget.video.path;
+    if (videoPath.trim().isEmpty) {
+      setState(() {
+        _hasError = true;
+      });
+      return;
+    }
+
+    try {
+      final controller = widget.video.isLocal
+          ? VideoPlayerController.file(File(videoPath))
+          : VideoPlayerController.networkUrl(Uri.parse(videoPath));
+      _controller = controller;
+      await controller.initialize();
+      await controller.pause();
+
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+
+      setState(() {
+        _hasError = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _hasError = true;
+      });
+    }
+  }
+
+  Future<void> _disposeController() async {
+    final controller = _controller;
+    _controller = null;
+    if (controller != null) {
+      await controller.dispose();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposeController();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final thumbnailPath = widget.video.thumbnailPath;
+    if (thumbnailPath != null && thumbnailPath.trim().isNotEmpty) {
+      return widget.video.isLocal
+          ? Image.file(
+              File(thumbnailPath),
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _fallback(),
+            )
+          : Image.network(
+              thumbnailPath,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _fallback(),
+            );
+    }
+
+    final controller = _controller;
+    if (_hasError || controller == null || !controller.value.isInitialized) {
+      return _fallback();
+    }
+
+    return FittedBox(
+      fit: BoxFit.cover,
+      child: SizedBox(
+        width: controller.value.size.width,
+        height: controller.value.size.height,
+        child: VideoPlayer(controller),
+      ),
+    );
+  }
+
+  Widget _fallback() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary.withAlpha(150), AppColors.primaryDark],
         ),
       ),
     );

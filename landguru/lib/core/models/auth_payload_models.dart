@@ -129,6 +129,122 @@ class LoginPayload {
   }
 }
 
+class AuthUserModel {
+  const AuthUserModel({
+    this.id = '',
+    this.fullName = '',
+    this.email = '',
+    this.phone = '',
+    this.photoUrl = '',
+    this.role = '',
+    this.isVerified = false,
+    this.agentType = '',
+    this.agentId = '',
+    this.agentIdDisplay = '',
+    this.agentTitle = '',
+  });
+
+  final String id;
+  final String fullName;
+  final String email;
+  final String phone;
+  final String photoUrl;
+  final String role;
+  final bool isVerified;
+  final String agentType;
+  final String agentId;
+  final String agentIdDisplay;
+  final String agentTitle;
+
+  factory AuthUserModel.fromJson(Map<String, dynamic> json) {
+    return AuthUserModel(
+      id: _readString(json, 'id') ?? '',
+      fullName: _readString(json, 'fullName') ?? '',
+      email: _readString(json, 'email') ?? '',
+      phone: _readString(json, 'phone') ?? '',
+      photoUrl: _readString(json, 'photoUrl') ?? '',
+      role: _readString(json, 'role') ?? '',
+      isVerified: _readBool(json, 'isVerified') ?? false,
+      agentType: _readString(json, 'agentType') ?? '',
+      agentId: _readString(json, 'agentId') ?? '',
+      agentIdDisplay: _readString(json, 'agentIdDisplay') ?? '',
+      agentTitle: _readString(json, 'agentTitle') ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'id': id,
+      'fullName': fullName,
+      'email': email,
+      'phone': phone,
+      'photoUrl': photoUrl,
+      'role': role,
+      'isVerified': isVerified,
+      'agentType': agentType,
+      'agentId': agentId,
+      'agentIdDisplay': agentIdDisplay,
+      'agentTitle': agentTitle,
+    };
+  }
+
+  AuthUserModel copyWith({
+    String? id,
+    String? fullName,
+    String? email,
+    String? phone,
+    String? photoUrl,
+    String? role,
+    bool? isVerified,
+    String? agentType,
+    String? agentId,
+    String? agentIdDisplay,
+    String? agentTitle,
+  }) {
+    return AuthUserModel(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      photoUrl: photoUrl ?? this.photoUrl,
+      role: role ?? this.role,
+      isVerified: isVerified ?? this.isVerified,
+      agentType: agentType ?? this.agentType,
+      agentId: agentId ?? this.agentId,
+      agentIdDisplay: agentIdDisplay ?? this.agentIdDisplay,
+      agentTitle: agentTitle ?? this.agentTitle,
+    );
+  }
+
+  static String? _readString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value != null) {
+      final text = value.toString().trim();
+      if (text.isNotEmpty) {
+        return text;
+      }
+    }
+    return null;
+  }
+
+  static bool? _readBool(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value is bool) {
+      return value;
+    }
+    if (value is String) {
+      final normalized = value.toLowerCase().trim();
+      if (normalized == 'true') {
+        return true;
+      }
+      if (normalized == 'false') {
+        return false;
+      }
+    }
+    return null;
+  }
+}
+
 class AuthSessionResponse {
   const AuthSessionResponse({
     required this.raw,
@@ -140,7 +256,7 @@ class AuthSessionResponse {
   final Map<String, dynamic> raw;
   final String? accessToken;
   //final String? refreshToken;
-  final Map<String, dynamic>? user;
+  final AuthUserModel? user;
 
   factory AuthSessionResponse.fromPayload(dynamic payload) {
     if (payload is! Map) {
@@ -149,44 +265,43 @@ class AuthSessionResponse {
 
     final map = Map<String, dynamic>.from(payload);
 
-    Map<String, dynamic>? extractUser() {
+    AuthUserModel? extractUser() {
       final directUser = map['user'];
       if (directUser is Map) {
-        return Map<String, dynamic>.from(directUser);
+        return AuthUserModel.fromJson(Map<String, dynamic>.from(directUser));
       }
 
       final data = map['data'];
       if (data is Map) {
         final nestedUser = data['user'];
         if (nestedUser is Map) {
-          return Map<String, dynamic>.from(nestedUser);
+          return AuthUserModel.fromJson(Map<String, dynamic>.from(nestedUser));
         }
       }
 
       return null;
     }
 
-    String? extractToken(List<String> keys) {
-      for (final key in keys) {
-        final value = map[key]?.toString();
-        if (value != null && value.isNotEmpty) {
-          return value;
-        }
+    String? extractToken(String key) {
+      final value = map[key]?.toString();
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
 
-        final data = map['data'];
-        if (data is Map) {
-          final nested = data[key]?.toString();
-          if (nested != null && nested.isNotEmpty) {
-            return nested;
-          }
+      final data = map['data'];
+      if (data is Map) {
+        final nested = data[key]?.toString();
+        if (nested != null && nested.isNotEmpty) {
+          return nested;
         }
       }
+
       return null;
     }
 
     return AuthSessionResponse(
       raw: map,
-      accessToken: extractToken(const ['accessToken', 'token']),
+      accessToken: extractToken('accessToken'),
       //refreshToken: extractToken(const ['refreshToken']),
       user: extractUser(),
     );

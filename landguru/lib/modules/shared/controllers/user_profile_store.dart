@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../models/user_system_model.dart';
+import '../../../core/models/models.dart';
 import '../services/user_profile_services.dart';
 import '../../../core/services/api_error_handler.dart';
 import '../../../core/services/auth_service.dart';
@@ -23,29 +24,27 @@ class UserProfileStore extends GetxService {
 
     var nextState = profileModel.value;
 
-    final fullName = _readString(user, const ['fullName', 'name']);
+    final fullName = user.fullName.trim();
     if (fullName.isNotEmpty) {
       nextState = nextState.copyWith(userName: fullName);
     }
 
-    final email = _readString(user, const ['email']);
+    final email = user.email.trim();
     if (email.isNotEmpty) {
       nextState = nextState.copyWith(userEmail: email);
     }
 
-    final phone = _readString(user, const ['phone']);
+    final phone = user.phone.trim();
     if (phone.isNotEmpty) {
       nextState = nextState.copyWith(userPhone: phone);
     }
 
-    final avatar = _readString(user, const ['photoUrl', 'image']);
+    final avatar = user.photoUrl.trim();
     if (avatar.isNotEmpty) {
       nextState = nextState.copyWith(profileImage: avatar);
     }
 
-    profileModel.value = nextState.copyWith(
-      isVerified: _readBool(user, const ['isVerified']),
-    );
+    profileModel.value = nextState.copyWith(isVerified: user.isVerified);
   }
 
   Future<void> refreshProfile({
@@ -136,13 +135,15 @@ class UserProfileStore extends GetxService {
       isTinVerified: profile.verification.tinVerified,
     );
 
-    _authService.updateUserFields({
-      'fullName': profile.fullName,
-      'email': profile.email,
-      'phone': profile.phone,
-      'photoUrl': profile.photoUrl,
-      'isVerified': profile.isVerified,
-    });
+    final updatedSessionUser = (_authService.user ?? const AuthUserModel())
+        .copyWith(
+          fullName: profile.fullName,
+          email: profile.email,
+          phone: profile.phone,
+          photoUrl: profile.photoUrl,
+          isVerified: profile.isVerified,
+        );
+    _authService.updateUser(updatedSessionUser);
   }
 
   void _applySummary(AccountSummaryModel summary) {
@@ -182,35 +183,4 @@ class UserProfileStore extends GetxService {
     return 'Not provided';
   }
 
-  String _readString(Map<String, dynamic> map, List<String> keys) {
-    for (final key in keys) {
-      final value = map[key];
-      if (value != null) {
-        final text = value.toString().trim();
-        if (text.isNotEmpty) {
-          return text;
-        }
-      }
-    }
-    return '';
-  }
-
-  bool _readBool(Map<String, dynamic> map, List<String> keys) {
-    for (final key in keys) {
-      final value = map[key];
-      if (value is bool) {
-        return value;
-      }
-      if (value is String) {
-        final normalized = value.trim().toLowerCase();
-        if (normalized == 'true') {
-          return true;
-        }
-        if (normalized == 'false') {
-          return false;
-        }
-      }
-    }
-    return false;
-  }
 }

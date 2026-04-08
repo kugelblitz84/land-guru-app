@@ -355,7 +355,13 @@ class AgentEditProfileView extends GetView<AgentEditProfileController> {
                             color: AppColors.white,
                           ),
                         )
-                      : Icon(Icons.edit, color: AppColors.white, size: 16.sp),
+                      : Padding(
+                          padding: EdgeInsets.all(6.w),
+                          child: Image.asset(
+                            'assets/Logos/Camera.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
                 ),
               ),
             ),

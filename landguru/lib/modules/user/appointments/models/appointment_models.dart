@@ -222,67 +222,61 @@ class Appointment {
     final sellPost = _asMap(json['sellPost']);
     final appointment = _asMap(json['appointment']);
 
-    final rawPostId =
-        _readString(sellPost, ['id']) ??
-        _readString(json, ['postId', 'sellPostId', 'id']) ??
-        '';
+    final rawPostId = _readString(sellPost, 'id') ?? '';
     final requestedAt =
-        _parseDateTime(_readString(appointment, ['requestedAt'])) ??
-        _parseDateTime(_readString(json, ['requestedAt']));
+        _parseDateTime(_readString(appointment, 'requestedAt')) ??
+      _parseDateTime(_readString(json, 'requestedAt'));
     final scheduledDate =
-        _parseDateTime(_readString(appointment, ['scheduledDate'])) ??
-        _parseDateTime(_readString(json, ['appointmentDate']));
+        _parseDateTime(_readString(appointment, 'scheduledDate')) ??
+      _parseDateTime(_readString(json, 'appointmentDate'));
     final status = _mapStatus(
       rawStatus:
-          _readString(appointment, ['status']) ??
-          _readString(json, ['status']) ??
-          '',
+          _readString(appointment, 'status') ??
+        _readString(json, 'status') ??
+        '',
       scheduledDate: scheduledDate,
     );
 
     return Appointment(
-      id:
-          _readString(appointment, ['id']) ??
-          _readString(json, ['id', 'appointmentId']) ??
-          '',
+      id: _readString(appointment, 'id') ?? '',
       postId: _formatPostId(rawPostId),
       propertyTitle:
-          _readString(sellPost, ['title']) ??
-          _readString(json, ['propertyTitle', 'title']) ??
+          _readString(sellPost, 'title') ??
+        _readString(json, 'propertyTitle') ??
           'Untitled Property',
       propertyImageUrl:
-          _readString(sellPost, ['image']) ??
-          _readString(json, ['propertyImageUrl', 'image']),
+          _readString(sellPost, 'image') ??
+        _readString(json, 'propertyImageUrl'),
       propertyType: _mapPropertyType(
-        _readString(sellPost, ['propertyType']) ??
-            _readString(json, ['propertyType']) ??
+        _readString(sellPost, 'propertyType') ??
+            _readString(json, 'propertyType') ??
             'Flat',
       ),
       location:
-          _readString(sellPost, ['location']) ??
-          _readString(json, ['location']) ??
+          _readString(sellPost, 'location') ??
+          _readString(json, 'location') ??
           '',
       status: status,
       appointmentDate: scheduledDate ?? requestedAt ?? DateTime.now(),
       requestedAt: requestedAt,
       price:
-          _formatPrice(_readDynamic(sellPost, ['askingPrice'])) ??
-          _readString(json, ['price']),
+          _formatPrice(_readDynamic(sellPost, 'askingPrice')) ??
+          _readString(json, 'price'),
       clientName:
-          _readString(appointment, ['clientName']) ??
-          _readString(json, ['clientName']),
+          _readString(appointment, 'clientName') ??
+          _readString(json, 'clientName'),
       clientId:
-          _readString(appointment, ['clientId']) ??
-          _readString(json, ['clientId']),
+          _readString(appointment, 'clientId') ??
+          _readString(json, 'clientId'),
       serviceType:
-          _readString(appointment, ['serviceType']) ??
-          _readString(json, ['serviceType']),
+          _readString(appointment, 'serviceType') ??
+          _readString(json, 'serviceType'),
       agentName:
-          _readString(appointment, ['agentName']) ??
-          _readString(json, ['agentName']),
+          _readString(appointment, 'agentName') ??
+          _readString(json, 'agentName'),
       agentId:
-          _readString(appointment, ['agentId']) ??
-          _readString(json, ['agentId']),
+          _readString(appointment, 'agentId') ??
+          _readString(json, 'agentId'),
     );
   }
 
@@ -348,31 +342,27 @@ class Appointment {
     return DateTime.tryParse(value);
   }
 
-  static String? _readString(Map<String, dynamic>? map, List<String> keys) {
+  static String? _readString(Map<String, dynamic>? map, String key) {
     if (map == null) {
       return null;
     }
-    for (final key in keys) {
-      final value = map[key];
-      if (value == null) {
-        continue;
-      }
-      final text = value.toString().trim();
-      if (text.isNotEmpty) {
-        return text;
-      }
+    final value = map[key];
+    if (value == null) {
+      return null;
+    }
+    final text = value.toString().trim();
+    if (text.isNotEmpty) {
+      return text;
     }
     return null;
   }
 
-  static dynamic _readDynamic(Map<String, dynamic>? map, List<String> keys) {
+  static dynamic _readDynamic(Map<String, dynamic>? map, String key) {
     if (map == null) {
       return null;
     }
-    for (final key in keys) {
-      if (map.containsKey(key)) {
-        return map[key];
-      }
+    if (map.containsKey(key)) {
+      return map[key];
     }
     return null;
   }
