@@ -152,12 +152,13 @@ class SignupController extends GetxController {
   /// Step 1: Send OTP to phone
   Future<void> sendOtp() async {
     if (!phoneFormKey.currentState!.validate()) return;
+    final normalizedPhone = _normalizeBdPhone(phoneController.text);
 
     isLoading.value = true;
     final result = await ApiErrorHandler.call(
       () => _authService.sendOtp(
         payload: SendOtpPayload(
-          phone: phoneController.text.trim(),
+          phone: normalizedPhone,
           forgetPassword: false,
         ),
       ),
@@ -183,12 +184,13 @@ class SignupController extends GetxController {
       );
       return;
     }
+    final normalizedPhone = _normalizeBdPhone(phoneController.text);
 
     isLoading.value = true;
     final result = await ApiErrorHandler.call(
       () => _authService.verifyOtp(
         payload: VerifyOtpPayload(
-          phone: phoneController.text.trim(),
+          phone: normalizedPhone,
           otp: otpString,
         ),
       ),
@@ -206,6 +208,7 @@ class SignupController extends GetxController {
   /// Step 2: Resend OTP
   Future<void> resendOtp() async {
     if (!canResend.value) return;
+    final normalizedPhone = _normalizeBdPhone(phoneController.text);
 
     canResend.value = false;
     resendCountdown.value = 60;
@@ -214,7 +217,7 @@ class SignupController extends GetxController {
       final result = await ApiErrorHandler.call(
         () => _authService.sendOtp(
           payload: SendOtpPayload(
-            phone: phoneController.text.trim(),
+            phone: normalizedPhone,
             forgetPassword: false,
           ),
         ),
@@ -272,12 +275,13 @@ class SignupController extends GetxController {
       );
       return;
     }
+    final normalizedPhone = _normalizeBdPhone(phoneController.text);
 
     isLoading.value = true;
     final result = await ApiErrorHandler.call(
       () => _authService.completeSignup(
         payload: CompleteSignupPayload(
-          phone: phoneController.text.trim(),
+          phone: normalizedPhone,
           password: passwordController.text,
           fullName: nameController.text.trim(),
           email: emailController.text.trim(),
@@ -322,13 +326,14 @@ class SignupController extends GetxController {
       );
       return;
     }
+    final normalizedPhone = _normalizeBdPhone(phoneController.text);
 
     isLoading.value = true;
     if (!skipIdentity) {
       final result = await ApiErrorHandler.call(
         () => _authService.completeSignupIdentity(
           payload: CompleteSignupIdentityPayload(
-            phone: phoneController.text.trim(),
+            phone: normalizedPhone,
             nidFrontUrl: nidFrontImagePath.value,
             nidBackUrl: nidBackImagePath.value,
             tinCertificateUrl: tinCertificatePath.value,
@@ -618,5 +623,16 @@ class SignupController extends GetxController {
       return 'application/pdf';
     }
     return 'application/octet-stream';
+  }
+
+  String _normalizeBdPhone(String input) {
+    final digits = input.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      return '';
+    }
+    if (digits.startsWith('0')) {
+      return digits;
+    }
+    return '0$digits';
   }
 }
