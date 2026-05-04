@@ -30,7 +30,9 @@ class AuthService extends GetxService {
     if (userJson != null && userJson.isNotEmpty) {
       final decoded = jsonDecode(userJson);
       if (decoded is Map) {
-        _user.value = AuthUserModel.fromJson(Map<String, dynamic>.from(decoded));
+        _user.value = AuthUserModel.fromJson(
+          Map<String, dynamic>.from(decoded),
+        );
       }
     }
 
@@ -49,28 +51,18 @@ class AuthService extends GetxService {
     required ResetPasswordWithOtpPayload payload,
   }) async {
     final body = payload.toJson();
-
-    final candidatePaths = <String>[
-      '/auth/reset-password',
-      '/auth/forgot-password/reset',
-      '/auth/forgot-password',
-    ];
-
-    Object? lastError;
-    for (final path in candidatePaths) {
-      try {
-        await _apiClient.post(path, data: body);
-        return;
-      } catch (error) {
-        lastError = error;
-      }
+    try {
+      await _apiClient.post('/auth/reset-password', data: body);
+    } catch (er) {
+      throw Exception('Failed to reset password: ${er.toString()}');
     }
+    //return;
 
-    if (lastError != null) {
-      throw lastError;
-    }
+    // if (lastError != null) {
+    //   throw lastError;
+    // }
 
-    throw Exception('Failed to reset password');
+    //throw Exception('Failed to reset password');
   }
 
   Future<AuthSessionResponse> completeSignup({
